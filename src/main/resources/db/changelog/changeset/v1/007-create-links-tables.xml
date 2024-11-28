@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="createJobsTasksTable" author="Sergei Ragaev">
+        <createTable tableName="jobs_tasks">
+            <column name="job_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tasks_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="addUniqueConstraintJobsTasks" author="Sergei Ragaev">
+        <addUniqueConstraint columnNames="tasks_id" constraintName="jobs_tasks_tasks_id_key" tableName="jobs_tasks"/>
+    </changeSet>
+
+    <changeSet id="createTasksContactsTable" author="Sergei Ragaev">
+        <createTable tableName="tasks_contacts">
+            <column name="contact_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tasks_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="createTasksEmployeesTable" author="Sergei Ragaev">
+        <createTable tableName="tasks_employees">
+            <column name="employee_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tasks_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="createTasksFollowsTable" author="Sergei Ragaev">
+        <createTable tableName="tasks_follows">
+            <column name="follows_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="task_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="addUniqueConstraintTaskFollows" author="Sergei Ragaev">
+        <addUniqueConstraint columnNames="follows_id" constraintName="tasks_follows_follows_id_key" tableName="tasks_follows"/>
+    </changeSet>
+
+    <changeSet id="addFKTasksConstraint" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="tasks" constraintName="fk_job_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="jobs" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKTasksContactsConstraintTasksId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="tasks_contacts" constraintName="fk_tasks_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKTasksContactsConstraintContactId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="contact_id" baseTableName="tasks_contacts" constraintName="fk_contact_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="contacts" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKJobsTasksConstraintTasksId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="jobs_tasks" constraintName="fk_tasks_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKJobsTasksConstraintJobId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="jobs_tasks" constraintName="fk_job_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="jobs" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKTasksFollowsConstraintFollowsId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="follows_id" baseTableName="tasks_follows" constraintName="fk_follows_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKTasksFollowsConstraintTaskId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="task_id" baseTableName="tasks_follows" constraintName="fk_task_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKTasksEmployeesConstraintTasksId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="tasks_employees" constraintName="fk_tasks_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKTasksEmployeesConstraintEmployeeId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="employee_id" baseTableName="tasks_employees" constraintName="fk_employee_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="contacts" validate="true"/>
+    </changeSet>
+
+</databaseChangeLog>

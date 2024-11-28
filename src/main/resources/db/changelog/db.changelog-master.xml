@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <include file="db/changelog/changeset/v1/v1-accumulate-changeset.yaml"/>
+
+<!--    <changeSet id="createFieldsTable" author="Sergei Ragaev">-->
+<!--        <createTable tableName="fields">-->
+<!--            <column name="id" type="SERIAL">-->
+<!--                <constraints primaryKey="true"/>-->
+<!--            </column>-->
+<!--            <column name="enabled" type="BOOLEAN">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="alias" type="VARCHAR(255)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="default_value" type="VARCHAR(255)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="name" type="VARCHAR(255)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="order" type="smallint">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="createJobsTasksTable" author="Sergei Ragaev">-->
+<!--        <createTable tableName="jobs_tasks">-->
+<!--            <column name="job_id" type="UUID">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="tasks_id" type="UUID">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="addUniqueConstraintJobsTasks" author="Sergei Ragaev">-->
+<!--        <addUniqueConstraint columnNames="tasks_id" constraintName="jobs_tasks_tasks_id_key" tableName="jobs_tasks"/>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="createJobsTable" author="Sergei Ragaev">-->
+<!--        <createTable tableName="jobs">-->
+<!--            <column name="id" type="UUID">-->
+<!--                <constraints nullable="false" primaryKey="true" primaryKeyName="jobs_pkey"/>-->
+<!--            </column>-->
+<!--            <column name="address1" type="VARCHAR(255)"/>-->
+<!--            <column name="address2" type="VARCHAR(255)"/>-->
+<!--            <column name="cell_phone" type="VARCHAR(255)"/>-->
+<!--            <column name="city" type="VARCHAR(255)"/>-->
+<!--            <column name="company" type="VARCHAR(255)"/>-->
+<!--            <column name="country" type="VARCHAR(255)"/>-->
+<!--            <column name="directions" type="TEXT"/>-->
+<!--            <column name="email" type="VARCHAR(255)"/>-->
+<!--            <column name="fax" type="VARCHAR(255)"/>-->
+<!--            <column name="home_phone" type="VARCHAR(255)"/>-->
+<!--            <column name="lock_box" type="VARCHAR(255)"/>-->
+<!--            <column name="lot" type="VARCHAR(255)"/>-->
+<!--            <column name="notes" type="TEXT"/>-->
+<!--            <column name="number" type="VARCHAR(255)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="owner_name" type="VARCHAR(255)"/>-->
+<!--            <column name="postal" type="VARCHAR(255)"/>-->
+<!--            <column name="state" type="VARCHAR(255)"/>-->
+<!--            <column name="subdivision" type="VARCHAR(255)"/>-->
+<!--            <column name="work_phone" type="VARCHAR(255)"/>-->
+<!--            <column name="is_deleted" type="boolean"/>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="createTasksTable" author="Sergei Ragaev">-->
+<!--        <createTable tableName="tasks">-->
+<!--            <column name="id" type="UUID">-->
+<!--                <constraints nullable="false" primaryKey="true" primaryKeyName="tasks_pkey"/>-->
+<!--            </column>-->
+<!--            <column name="actual_finish" type="date"/>-->
+<!--            <column name="duration" type="SMALLINT">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="marked" type="BOOLEAN"/>-->
+<!--            <column name="order" type="VARCHAR(255)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="target_finish" type="date">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="target_start" type="date">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="job_id" type="UUID"/>-->
+<!--            <column name="description" type="VARCHAR(255)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="notes" type="TEXT"/>-->
+<!--            <column name="files" type="TEXT"/>-->
+<!--            <column name="status" type="VARCHAR(255)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="contact_id" type="UUID"/>-->
+<!--            <column name="employee_id" type="UUID"/>-->
+<!--            <column name="is_deleted" type="boolean"/>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="createContactsTable" author="Sergei Ragaev">-->
+<!--        <createTable tableName="contacts">-->
+<!--            <column name="id" type="UUID">-->
+<!--                <constraints nullable="false" primaryKey="true" primaryKeyName="contacts_pkey"/>-->
+<!--            </column>-->
+<!--            <column name="insurance_date" type="date"/>-->
+<!--            <column name="workers_comp_date" type="date"/>-->
+<!--            <column name="comments" type="VARCHAR(255)"/>-->
+<!--            <column name="company" type="VARCHAR(255)"/>-->
+<!--            <column name="email" type="VARCHAR(255)"/>-->
+<!--            <column name="fax" type="VARCHAR(255)"/>-->
+<!--            <column name="first_name" type="VARCHAR(255)"/>-->
+<!--            <column name="last_name" type="VARCHAR(255)"/>-->
+<!--            <column name="notes" type="TEXT"/>-->
+<!--            <column name="phones" type="VARCHAR(255)"/>-->
+<!--            <column name="profession" type="VARCHAR(255)"/>-->
+<!--            <column name="spouse" type="VARCHAR(255)"/>-->
+<!--            <column name="supervisor" type="VARCHAR(255)"/>-->
+<!--            <column name="tax_id" type="VARCHAR(255)"/>-->
+<!--            <column name="web_site" type="VARCHAR(255)"/>-->
+<!--            <column name="is_deleted" type="boolean"/>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="createEmployeesTable" author="Sergei Ragaev">-->
+<!--        <createTable tableName="employees">-->
+<!--            <column name="id" type="UUID">-->
+<!--                <constraints nullable="false" primaryKey="true" primaryKeyName="employees_pkey"/>-->
+<!--            </column>-->
+<!--            <column name="name" type="VARCHAR(255)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="login_name" type="VARCHAR(255)"/>-->
+<!--            <column name="password" type="VARCHAR(255)"/>-->
+<!--            <column name="color" type="int"/>-->
+<!--            <column name="is_deleted" type="boolean"/>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="createTasksContactsTable" author="Sergei Ragaev">-->
+<!--        <createTable tableName="tasks_contacts">-->
+<!--            <column name="contact_id" type="UUID">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="tasks_id" type="UUID">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="createTasksEmployeesTable" author="Sergei Ragaev">-->
+<!--        <createTable tableName="tasks_employees">-->
+<!--            <column name="employee_id" type="UUID">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="tasks_id" type="UUID">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="createTasksFollowsTable" author="Sergei Ragaev">-->
+<!--        <createTable tableName="tasks_follows">-->
+<!--            <column name="follows_id" type="UUID">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="task_id" type="UUID">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="addUniqueConstraintTaskFollows" author="Sergei Ragaev">-->
+<!--        <addUniqueConstraint columnNames="follows_id" constraintName="tasks_follows_follows_id_key" tableName="tasks_follows"/>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="addFKTasksConstraint" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="tasks" constraintName="fk_job_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="jobs" validate="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="addFKTasksContactsConstraintTasksId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="tasks_contacts" constraintName="fk_tasks_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="addFKTasksContactsConstraintContactId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="contact_id" baseTableName="tasks_contacts" constraintName="fk_contact_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="contacts" validate="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="addFKJobsTasksConstraintTasksId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="jobs_tasks" constraintName="fk_tasks_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="addFKJobsTasksConstraintJobId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="jobs_tasks" constraintName="fk_job_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="jobs" validate="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="addFKTasksFollowsConstraintFollowsId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="follows_id" baseTableName="tasks_follows" constraintName="fk_follows_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="addFKTasksFollowsConstraintTaskId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="task_id" baseTableName="tasks_follows" constraintName="fk_task_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="addFKTasksEmployeesConstraintTasksId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="tasks_employees" constraintName="fk_tasks_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="addFKTasksEmployeesConstraintEmployeeId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="employee_id" baseTableName="tasks_employees" constraintName="fk_employee_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="contacts" validate="true"/>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="insertAdminIntoUserTable" author="Sergei Ragaev">-->
+<!--        <insert tableName="users">-->
+<!--            <column name="id" value="1" />-->
+<!--            <column name="reg_date" value="2024-06-30 12:06:47.297523"/>-->
+<!--            <column name="email" value="admin@socialnetwork.com"/>-->
+<!--            <column name="first_name" value="firstname"/>-->
+<!--            <column name="last_name" value="lastname"/>-->
+<!--            <column name="password" value="$2a$10$jKwjnyGxN/oBixbpgyG7rug2QB/k6U7/35JyFPChXv6W5/QUvCa/u"/>-->
+<!--            <column name="role" value="ADMIN"/>-->
+<!--            <column name="is_blocked" value="false"/>-->
+<!--            <column name="is_online" value="false"/>-->
+<!--            <column name="is_deleted" value="false"/>-->
+<!--        </insert>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="updateSequenceOfUserTable" author="Sergei Ragaev" >-->
+<!--        <sql dbms="postgresql" endDelimiter=";">ALTER SEQUENCE users_id_seq restart with 2;-->
+<!--        </sql>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="createPasswordResetTokenTable" author="Sergei Ragaev" >-->
+<!--        <createTable tableName="password_reset_tokens">-->
+<!--            <column name="expiry_date" type="TIMESTAMP WITHOUT TIME ZONE"/>-->
+<!--            <column name="id" type="BIGSERIAL">-->
+<!--                <constraints primaryKey="true"/>-->
+<!--            </column>-->
+<!--            <column name="user_id" type="BIGINT"/>-->
+<!--            <column name="token" type="VARCHAR(255)"/>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="createFKForPasswordResetTokenTable" author="Sergei Ragaev" >-->
+<!--        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="password_reset_tokens" constraintName="fk_user_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="users" validate="true"/>-->
+<!--    </changeSet>-->
+</databaseChangeLog>

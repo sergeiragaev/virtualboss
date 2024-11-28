@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changeset/v1/001-create-fields-table.xml
+  - include:
+      file: db/changelog/changeset/v1/002-insert-fields.sql
+  - include:
+      file: db/changelog/changeset/v1/003-create-tasks-table.xml
+  - include:
+      file: db/changelog/changeset/v1/004-create-jobs-table.xml
+  - include:
+      file: db/changelog/changeset/v1/005-create-contacts-table.xml
+  - include:
+      file: db/changelog/changeset/v1/006-create-employees-table.xml
+  - include:
+      file: db/changelog/changeset/v1/007-create-links-tables.xml

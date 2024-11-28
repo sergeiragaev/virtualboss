@@ -1,10 +1,10 @@
-package net.virtualboss.remote;
+package net.virtualboss;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class RemoteVirtualBossApplicationTests {
+class VirtualBossApplicationTests {
 
 	@Test
 	void contextLoads() {

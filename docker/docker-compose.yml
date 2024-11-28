@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      - POSTGRES_DB=virtualboss
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - database-data:/var/lib/postgresql/data/
+
+  virtualboss:
+    image: ragaev/virtualboss:0.0.1-SNAPSHOT
+    environment:
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/virtualboss
+    ports:
+      - "8080:8080"
+    restart: on-failure
+
+  frontend:
+    image: ragaev/frontend:virtualboss
+    ports:
+      - "80:80"
+    tty: true
+    restart: on-failure
+#    volumes:
+#      - ./nginx-config:/etc/nginx/conf.d
+volumes:
+  database-data:
+networks:
+  virtualboss:

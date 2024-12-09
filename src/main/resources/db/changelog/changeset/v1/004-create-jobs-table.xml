@@ -23,6 +23,7 @@
             <column name="lock_box" type="VARCHAR(255)"/>
             <column name="lot" type="VARCHAR(255)"/>
             <column name="notes" type="TEXT"/>
+            <column name="notes_rtf" type="TEXT"/>
             <column name="number" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>

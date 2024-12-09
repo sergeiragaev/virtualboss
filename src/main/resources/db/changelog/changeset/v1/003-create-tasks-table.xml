@@ -15,9 +15,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="marked" type="BOOLEAN"/>
-            <column name="order" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="order" type="VARCHAR(255)"/>
             <column name="target_finish" type="date">
                 <constraints nullable="false"/>
             </column>
@@ -29,6 +27,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="notes" type="TEXT"/>
+            <column name="notes_rtf" type="TEXT"/>
             <column name="files" type="TEXT"/>
             <column name="status" type="VARCHAR(255)">
                 <constraints nullable="false"/>

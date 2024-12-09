@@ -46,7 +46,11 @@ public class Contact {
 
     private String comments;
 
+    @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Column(columnDefinition = "TEXT", name = "notes_rtf")
+    private String notesRtf;
 
     private String fax;
 

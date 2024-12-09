@@ -15,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tasks")
+@ToString
 public class Task {
 
     @Id
@@ -42,13 +43,19 @@ public class Task {
     @OneToMany
     private List<Task> follows = new ArrayList<>();
 
-    @Column(nullable = false, name = "\"order\"")
+    @Column(name = "\"order\"")
     private String order;
 
     @Column(columnDefinition = "TEXT")
+    @ToString.Exclude
     private String notes;
 
+    @Column(columnDefinition = "TEXT", name = "notes_rtf")
+    @ToString.Exclude
+    private String notesRtf;
+
     @Column(columnDefinition = "TEXT")
+    @ToString.Exclude
     private String files;
 
     private Boolean marked;
@@ -65,7 +72,7 @@ public class Task {
     private Employee employee;
 
     @ManyToOne
-    @JoinColumn(nullable = false, name = "job_id", referencedColumnName = "id")
+    @JoinColumn(name = "job_id", referencedColumnName = "id")
     private Job job;
 
 }

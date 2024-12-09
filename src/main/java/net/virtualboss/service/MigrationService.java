@@ -1,24 +1,18 @@
 package net.virtualboss.service;
 
+import com.linuxense.javadbf.DBFReader;
+import com.linuxense.javadbf.DBFRow;
+import com.linuxense.javadbf.DBFUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import net.jdbf.core.DbfField;
-import net.jdbf.core.DbfMetadata;
-import net.jdbf.core.DbfRecord;
-import net.jdbf.reader.DbfReader;
-import net.virtualboss.model.entity.Contact;
-import net.virtualboss.model.entity.Job;
-import net.virtualboss.model.entity.Task;
 import net.virtualboss.repository.ContactRepository;
 import net.virtualboss.repository.JobRepository;
 import net.virtualboss.repository.TaskRepository;
+import net.virtualboss.util.DBConnection;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.io.*;
+import java.sql.SQLException;
 import java.util.*;
 
 @Service
@@ -34,217 +28,315 @@ public class MigrationService {
     private final Map<Integer, String> taskCodes = new HashMap<>();
     private final Map<String, Integer> pendingTasks = new HashMap<>();
 
-    private final Charset stringCharset = Charset.forName("cp1252");
+    public void migrate(String dataPath) {
 
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd").localizedBy(Locale.US);
+        if (dataPath == null) {
+            dataPath = "db/sampleJobs/SampleCompanyInc";
+        }
 
-    private final List<String> samples = new ArrayList<>();
+        migrateJobs(dataPath);
+        migrateContacts(dataPath);
+        migrateTasks(dataPath);
+    }
 
-    public void migrate() {
+    public void migrateTasks(String path) {
+        DBFReader reader = null;
+        List<String> columns = getTaskColumns();
 
-//        samples.add("db/sampleJobs/HomeBuildingSample01");
-//        samples.add("db/sampleJobs/HomeBuildingSample02");
-//        samples.add("db/sampleJobs/HomeBuildingSample03");
-//        samples.add("db/sampleJobs/HomeBuildingSample04");
-//        samples.add("db/sampleJobs/HomeBuildingSample05");
-//        samples.add("db/sampleJobs/HomeBuildingSample06");
-//        samples.add("db/sampleJobs/HomeBuildingSample07");
-//        samples.add("db/sampleJobs/HomeBuildingSample08");
-//        samples.add("db/sampleJobs/HomeBuildingSample09");
-//        samples.add("db/sampleJobs/HomeBuildingSample10");
-//        samples.add("db/sampleJobs/HomeBuildingSample11");
-//        samples.add("db/sampleJobs/HomeBuildingSample12");
-//        samples.add("db/sampleJobs/HomeBuildingSample13");
-//        samples.add("db/sampleJobs/Landscaping Samples");
-//        samples.add("db/sampleJobs/PoolSample");
-//        samples.add("db/sampleJobs/RemodelingSamples");
-//        samples.add("db/sampleJobs/ResidentialElectricSample");
-        samples.add("db/sampleJobs/SampleCompanyInc");
+        try {
+            reader = new DBFReader(new FileInputStream(path + "/tmtask.dbf"));
+            reader.setMemoFile(new File(path + "/tmtask.fpt"));
 
-        for (String path : samples) {
-            migrateJobs(path);
-            migrateContacts(path);
-            migrateTasks(path, 0, 0);
+            DBFRow row;
+            while ((row = reader.nextRow()) != null) {
+
+                List<Object> values = new ArrayList<>();
+
+                String newId = UUID.randomUUID().toString();
+
+                try {
+                    values.add(newId);
+                    values.add(jobCodes.get(row.getString("TA_JOBNO")));
+                    values.add(setDescription(row.getString("TA_TASK")).replace("'", "''"));
+                    values.add(row.getString("TA_DESC")
+                            .replace("\u0000", "")
+                            .replace("'", "''"));
+                    values.add(row.getString("TA_DESCRTF")
+                            .replace("\u0000", "")
+                            .replace("'", "''"));
+                    values.add(contactCodes.get(row.getString("TA_CUSTID")));
+                    values.add(
+                            row.getDate("TA_DTARGET") == null ? null :
+                                    row.getDate("TA_DTARGET").toString());
+                    values.add(
+                            row.getDate("TA_DDONE") == null ? null :
+                                    row.getDate("TA_DDONE").toString());
+                    values.add(
+                            row.getDate("TA_FTARGET") == null ? null :
+                                    row.getDate("TA_FTARGET").toString());
+                    values.add(row.getString("TA_ORDER").replace("'", "''"));
+//                        task.setOrder(rec.getInteger("TA_TASKNO"));
+                    values.add(row.getString("TA_STATUS").replace("'", "''"));
+                    values.add(row.getString("TA_DAYS"));
+
+                    values.add(row.isDeleted());
+
+                } catch (Exception e) {
+                    log.info("There is error occurred while parsing task info: {}", e.getLocalizedMessage());
+                }
+
+                taskCodes.put(row.getInt("TA_TASKNO"), newId);
+
+                DBConnection.addRow(values);
+                if (DBConnection.multiInsert.length() > 10_000_000) {
+                    try {
+                        DBConnection.executeMultiInsert("tasks", columns);
+                    } catch (SQLException e) {
+                        log.info("There is error occurred while inserting data into db from tmtask.dbf : {}", e.getLocalizedMessage());
+                    }
+                }
+//                    pendingTasks.put(saved.getId().toString(), row.getInt("TA_PENDING"));
+            }
+
+        } catch (Exception e) {
+            log.info("There is error occurred while parsing tmtask.dbf: {}", e.getLocalizedMessage());
+        } finally {
+            try {
+                DBConnection.executeMultiInsert("tasks", columns);
+            } catch (SQLException e) {
+                log.info("There is error occurred while inserting data into db from tmtask.dbf : {}", e.getLocalizedMessage());
+            }
+            DBFUtils.close(reader);
         }
     }
 
-    public void migrateTasks(String path, int plusYears, int plusMonths) {
+    private List<String> getTaskColumns() {
+        List<String> columns = new ArrayList<>();
 
-        InputStream dbf = getClass().getClassLoader().getResourceAsStream(path + "/tmtask.dbf");
-        InputStream memo = getClass().getClassLoader().getResourceAsStream(path + "/tmtask.fpt");
+        columns.add("id");
+        columns.add("job_id");
+        columns.add("description");
+        columns.add("notes");
+        columns.add("notes_rtf");
+        columns.add("contact_id");
+        columns.add("target_start");
+        columns.add("actual_finish");
+        columns.add("target_finish");
+        columns.add("\"order\"");
+        columns.add("status");
+        columns.add("duration");
 
-        try (DbfReader reader = new DbfReader(dbf, memo)) {
-            DbfMetadata meta = reader.getMetadata();
-            System.out.println("Read tmtask DBF Metadata: " + meta);
+        columns.add("is_deleted");
 
-            DbfRecord rec;
-            while ((rec = reader.read()) != null) {
-                if (rec.isDeleted()) continue;
+        return columns;
+    }
 
-                rec.setStringCharset(stringCharset);
-
-                Task task = new Task();
-
-                for (DbfField field : meta.getFields()) {
-                    String name = field.getName();
-                    switch (name) {
-                        case "TA_JOBNO" -> task.setJob(
-                                jobRepository.findById(UUID.fromString(
-                                        jobCodes.get(rec.getString("TA_JOBNO")))).orElseThrow());
-                        case "TA_TASK" -> task.setDescription(rec.getString("TA_TASK"));
-                        case "TA_DESC" -> task.setNotes(rec.getMemoAsString("TA_DESC"));
-                        case "TA_CUSTID" -> task.setContact(
-                                contactRepository.findById(UUID.fromString(
-                                        contactCodes.get(rec.getString("TA_CUSTID")))).orElseThrow());
-                        case "TA_DTARGET" -> task.setTargetStart(
-                                rec.getString("TA_DTARGET") == null ?
-                                        null : LocalDate.parse(rec.getString("TA_DTARGET"), formatter));
-                        case "TA_DDONE" -> task.setActualFinish(
-                                rec.getString("TA_DDONE") == null ?
-                                        null : LocalDate.parse(rec.getString("TA_DDONE"), formatter));
-                        case "TA_FTARGET" -> task.setTargetFinish(
-                                rec.getString("TA_FTARGET") == null ?
-                                        null : LocalDate.parse(rec.getString("TA_FTARGET"), formatter));
-                        case "TA_ORDER" -> task.setOrder(rec.getString("TA_ORDER"));
-//                        case "TA_TASKNO" -> task.setOrder(rec.getInteger("TA_TASKNO"));
-                        case "TA_STATUS" -> task.setStatus(rec.getString("TA_STATUS"));
-                        case "TA_DAYS" -> task.setDuration(Short.parseShort(rec.getInteger("TA_DAYS").toString()));
-                    }
-                }
-
-                Task saved = taskRepository.save(task);
-
-                taskCodes.put(rec.getInteger("TA_TASKNO"), saved.getId().toString());
-                pendingTasks.put(saved.getId().toString(), rec.getInteger("TA_PENDING"));
-            }
-
-
-            List<Task> tasks = taskRepository.findAll();
-            for (Task task : tasks) {
-                task.setTargetStart(task.getTargetStart().plusYears(plusYears).plusMonths(plusMonths));
-                task.setTargetFinish(task.getTargetFinish().plusYears(plusYears).plusMonths(plusMonths));
-                taskRepository.save(task);
-            }
-
-//            for (Map.Entry<String, Integer> entry : pendingTasks.entrySet()) {
-//                Task task = taskRepository.findById(UUID.fromString(entry.getKey())).orElseThrow();
-//                UUID pendingTaskCode = UUID.fromString(taskCodes.get(entry.getValue()));
-//                task.getFollows().add(taskRepository.findById(pendingTaskCode).orElseThrow());
-//                taskRepository.save(task);
-//            }
-
-        } catch (IOException e) {
-            //e.printStackTrace();
-//        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+    private String setDescription(String taTask) {
+        return taTask == null ? "~Empty description~" : taTask;
     }
 
     public void migrateContacts(String path) {
 
-        InputStream dbf = getClass().getClassLoader().getResourceAsStream(path + "/ctcust.dbf");
-        InputStream memo = getClass().getClassLoader().getResourceAsStream(path + "/ctcust.fpt");
+        DBFReader reader = null;
 
-        try (DbfReader reader = new DbfReader(dbf, memo)) {
-            DbfMetadata meta = reader.getMetadata();
-            System.out.println("Read ctcust DBF Metadata: " + meta);
+        List<String> columns = getContactColumns();
 
-            DbfRecord rec;
-            while ((rec = reader.read()) != null) {
-                if (rec.isDeleted()) continue;
+        try {
+            reader = new DBFReader(new FileInputStream(path + "/ctcust.dbf"));
+            reader.setMemoFile(new File(path + "/ctcust.fpt"));
 
-                rec.setStringCharset(stringCharset);
+            DBFRow row;
+            while ((row = reader.nextRow()) != null) {
+                List<Object> values = new ArrayList<>();
 
-                Contact contact = new Contact();
+                String newId = UUID.randomUUID().toString();
 
-                for (DbfField field : meta.getFields()) {
-                    String name = field.getName();
-                    switch (name) {
-                        case "CU_NAME" -> contact.setCompany(rec.getString("CU_NAME"));
-                        case "CU_PROFESS" -> contact.setProfession(rec.getString("CU_PROFESS"));
-                        case "CU_LAST" -> contact.setLastName(rec.getString("CU_LAST"));
-                        case "CU_FIRST" -> contact.setFirstName(rec.getString("CU_FIRST"));
-                        case "CU_COMMENT" -> contact.setComments(rec.getString("CU_COMMENT"));
-                        case "CU_NOTES" -> contact.setNotes(rec.getMemoAsString("CU_NOTES"));
-                        case "CU_EMAIL" -> contact.setEmail(rec.getString("CU_EMAIL"));
-                        case "CU_WWW" -> contact.setWebSite(rec.getString("CU_WWW"));
-                        case "CU_SPOUSE" -> contact.setSpouse(rec.getString("CU_SPOUSE"));
-                        case "CU_BOSS" -> contact.setSupervisor(rec.getString("CU_BOSS"));
-                        case "CU_TAXID" -> contact.setTaxId(rec.getString("CU_TAXID"));
-                        case "CU_FAXNO" -> contact.setFax(rec.getString("CU_FAXNO"));
-                        case "CU_COMPDAT" -> contact.setWorkersCompDate(
-                                rec.getString("CU_COMPDAT") == null ?
-                                null : LocalDate.parse(rec.getString("CU_COMPDAT"), formatter));
-                        case "CU_INSDAT" -> contact.setInsuranceDate(
-                                rec.getString("CU_INSDAT") == null ?
-                                        null : LocalDate.parse(rec.getString("CU_INSDAT"), formatter));
+                try {
+                    values.add(newId);
+
+                    values.add(row.getString("CU_NAME").replace("'", "''"));
+                    values.add(row.getString("CU_PROFESS").replace("'", "''"));
+                    values.add(row.getString("CU_LAST").replace("'", "''"));
+                    values.add(row.getString("CU_FIRST").replace("'", "''"));
+                    values.add(row.getString("CU_COMMENT").replace("'", "''"));
+                    values.add(row.getString("CU_NOTES")
+                            .replace("\u0000", "").replace("'", "''"));
+                    values.add(row.getString("CU_NOTERTF")
+                            .replace("\u0000", "").replace("'", "''"));
+                    values.add(row.getString("CU_EMAIL").replace("'", "''"));
+                    values.add(row.getString("CU_WWW").replace("'", "''"));
+                    values.add(row.getString("CU_SPOUSE").replace("'", "''"));
+                    values.add(row.getString("CU_BOSS").replace("'", "''"));
+                    values.add(row.getString("CU_TAXID").replace("'", "''"));
+                    values.add(row.getString("CU_FAXNO").replace("'", "''"));
+                    values.add(
+                            row.getDate("CU_COMPDAT") == null ? null :
+                                    row.getDate("CU_COMPDAT").toString());
+                    values.add(
+                            row.getDate("CU_INSDAT") == null ? null :
+                                    row.getDate("CU_INSDAT").toString());
+                    values.add(row.isDeleted());
+
+                } catch (Exception e) {
+                    log.info("There is error occurred while parsing contact info: {}", e.getLocalizedMessage());
+                }
+                DBConnection.addRow(values);
+                if (DBConnection.multiInsert.length() > 10_000_000) {
+                    try {
+                        DBConnection.executeMultiInsert("contacts", columns);
+                    } catch (SQLException e) {
+                        log.info("There is error occurred while inserting data into db from ctcust.dbf : {}", e.getLocalizedMessage());
                     }
                 }
-
-                Contact saved = contactRepository.save(contact);
-
-                contactCodes.put(rec.getString("CU_CUSTID"), saved.getId().toString());
-
+                contactCodes.put(row.getString("CU_CUSTID"), newId);
             }
-
-        } catch (IOException e) {
-            //e.printStackTrace();
-//        } catch (ParseException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.info("There is error occurred while parsing ctcust.dbf: {}", e.getLocalizedMessage());
+        } finally {
+            try {
+                DBConnection.executeMultiInsert("contacts", columns);
+            } catch (SQLException e) {
+                log.info("There is error occurred while inserting data into db from ctcust.dbf : {}", e.getLocalizedMessage());
+            }
+            DBFUtils.close(reader);
         }
+    }
+
+    private List<String> getContactColumns() {
+        List<String> columns = new ArrayList<>();
+        columns.add("id");
+        columns.add("company");
+        columns.add("profession");
+        columns.add("last_name");
+        columns.add("first_name");
+        columns.add("comments");
+        columns.add("notes");
+        columns.add("notes_rtf");
+        columns.add("email");
+        columns.add("web_site");
+        columns.add("spouse");
+        columns.add("supervisor");
+        columns.add("tax_id");
+        columns.add("fax");
+        columns.add("workers_comp_date");
+        columns.add("insurance_date");
+        columns.add("is_deleted");
+        return columns;
     }
 
     public void migrateJobs(String path) {
 
-        InputStream dbf = getClass().getClassLoader().getResourceAsStream(path + "/tmjob.dbf");
-        InputStream memo = getClass().getClassLoader().getResourceAsStream(path + "/tmjob.fpt");
+        DBFReader reader = null;
 
-        try (DbfReader reader = new DbfReader(dbf, memo)) {
-            DbfMetadata meta = reader.getMetadata();
-            System.out.println("Read tmjob DBF Metadata: " + meta);
+        List<String> columns = getJobColumns();
 
-            DbfRecord rec;
-            while ((rec = reader.read()) != null) {
-                if (rec.isDeleted()) continue;
+        try {
+            reader = new DBFReader(new FileInputStream(path + "/tmjob.dbf"));
+            reader.setMemoFile(new File(path + "/tmjob.fpt"));
 
-                rec.setStringCharset(stringCharset);
+            DBFRow row;
+            while ((row = reader.nextRow()) != null) {
+                List<Object> values = new ArrayList<>();
 
-                Job job = new Job();
+                String newId = UUID.randomUUID().toString();
 
-                for (DbfField field : meta.getFields()) {
-                    String name = field.getName();
-                    switch (name) {
-                        case "JO_JOBNO" -> job.setNumber(rec.getString("JO_JOBNO"));
-                        case "JO_LOTNO" -> job.setLot(rec.getString("JO_LOTNO"));
-                        case "JO_ADDR" -> job.setAddress1(rec.getString("JO_ADDR"));
-                        case "JO_ADDR2" -> job.setAddress2(rec.getString("JO_ADDR2"));
-                        case "JO_CITY" -> job.setCity(rec.getString("JO_CITY"));
-                        case "JO_STATE" -> job.setState(rec.getString("JO_STATE"));
-                        case "JO_ZIP" -> job.setPostal(rec.getString("JO_ZIP"));
-                        case "JO_LOCKBOX" -> job.setLockBox(rec.getString("JO_LOCKBOX"));
-                        case "JO_DIRECTI" -> job.setDirections(rec.getString("JO_DIRECTI"));
-                        case "JO_DESC" -> job.setNotes(rec.getMemoAsString("JO_DESC"));
-                        case "JO_OWNER" -> job.setOwnerName(rec.getString("JO_OWNER"));
-                        case "JO_EMAIL" -> job.setEmail(rec.getString("JO_EMAIL"));
-                        case "JO_COUNTRY" -> job.setCountry(rec.getString("JO_COUNTRY"));
-                        case "JO_OWNERPH" -> job.setOwnerName(rec.getString("JO_OWNERPH"));
-                        case "JO_WORK1" -> job.setWorkPhone(rec.getString("JO_WORK1"));
-                        case "JO_CELL1" -> job.setCellPhone(rec.getString("JO_CELL1"));
-                        case "JO_FAX1" -> job.setFax(rec.getString("JO_FAX1"));
-                        case "JO_COMPANY" -> job.setCompany(rec.getString("JO_COMPANY"));
+                try {
+                    values.add(newId);
+                    values.add(row.getString("JO_JOBNO")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_LOTNO")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_ADDR")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_ADDR2")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_CITY")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_STATE")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_ZIP")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_LOCKBOX")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_DIRECTI")
+                            .replace("\u0000", "")
+                            .trim()
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_DESC")
+                            .replace("\u0000", "")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_DESCRTF")
+                            .replace("\u0000", "")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_OWNER")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_EMAIL")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_COUNTRY")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_OWNERPH")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_WORK1")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_CELL1")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_FAX1")
+                            .replace("'", "''"));
+                    values.add(row.getString("JO_COMPANY")
+                            .replace("'", "''"));
+                    values.add(row.isDeleted());
+
+                } catch (Exception e) {
+                    log.info("There is error occurred while parsing job info: {}", e.getLocalizedMessage());
+                }
+
+                DBConnection.addRow(values);
+                if (DBConnection.multiInsert.length() > 10_000_000) {
+                    try {
+                        DBConnection.executeMultiInsert("jobs", columns);
+                    } catch (SQLException e) {
+                        log.info("There is error occurred while inserting data into db from tmjob.dbf : {}", e.getLocalizedMessage());
                     }
                 }
 
-                Job saved = jobRepository.save(job);
-
-                jobCodes.put(rec.getString("JO_JOBNO"), saved.getId().toString());
-
+                jobCodes.put(row.getString("JO_JOBNO"), newId);
             }
-
-        } catch (IOException e) {
-            //e.printStackTrace();
-//        } catch (ParseException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.info("There is error occurred while parsing tmjob.dbf : {}", e.getLocalizedMessage());
+        } finally {
+            try {
+                DBConnection.executeMultiInsert("jobs", columns);
+            } catch (SQLException e) {
+                log.info("There is error occurred while inserting data into db from tmjob.dbf : {}", e.getLocalizedMessage());
+            }
+            DBFUtils.close(reader);
         }
+    }
+
+    private List<String> getJobColumns() {
+        List<String> columns = new ArrayList<>();
+
+        columns.add("id");
+        columns.add("number");
+        columns.add("lot");
+        columns.add("address1");
+        columns.add("address2");
+        columns.add("city");
+        columns.add("state");
+        columns.add("postal");
+        columns.add("lock_box");
+        columns.add("directions");
+        columns.add("notes");
+        columns.add("notes_rtf");
+        columns.add("owner_name");
+        columns.add("email");
+        columns.add("country");
+        columns.add("home_phone");
+        columns.add("work_phone");
+        columns.add("cell_phone");
+        columns.add("fax");
+        columns.add("company");
+        columns.add("is_deleted");
+        return columns;
     }
 }

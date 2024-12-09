@@ -17,7 +17,7 @@ public class MigrationController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/migrate")
     public void migrate() {
-        service.migrate();
+        service.migrate(null);
     }
 
 }

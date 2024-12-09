@@ -1,5 +1,6 @@
 services:
   postgres:
+    hostname: postgres
     image: postgres:latest
     ports:
       - "5432:5432"
@@ -9,15 +10,38 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - database-data:/var/lib/postgresql/data/
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      virtualbossnet:
+#        aliases:
+#          - postgres
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.type == postgres
+#          - node.hostname == postgres
+#          - node.role == worker
+#    cap_add:
+#      - NET_RAW
+#      - NET_ADMIN
+#      - NET_BROADCAST
+#      - NET_BIND_SERVICE
 
-  virtualboss:
-    image: ragaev/virtualboss:0.0.1-SNAPSHOT
-    environment:
-      - DATABASE_URL=jdbc:postgresql://postgres:5432/virtualboss
-    ports:
-      - "8080:8080"
-    restart: on-failure
+#  virtualboss:
+#    hostname: 'virtualboss'
+#    image: ragaev/virtualboss:0.0.1-SNAPSHOT
+#    environment:
+#      - DATABASE_URL=jdbc:postgresql://postgres:5432/virtualboss
+#    ports:
+#      - "8080:8080"
+#    restart: on-failure
+#    networks:
+#      virtualbossnet:
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.type != postgres
+#          - node.role == worker
 
   frontend:
     image: ragaev/frontend:virtualboss
@@ -25,9 +49,20 @@ services:
       - "80:80"
     tty: true
     restart: on-failure
-#    volumes:
-#      - ./nginx-config:/etc/nginx/conf.d
+    volumes:
+      - ./nginx-config.local:/etc/nginx/conf.d
+    networks:
+      virtualbossnet:
+    deploy:
+      placement:
+        constraints:
+          - node.labels.type != postgres
+          - node.role == worker
+
 volumes:
-  database-data:
+  pgdata:
 networks:
-  virtualboss:
+  virtualbossnet:
+#    driver: overlay
+#    driver_opts:
+#      com.docker.network.driver.mtu: 1450

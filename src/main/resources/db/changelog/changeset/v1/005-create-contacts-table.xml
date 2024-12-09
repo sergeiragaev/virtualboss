@@ -19,6 +19,7 @@
             <column name="first_name" type="VARCHAR(255)"/>
             <column name="last_name" type="VARCHAR(255)"/>
             <column name="notes" type="TEXT"/>
+            <column name="notes_rtf" type="TEXT"/>
             <column name="phones" type="VARCHAR(255)"/>
             <column name="profession" type="VARCHAR(255)"/>
             <column name="spouse" type="VARCHAR(255)"/>

@@ -1,7 +1,7 @@
-package net.virtualboss.controller;
+package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
-import net.virtualboss.model.dto.JobDto;
+import net.virtualboss.web.dto.JobDto;
 import net.virtualboss.service.JobService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +25,8 @@ public class JobController {
 
     @GetMapping("/jobdata")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<JobDto[]> jobData(@RequestParam String JobId) {
-        return ResponseEntity.ok(service.findById(JobId));
+    public ResponseEntity<JobDto[]> jobData(@RequestParam(name = "JobId") String jobId) {
+        return ResponseEntity.ok(service.findById(jobId));
     }
 
 }

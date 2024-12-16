@@ -5,9 +5,6 @@ import com.linuxense.javadbf.DBFRow;
 import com.linuxense.javadbf.DBFUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import net.virtualboss.repository.ContactRepository;
-import net.virtualboss.repository.JobRepository;
-import net.virtualboss.repository.TaskRepository;
 import net.virtualboss.util.DBConnection;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +16,10 @@ import java.util.*;
 @RequiredArgsConstructor
 @Log4j2
 public class MigrationService {
-    private final ContactRepository contactRepository;
-    private final TaskRepository taskRepository;
-    private final JobRepository jobRepository;
 
     private final Map<String, String> jobCodes = new HashMap<>();
     private final Map<String, String> contactCodes = new HashMap<>();
+    private final Map<String, String> employeeCodes = new HashMap<>();
     private final Map<Integer, String> taskCodes = new HashMap<>();
     private final Map<String, Integer> pendingTasks = new HashMap<>();
 
@@ -36,7 +31,78 @@ public class MigrationService {
 
         migrateJobs(dataPath);
         migrateContacts(dataPath);
+        migrateEmployees(dataPath);
         migrateTasks(dataPath);
+    }
+
+    private List<String> getEmployeeColumns() {
+        List<String> columns = new ArrayList<>();
+
+        columns.add("id");
+        columns.add("name");
+//        columns.add("email");
+        columns.add("password");
+        columns.add("notes");
+        columns.add("color");
+        columns.add("role");
+
+        columns.add("is_deleted");
+
+        return columns;
+    }
+
+    private void migrateEmployees(String path) {
+        DBFReader reader = null;
+        List<String> columns = getEmployeeColumns();
+        try {
+            reader = new DBFReader(new FileInputStream(path + "/ctemp.dbf"));
+            reader.setMemoFile(new File(path + "/ctemp.fpt"));
+
+            DBFRow row;
+            while ((row = reader.nextRow()) != null) {
+
+                List<Object> values = new ArrayList<>();
+
+                String newId = UUID.randomUUID().toString();
+
+                try {
+                    values.add(newId);
+                    values.add(row.getString("EM_NAME").replace("'", "''"));
+                    values.add(row.getString("EM_PWORD").replace("'", "''"));
+                    values.add(row.getString("EM_NOTES")
+                            .replace("\u0000", "")
+                            .replace("'", "''"));
+                    values.add(row.getString("EM_COLOR"));
+                    values.add(row.getString("EM_RIGHTS"));
+
+                    values.add(row.isDeleted());
+
+                } catch (Exception e) {
+                    log.info("There is error occurred while parsing employees info: {}", e.getLocalizedMessage());
+                }
+
+                employeeCodes.put(row.getString("EM_NAME"), newId);
+
+                DBConnection.addRow(values);
+                if (DBConnection.multiInsert.length() > 10_000_000) {
+                    try {
+                        DBConnection.executeMultiInsert("employees", columns);
+                    } catch (SQLException e) {
+                        log.info("There is error occurred while inserting data into db from ctemp.dbf : {}", e.getLocalizedMessage());
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            log.info("There is error occurred while parsing ctemp.dbf: {}", e.getLocalizedMessage());
+        } finally {
+            try {
+                DBConnection.executeMultiInsert("employees", columns);
+            } catch (SQLException e) {
+                log.info("There is error occurred while inserting data into db from ctemp.dbf : {}", e.getLocalizedMessage());
+            }
+            DBFUtils.close(reader);
+        }
     }
 
     public void migrateTasks(String path) {
@@ -78,6 +144,8 @@ public class MigrationService {
 //                        task.setOrder(rec.getInteger("TA_TASKNO"));
                     values.add(row.getString("TA_STATUS").replace("'", "''"));
                     values.add(row.getString("TA_DAYS"));
+                    values.add(row.getString("TA_ISACT"));
+                    values.add(employeeCodes.get(row.getString("TA_REQUEST")));
 
                     values.add(row.isDeleted());
 
@@ -125,6 +193,8 @@ public class MigrationService {
         columns.add("\"order\"");
         columns.add("status");
         columns.add("duration");
+        columns.add("marked");
+        columns.add("requested_id");
 
         columns.add("is_deleted");
 

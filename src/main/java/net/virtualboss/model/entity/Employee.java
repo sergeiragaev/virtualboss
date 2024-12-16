@@ -1,11 +1,10 @@
 package net.virtualboss.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class Employee {
+public class Employee  implements Serializable {
     @Id
     @GeneratedValue
     private UUID id;
@@ -24,17 +23,22 @@ public class Employee {
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "login_name")
-    private String loginName;
+    @Column(name = "email")
+    private String email;
 
     private String password;
 
     private Integer color;
 
+    @Column(columnDefinition = "TEXT")
+    @ToString.Exclude
+    private String notes;
+
     @Column(name = "is_deleted")
     private boolean isDeleted;
 
     @OneToMany(cascade = CascadeType.DETACH)
+    @JsonIgnore
     private List<Task> tasks = new ArrayList<>();
 
 }

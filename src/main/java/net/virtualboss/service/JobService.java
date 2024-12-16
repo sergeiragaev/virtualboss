@@ -3,7 +3,7 @@ package net.virtualboss.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.mapper.v1.JobMapperV1;
-import net.virtualboss.model.dto.JobDto;
+import net.virtualboss.web.dto.JobDto;
 import net.virtualboss.model.entity.Job;
 import net.virtualboss.repository.JobRepository;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,7 @@
-package net.virtualboss.controller;
+package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
-import net.virtualboss.model.dto.CalendarDto;
+import net.virtualboss.web.dto.CalendarDto;
 import net.virtualboss.service.CalendarService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

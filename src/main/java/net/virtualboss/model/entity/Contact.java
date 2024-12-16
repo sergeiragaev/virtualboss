@@ -3,6 +3,7 @@ package net.virtualboss.model.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "contacts")
 @Data
-public class Contact {
+public class Contact implements Serializable {
     @Id
     @GeneratedValue
     private UUID id;
@@ -20,7 +21,8 @@ public class Contact {
     private String profession;
 
     public String getPerson() {
-        return firstName + " " + lastName;
+        return firstName + " " + lastName +
+                " (" + company + ")";
     }
 
     @Column(name = "first_name")

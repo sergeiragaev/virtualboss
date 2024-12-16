@@ -1,6 +1,6 @@
 package net.virtualboss.mapper.v1;
 
-import net.virtualboss.model.dto.ContactDto;
+import net.virtualboss.web.dto.ContactDto;
 import net.virtualboss.model.entity.Contact;
 import org.mapstruct.*;
 

@@ -1,17 +1,23 @@
 package net.virtualboss.util;
 
+import lombok.extern.log4j.Log4j2;
 import net.virtualboss.config.DbConfig;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
+@Log4j2
 public class DBConnection {
 
     private static Connection connection;
 
     public static StringBuilder multiInsert = new StringBuilder();
+
+    private DBConnection() {
+    }
 
     public static Connection getConnection() {
         if (connection == null) {
@@ -21,7 +27,7 @@ public class DBConnection {
                                 + DbConfig.getDbUser()
                                 + "&password=" + DbConfig.getDbPass());
             } catch (SQLException e) {
-                e.printStackTrace();
+                log.info("There is error while connect to DB: {}", e.getLocalizedMessage());
             }
         }
         return connection;
@@ -35,8 +41,12 @@ public class DBConnection {
         }
         sql.append(") VALUES ");
         sql.append(multiInsert.toString());
-        DBConnection.getConnection().createStatement().execute(sql.toString());
-        multiInsert = new StringBuilder();
+        try (Statement statement = DBConnection.getConnection().createStatement()) {
+            statement.execute(sql.toString());
+            multiInsert = new StringBuilder();
+        } catch (Exception e) {
+            log.info("Error occurred while inserting data: {}", e.getLocalizedMessage());
+        }
     }
 
     public static void addRow(List<Object> values) {
@@ -53,4 +63,5 @@ public class DBConnection {
         }
         multiInsert.append(")");
     }
+
 }

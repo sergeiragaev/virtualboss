@@ -1,4 +1,4 @@
-package net.virtualboss.controller;
+package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
 import net.virtualboss.service.FieldService;
@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -19,7 +20,7 @@ public class MainPageController {
     public String index() {return "index";}
 
     @GetMapping("/fieldcaptions")
-    public ResponseEntity<Map<String, String>[]> fieldCaptions(@RequestParam String fields) {
+    public ResponseEntity<List<Map<String, String>>> fieldCaptions(@RequestParam String fields) {
         return ResponseEntity.ok(fieldService.getFieldCaptions(fields));
     }
 

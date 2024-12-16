@@ -1,4 +1,4 @@
-package net.virtualboss.model.dto;
+package net.virtualboss.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

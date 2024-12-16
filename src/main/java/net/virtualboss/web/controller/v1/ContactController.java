@@ -1,7 +1,7 @@
-package net.virtualboss.controller;
+package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
-import net.virtualboss.model.dto.ContactDto;
+import net.virtualboss.web.dto.ContactDto;
 import net.virtualboss.service.ContactService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

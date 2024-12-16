@@ -1,6 +1,6 @@
 package net.virtualboss.mapper.v1;
 
-import net.virtualboss.model.dto.JobDto;
+import net.virtualboss.web.dto.JobDto;
 import net.virtualboss.model.entity.Job;
 import org.mapstruct.*;
 

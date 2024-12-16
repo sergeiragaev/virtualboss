@@ -3,6 +3,7 @@ package net.virtualboss.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Table(name = "tasks")
 @ToString
-public class Task {
+public class Task  implements Serializable {
 
     @Id
     @GeneratedValue
@@ -29,7 +30,7 @@ public class Task {
     private LocalDate targetStart;
 
     @Column(nullable = false)
-    private short duration;
+    private Short duration;
 
     @Column(nullable = false, name = "target_finish")
     private LocalDate targetFinish;
@@ -68,8 +69,8 @@ public class Task {
     private Contact contact;
 
     @ManyToOne
-    @JoinColumn(name = "employee_id", referencedColumnName = "id")
-    private Employee employee;
+    @JoinColumn(name = "requested_id", referencedColumnName = "id")
+    private Employee requested;
 
     @ManyToOne
     @JoinColumn(name = "job_id", referencedColumnName = "id")

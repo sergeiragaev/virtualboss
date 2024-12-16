@@ -1,4 +1,4 @@
-package net.virtualboss.controller;
+package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
 import net.virtualboss.service.MigrationService;

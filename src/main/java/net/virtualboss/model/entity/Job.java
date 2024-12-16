@@ -3,6 +3,7 @@ package net.virtualboss.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class Job {
+public class Job  implements Serializable {
     @Id
     @GeneratedValue
     private UUID id;

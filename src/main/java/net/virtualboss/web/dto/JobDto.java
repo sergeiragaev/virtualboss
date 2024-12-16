@@ -1,9 +1,13 @@
-package net.virtualboss.model.dto;
+package net.virtualboss.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -86,4 +90,27 @@ public class JobDto {
     @JsonProperty("JobCountry")
     @Builder.Default
     private String country = "";
+
+    public static Map<String, Object> getFieldsMap(JobDto jobDto, boolean useJsonCaption, List<String> fieldList) {
+
+        Map<String, Object> responseMap = new HashMap<>();
+
+        for (Field field : TaskDto.class.getDeclaredFields()) {
+            String captionValue;
+            if (useJsonCaption && field.isAnnotationPresent(JsonProperty.class)) {
+                captionValue = field.getAnnotation(JsonProperty.class).value();
+            } else {
+                captionValue = field.getName();
+            }
+            if (fieldList == null || fieldList.contains(captionValue)) {
+                try {
+                    Object value = field.get(jobDto);
+                    if (value != null) responseMap.put(captionValue, value);
+                } catch (IllegalAccessException e) {
+                    throw new IllegalStateException("Failed to access field: " + field.getName(), e);
+                }
+            }
+        }
+        return responseMap;
+    }
 }

@@ -6,10 +6,26 @@ spring:
     username: ${DATABASE_USER:postgres}
     password: ${DATABASE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      pool-name: HikariCP
+      max-lifetime: 600000
+
+  codec:
+    max-in-memory-size: 1048576
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
+      hibernate:
+        ddl-auto: none
+      show-sql: true
   liquibase:
     change-log: classpath://db/changelog/db.changelog-master.xml
     enabled: true
@@ -25,6 +41,16 @@ spring:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
+
+ # Logging settings
+logging:
+  level:
+      com:
+        zaxxer:
+          hikari:
+            TRACE:
+            HikariConfig:
+              DEBUG
 
 server:
   port: 8080

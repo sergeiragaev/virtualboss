@@ -42,6 +42,17 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="createEmployeesTasksTable" author="Sergei Ragaev">
+        <createTable tableName="employees_tasks">
+            <column name="employee_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tasks_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
     <changeSet id="createTasksFollowsTable" author="Sergei Ragaev">
         <createTable tableName="tasks_follows">
             <column name="follows_id" type="UUID">
@@ -83,6 +94,12 @@
     </changeSet>
     <changeSet id="addFKTasksEmployeesConstraintEmployeeId" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="employee_id" baseTableName="tasks_employees" constraintName="fk_employee_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="contacts" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKEmployeesTasksConstraintTasksId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="employees_tasks" constraintName="fk_tasks_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKEmployeesTasksConstraintEmployeeId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="employee_id" baseTableName="employees_tasks" constraintName="fk_employee_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="contacts" validate="true"/>
     </changeSet>
 
 </databaseChangeLog>

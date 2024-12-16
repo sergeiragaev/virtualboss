@@ -33,7 +33,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="contact_id" type="UUID"/>
-            <column name="employee_id" type="UUID"/>
+            <column name="requested_id" type="UUID"/>
             <column name="is_deleted" type="boolean"/>
         </createTable>
     </changeSet>

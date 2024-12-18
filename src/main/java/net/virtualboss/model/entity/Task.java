@@ -23,6 +23,8 @@ public class Task  implements Serializable {
     @GeneratedValue
     private UUID id;
 
+    private Long number;
+
     @Column(nullable = false)
     private String description;
 

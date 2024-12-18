@@ -8,6 +8,7 @@ import net.virtualboss.web.dto.EmployeeDto;
 import net.virtualboss.model.entity.Employee;
 import net.virtualboss.repository.EmployeeRepository;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
@@ -28,7 +29,16 @@ public class EmployeeService {
         return new EmployeeDto[]{mapper.mapToDto(employee)};
     }
 
+    @Cacheable(value = "employee")
     public List<EmployeeDto> findAll() {
-        return employeeRepository.findAll().stream().map(mapper::mapToDto).toList();
+        return employeeRepository.findAll(
+                Sort.by(Sort.Direction.ASC, "name")
+        ).stream().map(mapper::mapToDto).toList();
+    }
+
+    public Employee findByName(String name) {
+        if (name == null || name.isBlank()) return null;
+        return employeeRepository.findByName(name).orElseThrow(
+                () -> new EntityNotFoundException(MessageFormat.format("Employee with name: {0} not found!", name)));
     }
 }

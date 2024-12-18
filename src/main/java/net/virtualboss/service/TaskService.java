@@ -1,19 +1,27 @@
 package net.virtualboss.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.mapper.v1.TaskMapperV1;
-import net.virtualboss.web.dto.TaskDto;
-import net.virtualboss.web.dto.TaskFilterDto;
+import net.virtualboss.model.entity.Contact;
+import net.virtualboss.model.entity.Job;
+import net.virtualboss.util.BeanUtils;
+import net.virtualboss.web.dto.task.TaskResponse;
+import net.virtualboss.web.dto.task.TaskFilter;
 import net.virtualboss.web.criteria.TaskFilterCriteria;
 import net.virtualboss.model.entity.Task;
 import net.virtualboss.repository.ContactRepository;
 import net.virtualboss.repository.JobRepository;
 import net.virtualboss.repository.TaskRepository;
+import net.virtualboss.web.dto.task.UpsertTaskRequest;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,19 +38,29 @@ public class TaskService {
     private final ContactRepository contactRepository;
     private final TaskMapperV1 taskMapper;
 
-
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     @Cacheable(value = "task", key = "#id")
-    public TaskDto[] findById(String id) {
-        Task task = taskRepository.findById(UUID.fromString(id))
-                .orElseThrow(() -> new EntityNotFoundException(
-                        MessageFormat.format("Task with id: {0} not found", id)));
-        return new TaskDto[]{taskMapper.mapToDto(task)};
+    public TaskResponse findById(String id) {
+        Task task = getTaskById(id);
+        return taskMapper.taskToResponse(task);
     }
 
-    public List<Map<String, Object>> findAll(String fields, TaskFilterDto filter, Integer size, Integer page) {
+    private Task getTaskById(String id) {
+        return taskRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new EntityNotFoundException(
+                        MessageFormat.format("Task with id: {0} not found!", id)));
+    }
+
+    public List<Map<String, Object>> findAll(String fields, TaskFilter filter) {
 
         List<String> fieldList = Arrays.stream(fields.split(",")).toList();
+
+        if (filter.getSize() == null) filter.setSize(Integer.MAX_VALUE);
+        if (filter.getPage() == null) filter.setPage(1);
+        if (filter.getSort() == null) filter.setSort("description,asc");
+        String[] sorts = filter.getSort().split(",");
 
         String status = null;
         boolean isActive = filter.getIsActive() != null && filter.getIsActive();
@@ -57,7 +75,7 @@ public class TaskService {
 
         return taskRepository.findAll(
                         TaskFilterCriteria.builder()
-                                .findString(filter.getFindString())
+                                .findString(filter.getFindString().isBlank() ? null : filter.getFindString())
                                 .status(status)
                                 .marked(filter.getIsMarked())
                                 .targetStartFrom(filterDates.get("targetStartFrom"))
@@ -77,13 +95,17 @@ public class TaskService {
                                                 filter.getCustIds().stream()
                                                         .map(UUID::fromString).toList()))
                                 .build().getSpecification(),
-                        PageRequest.of(page - 1, size))
-                .map(taskMapper::mapToDto).getContent().stream()
-                .map(taskDto -> TaskDto.getFieldsMap(taskDto, true, fieldList))
+                        PageRequest.of(filter.getPage() - 1, filter.getSize(),
+                                Sort.by(
+                                        Sort.Direction.valueOf(sorts[1].toUpperCase()), sorts[0]
+                                )
+                        ))
+                .map(taskMapper::taskToResponse).getContent().stream()
+                .map(taskResponse -> TaskResponse.getFieldsMap(taskResponse, fieldList))
                 .toList();
     }
 
-    private Map<String, LocalDate> setFilterDates(TaskFilterDto filter) {
+    private Map<String, LocalDate> setFilterDates(TaskFilter filter) {
         Map<String, LocalDate> filterDates = new HashMap<>();
 
         if (filter.getIsDateRange() != null) {
@@ -117,9 +139,79 @@ public class TaskService {
     }
 
     @Transactional
-    @CacheEvict(value = "task", key = "#taskDto.id")
-    public TaskDto[] saveTask(TaskDto taskDto) {
-        Task task = taskMapper.mapToEntity(taskDto);
-        return new TaskDto[]{taskMapper.mapToDto(taskRepository.save(task))};
+    @CachePut(value = "task", key = "#id")
+    public TaskResponse saveTask(String id, UpsertTaskRequest request) {
+        Task task = taskMapper.requestToTask(id, request);
+        Task taskFromDb = getTaskById(id);
+        BeanUtils.copyNonNullProperties(task, taskFromDb);
+        return taskMapper.taskToResponse(taskRepository.save(taskFromDb));
+    }
+
+    @Transactional
+    public TaskResponse createTask(UpsertTaskRequest request) {
+        Task task = taskMapper.requestToTask(request);
+        task.setNumber(getNextSequenceValue("tasks_number_seq"));
+        return taskMapper.taskToResponse(taskRepository.save(task));
+    }
+
+    @Transactional
+    @CacheEvict(value = "task", key = "#id")
+    public void deleteTask(String id) {
+        Task task = taskRepository.findById(UUID.fromString(id)).orElseThrow(
+                () -> new EntityNotFoundException(
+                        MessageFormat.format("Task with Id: {0} not found!", id)
+                )
+        );
+        taskRepository.delete(task);
+    }
+
+    public void eraseJobFromTasks(Job job) {
+        taskRepository.findAllByJob(job)
+                .forEach(this::eraseJobFromTask);
+    }
+
+    @CacheEvict(value = "task", key = "#task.id")
+    public void eraseJobFromTask(Task task) {
+        task.setJob(null);
+        taskRepository.save(task);
+    }
+
+    public void reassignTasksContact(Contact contact) {
+        taskRepository.findAllByContact(contact)
+                .forEach(this::updateTasksContactToUnassigned);
+    }
+
+    @CacheEvict(value = "task", key = "#task.id")
+    public void updateTasksContactToUnassigned(Task task) {
+        task.setContact(getContactById(null));
+        taskRepository.save(task);
+    }
+
+    public Contact getContactById(String contactId) {
+        if (contactId == null || contactId.isBlank() || contactId.equals("UNASSIGNED"))
+            return contactRepository.getUnassigned().orElseGet(this::createUnassigned);
+        return contactRepository.findById(UUID.fromString(contactId)).orElseThrow(
+                () -> new EntityNotFoundException(
+                        MessageFormat.format("Contact with id: {0} not found!", contactId)));
+
+    }
+
+    private Contact createUnassigned() {
+        Contact contact = new Contact();
+        contact.setCompany("UNASSIGNED");
+        return contactRepository.save(contact);
+    }
+
+    public Job getJobByNumber(String jobNumber) {
+        if (jobNumber == null || jobNumber.isBlank()) return null;
+        return jobRepository.findByNumberIgnoreCase(jobNumber).orElseThrow(
+                () -> new EntityNotFoundException(
+                        MessageFormat.format("Job with number: {0} not found!", jobNumber)));
+    }
+
+    public Long getNextSequenceValue(String sequenceName) {
+        return (Long) entityManager.createNativeQuery("SELECT NEXTVAL(:sequenceName)")
+                .setParameter("sequenceName", sequenceName)
+                .getSingleResult();
     }
 }

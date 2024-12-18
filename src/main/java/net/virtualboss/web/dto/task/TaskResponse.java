@@ -1,8 +1,10 @@
-package net.virtualboss.web.dto;
+package net.virtualboss.web.dto.task;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
+import net.virtualboss.web.dto.contact.ContactResponse;
+import net.virtualboss.web.dto.job.JobResponse;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -11,9 +13,12 @@ import java.util.*;
 
 @Builder
 @Data
-public class TaskDto implements Serializable {
+public class TaskResponse implements Serializable {
     @JsonProperty("TaskId")
     private UUID id;
+
+    @JsonProperty("TaskNumber")
+    private Long number;
 
     @JsonProperty("TaskDescription")
     private String description;
@@ -23,7 +28,7 @@ public class TaskDto implements Serializable {
 
     @JsonProperty("TaskDuration")
     @Builder.Default
-    private Short duration = 1;
+    private Short duration = 0;
 
     @JsonProperty("TaskTargetFinish")
     private LocalDate targetFinish;
@@ -44,7 +49,7 @@ public class TaskDto implements Serializable {
 
     @JsonProperty("TaskMarked")
     @Builder.Default
-    private Boolean marked = Boolean.FALSE;
+    private String marked = "False";
 
     @JsonProperty("JobNumber")
     @Builder.Default
@@ -73,20 +78,41 @@ public class TaskDto implements Serializable {
     @Builder.Default
     private String follows = "";
 
-    public static Map<String, Object> getFieldsMap(TaskDto taskDto, boolean useJsonCaption, List<String> fieldList) {
+    @JsonProperty("Job")
+    @Builder.Default
+    private JobResponse jobResponse = JobResponse.builder().build();
+
+    @JsonProperty("Contact")
+    @Builder.Default
+    private ContactResponse contactResponse = ContactResponse.builder().build();
+
+    public static Map<String, Object> getFieldsMap(TaskResponse taskResponse, List<String> fieldList) {
 
         Map<String, Object> responseMap = new HashMap<>();
 
-        for (Field field : TaskDto.class.getDeclaredFields()) {
+        for (Field field : taskResponse.getClass().getDeclaredFields()) {
             String captionValue;
-            if (useJsonCaption && field.isAnnotationPresent(JsonProperty.class)) {
+            if (field.isAnnotationPresent(JsonProperty.class)) {
                 captionValue = field.getAnnotation(JsonProperty.class).value();
             } else {
                 captionValue = field.getName();
             }
+
+            if (captionValue.equals("Contact")) {
+                if (taskResponse.contactResponse == null) continue;
+                responseMap.putAll(ContactResponse.getFieldsMap(taskResponse.contactResponse, fieldList));
+                continue;
+            }
+
+            if (captionValue.equals("Job")) {
+                if (taskResponse.jobResponse == null) continue;
+                responseMap.putAll(JobResponse.getFieldsMap(taskResponse.jobResponse, fieldList));
+                continue;
+            }
+
             if (fieldList == null || fieldList.contains(captionValue)) {
                 try {
-                    Object value = field.get(taskDto);
+                    Object value = field.get(taskResponse);
                     if (value != null) responseMap.put(captionValue, value);
                 } catch (IllegalAccessException e) {
                     throw new IllegalStateException("Failed to access field: " + field.getName(), e);

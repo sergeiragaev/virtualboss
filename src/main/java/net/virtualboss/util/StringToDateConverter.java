@@ -10,14 +10,19 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class StringToDateConverter implements Converter<String, LocalDate> {
 
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+    private static final DateTimeFormatter FORMATTER_USA = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+    private static final DateTimeFormatter FORMATTER_ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public LocalDate convert(@Nonnull String source) {
         try {
-            return LocalDate.parse(source, formatter);
+            return LocalDate.parse(source, FORMATTER_USA);
         } catch (Exception e) {
-            return null;
+            try {
+                return LocalDate.parse(source, FORMATTER_ISO);
+            } catch (Exception ex) {
+                return null;
+            }
         }
     }
 }

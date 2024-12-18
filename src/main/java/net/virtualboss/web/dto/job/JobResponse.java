@@ -1,9 +1,10 @@
-package net.virtualboss.web.dto;
+package net.virtualboss.web.dto.job;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class JobDto {
+public class JobResponse implements Serializable {
     @JsonProperty("JobId")
     private UUID id;
 
@@ -91,20 +92,20 @@ public class JobDto {
     @Builder.Default
     private String country = "";
 
-    public static Map<String, Object> getFieldsMap(JobDto jobDto, boolean useJsonCaption, List<String> fieldList) {
+    public static Map<String, Object> getFieldsMap(JobResponse jobResponse, List<String> fieldList) {
 
         Map<String, Object> responseMap = new HashMap<>();
 
-        for (Field field : TaskDto.class.getDeclaredFields()) {
+        for (Field field : jobResponse.getClass().getDeclaredFields()) {
             String captionValue;
-            if (useJsonCaption && field.isAnnotationPresent(JsonProperty.class)) {
+            if (field.isAnnotationPresent(JsonProperty.class)) {
                 captionValue = field.getAnnotation(JsonProperty.class).value();
             } else {
                 captionValue = field.getName();
             }
             if (fieldList == null || fieldList.contains(captionValue)) {
                 try {
-                    Object value = field.get(jobDto);
+                    Object value = field.get(jobResponse);
                     if (value != null) responseMap.put(captionValue, value);
                 } catch (IllegalAccessException e) {
                     throw new IllegalStateException("Failed to access field: " + field.getName(), e);

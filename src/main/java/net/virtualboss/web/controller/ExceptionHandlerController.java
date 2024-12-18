@@ -31,7 +31,7 @@ public class ExceptionHandlerController {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> notFound(EntityNotFoundException ex) {
-        log.error("There is error while trying to get entity", ex);
+        log.error("There is error occurred while trying to get entity", ex);
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(ex.getLocalizedMessage(), new ArrayList<>()));
     }
@@ -62,6 +62,7 @@ public class ExceptionHandlerController {
 
     @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> alreadyExistsHandler(AlreadyExistsException ex) {
+        log.error("There is error occurred while trying to create new/update entity", ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(ex.getLocalizedMessage(), new ArrayList<>()));
     }

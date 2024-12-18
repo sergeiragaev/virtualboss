@@ -15,16 +15,14 @@ import java.util.*;
 public class FieldService {
     private final FieldRepository fieldRepository;
 
-    @Cacheable(value = "field", key = "#fieldList")
-    public List<Map<String, String>> getFieldCaptions(String fieldList) {
+    @Cacheable(value = "fieldCaptions", key = "#fieldList")
+    public Map<String, String> getFieldCaptions(String fieldList) {
         String[] fields = fieldList.split(",");
         List<Field> fieldCaptions = fieldRepository.findAllByNameIn(Arrays.stream(fields).toList());
         Map<String, String> captions = new HashMap<>();
         for (Field field : fieldCaptions) {
             captions.put(field.getName(), field.getAlias());
         }
-        List<Map<String, String>>  result = new ArrayList<>();
-        result.add(captions);
-        return result;
+        return captions;
     }
 }

@@ -34,15 +34,21 @@ public class CalendarService {
                     .start(task.getTargetStart())
                     .end(task.getTargetFinish())
                     .title(task.getDescription())
-                    .job(task.getJob().getNumber())
+                    .job(getJobNumber(task))
                     .color("#FF0000")
                     .person(task.getContact().getPerson())
                     .duration(String.valueOf(task.getDuration()))
                     .taskNotes(task.getNotes())
-                    .url("TaskDetail?TaskId=" + task.getId())
+                    .url("api/v1/task/" + task.getId())
+                    .taskId(task.getId().toString())
                     .build();
             calendarDtoList.add(calendarDto);
         }
         return calendarDtoList;
+    }
+
+    private String getJobNumber(Task task) {
+        if (task.getJob() == null) return "";
+        return task.getJob().getNumber();
     }
 }

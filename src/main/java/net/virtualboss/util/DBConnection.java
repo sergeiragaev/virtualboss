@@ -64,4 +64,12 @@ public class DBConnection {
         multiInsert.append(")");
     }
 
+    public static void updateTasksNumberSequence(Integer maxNumber) throws SQLException {
+        try (Statement statement = DBConnection.getConnection().createStatement()) {
+            statement.execute("ALTER SEQUENCE tasks_number_seq restart with " + maxNumber + " ;");
+        } catch (Exception e) {
+            log.info("Error occurred while updating sequence of tasks table: {}", e.getLocalizedMessage());
+        }
+    }
+
 }

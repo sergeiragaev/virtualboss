@@ -40,7 +40,6 @@ public class MigrationService {
 
         columns.add("id");
         columns.add("name");
-//        columns.add("email");
         columns.add("password");
         columns.add("notes");
         columns.add("color");
@@ -88,6 +87,7 @@ public class MigrationService {
                     try {
                         DBConnection.executeMultiInsert("employees", columns);
                     } catch (SQLException e) {
+                        DBConnection.multiInsert = new StringBuilder();
                         log.info("There is error occurred while inserting data into db from ctemp.dbf : {}", e.getLocalizedMessage());
                     }
                 }
@@ -99,6 +99,7 @@ public class MigrationService {
             try {
                 DBConnection.executeMultiInsert("employees", columns);
             } catch (SQLException e) {
+                DBConnection.multiInsert = new StringBuilder();
                 log.info("There is error occurred while inserting data into db from ctemp.dbf : {}", e.getLocalizedMessage());
             }
             DBFUtils.close(reader);
@@ -122,6 +123,7 @@ public class MigrationService {
 
                 try {
                     values.add(newId);
+                    values.add(row.getInt("TA_TASKNO"));
                     values.add(jobCodes.get(row.getString("TA_JOBNO")));
                     values.add(setDescription(row.getString("TA_TASK")).replace("'", "''"));
                     values.add(row.getString("TA_DESC")
@@ -160,6 +162,7 @@ public class MigrationService {
                     try {
                         DBConnection.executeMultiInsert("tasks", columns);
                     } catch (SQLException e) {
+                        DBConnection.multiInsert = new StringBuilder();
                         log.info("There is error occurred while inserting data into db from tmtask.dbf : {}", e.getLocalizedMessage());
                     }
                 }
@@ -171,7 +174,10 @@ public class MigrationService {
         } finally {
             try {
                 DBConnection.executeMultiInsert("tasks", columns);
+                DBConnection.updateTasksNumberSequence(taskCodes.keySet().stream()
+                        .max(Integer::compareTo).get() + 1);
             } catch (SQLException e) {
+                DBConnection.multiInsert = new StringBuilder();
                 log.info("There is error occurred while inserting data into db from tmtask.dbf : {}", e.getLocalizedMessage());
             }
             DBFUtils.close(reader);
@@ -182,6 +188,7 @@ public class MigrationService {
         List<String> columns = new ArrayList<>();
 
         columns.add("id");
+        columns.add("number");
         columns.add("job_id");
         columns.add("description");
         columns.add("notes");
@@ -255,6 +262,7 @@ public class MigrationService {
                     try {
                         DBConnection.executeMultiInsert("contacts", columns);
                     } catch (SQLException e) {
+                        DBConnection.multiInsert = new StringBuilder();
                         log.info("There is error occurred while inserting data into db from ctcust.dbf : {}", e.getLocalizedMessage());
                     }
                 }
@@ -266,6 +274,7 @@ public class MigrationService {
             try {
                 DBConnection.executeMultiInsert("contacts", columns);
             } catch (SQLException e) {
+                DBConnection.multiInsert = new StringBuilder();
                 log.info("There is error occurred while inserting data into db from ctcust.dbf : {}", e.getLocalizedMessage());
             }
             DBFUtils.close(reader);
@@ -365,6 +374,7 @@ public class MigrationService {
                     try {
                         DBConnection.executeMultiInsert("jobs", columns);
                     } catch (SQLException e) {
+                        DBConnection.multiInsert = new StringBuilder();
                         log.info("There is error occurred while inserting data into db from tmjob.dbf : {}", e.getLocalizedMessage());
                     }
                 }
@@ -377,6 +387,7 @@ public class MigrationService {
             try {
                 DBConnection.executeMultiInsert("jobs", columns);
             } catch (SQLException e) {
+                DBConnection.multiInsert = new StringBuilder();
                 log.info("There is error occurred while inserting data into db from tmjob.dbf : {}", e.getLocalizedMessage());
             }
             DBFUtils.close(reader);

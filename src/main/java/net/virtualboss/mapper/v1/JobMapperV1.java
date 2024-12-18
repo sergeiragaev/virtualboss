@@ -1,18 +1,23 @@
 package net.virtualboss.mapper.v1;
 
-import net.virtualboss.web.dto.JobDto;
+import net.virtualboss.web.dto.job.JobResponse;
 import net.virtualboss.model.entity.Job;
+import net.virtualboss.web.dto.job.UpsertJobRequest;
 import org.mapstruct.*;
 
-import java.util.List;
+import java.util.UUID;
 
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE,
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 public interface JobMapperV1 {
 
-    Job mapToJob(JobDto jobDto);
+    Job requestToJob(UpsertJobRequest request);
 
-    JobDto mapToDto(Job job);
+    default Job requestToJob(String id, UpsertJobRequest request) {
+        Job job = requestToJob(request);
+        job.setId(UUID.fromString(id));
+        return job;
+    }
 
-    List<JobDto> map(List<Job> jobs);
+    JobResponse jobToResponse(Job job);
 }

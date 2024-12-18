@@ -1,11 +1,11 @@
-package net.virtualboss.web.dto;
+package net.virtualboss.web.dto.contact;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class ContactDto {
+public class ContactResponse implements Serializable {
     @JsonProperty("ContactId")
     private UUID id;
 
@@ -26,6 +26,8 @@ public class ContactDto {
     private String profession = "";
 
     @JsonProperty("ContactPerson")
+    private String person;
+
     public String getPerson() {
         return firstName + " " + lastName;
     }
@@ -56,11 +58,11 @@ public class ContactDto {
 
     @JsonProperty("ContactWorkersCompDate")
     @Builder.Default
-    private LocalDate workersCompDate = LocalDate.MIN;
+    private String workersCompDate = "";
 
     @JsonProperty("ContactInsuranceDate")
     @Builder.Default
-    private LocalDate insuranceDate = LocalDate.MIN;
+    private String insuranceDate = "";
 
     @JsonProperty("ContactComments")
     @Builder.Default
@@ -83,20 +85,27 @@ public class ContactDto {
     private String phones = "";
 
 
-    public static Map<String, Object> getFieldsMap(ContactDto contactDto, boolean useJsonCaption, List<String> fieldList) {
+    public static Map<String, Object> getFieldsMap(ContactResponse contactResponse, List<String> fieldList) {
 
         Map<String, Object> responseMap = new HashMap<>();
 
-        for (Field field : TaskDto.class.getDeclaredFields()) {
+        for (Field field : contactResponse.getClass().getDeclaredFields()) {
             String captionValue;
-            if (useJsonCaption && field.isAnnotationPresent(JsonProperty.class)) {
+            if (field.isAnnotationPresent(JsonProperty.class)) {
                 captionValue = field.getAnnotation(JsonProperty.class).value();
             } else {
                 captionValue = field.getName();
             }
+
+            if (captionValue.equals("ContactPerson") && fieldList.contains(captionValue)) {
+                Object value = contactResponse.getPerson();
+                if (value != null) responseMap.put(captionValue, value);
+                continue;
+            }
+
             if (fieldList == null || fieldList.contains(captionValue)) {
                 try {
-                    Object value = field.get(contactDto);
+                    Object value = field.get(contactResponse);
                     if (value != null) responseMap.put(captionValue, value);
                 } catch (IllegalAccessException e) {
                     throw new IllegalStateException("Failed to access field: " + field.getName(), e);

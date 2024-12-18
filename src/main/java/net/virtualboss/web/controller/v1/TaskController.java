@@ -2,9 +2,11 @@ package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
 import net.virtualboss.web.dto.GroupDto;
-import net.virtualboss.web.dto.TaskDto;
-import net.virtualboss.web.dto.TaskFilterDto;
+import net.virtualboss.web.dto.task.TaskResponse;
+import net.virtualboss.web.dto.task.TaskFilter;
 import net.virtualboss.service.TaskService;
+import net.virtualboss.web.dto.task.UpsertTaskRequest;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,16 +17,15 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "task")
 public class TaskController {
     private final TaskService service;
 
     @GetMapping("/task")
     public ResponseEntity<List<Map<String, Object>>> getTasks(
-            TaskFilterDto filter,
-            @RequestParam(required = false) String fields,
-            @RequestParam(required = false, defaultValue = "20") Integer size,
-            @RequestParam(required = false, defaultValue = "1") Integer page) {
-        return ResponseEntity.ok(service.findAll(fields, filter, size, page));
+            TaskFilter filter,
+            @RequestParam(required = false) String fields) {
+        return ResponseEntity.ok(service.findAll(fields, filter));
     }
 
     @GetMapping("/taskdata")
@@ -32,16 +33,28 @@ public class TaskController {
     public void taskData(@RequestParam boolean logincheck) {
     }
 
-    @GetMapping("/task/{taskId}")
-    public ResponseEntity<TaskDto[]> taskDetails(@PathVariable String taskId) {
-        return ResponseEntity.ok(service.findById(taskId));
+    @GetMapping("/task/{id}")
+    public ResponseEntity<TaskResponse> taskDetails(@PathVariable String id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
-    @PutMapping("/task")
-    public ResponseEntity<TaskDto[]> saveTask(TaskDto taskDto) {
-        return ResponseEntity.ok(service.saveTask(taskDto));
+    @PutMapping("/task/{id}")
+    public ResponseEntity<TaskResponse> saveTask(
+            @PathVariable String id,
+            UpsertTaskRequest request) {
+        return ResponseEntity.ok(service.saveTask(id, request));
     }
 
+    @PostMapping("/task")
+    public ResponseEntity<TaskResponse> createTask(UpsertTaskRequest request) {
+        return ResponseEntity.ok(service.createTask(request));
+    }
+
+    @DeleteMapping("/task/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteTask(@PathVariable String id) {
+        service.deleteTask(id);
+    }
 
     @GetMapping("/TaskGroupData")
     public ResponseEntity<GroupDto[]> groupDetails() {

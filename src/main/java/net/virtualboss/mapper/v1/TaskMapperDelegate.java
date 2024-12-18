@@ -1,44 +1,32 @@
 package net.virtualboss.mapper.v1;
 
-import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.model.entity.Task;
-import net.virtualboss.repository.ContactRepository;
-import net.virtualboss.repository.EmployeeRepository;
-import net.virtualboss.repository.JobRepository;
-import net.virtualboss.web.dto.TaskDto;
+import net.virtualboss.service.EmployeeService;
+import net.virtualboss.service.TaskService;
+import net.virtualboss.web.dto.task.UpsertTaskRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.UUID;
 
 public abstract class TaskMapperDelegate implements TaskMapperV1 {
     @Autowired
-    private EmployeeRepository employeeRepository;
+    private EmployeeService employeeService;
     @Autowired
-    private JobRepository jobRepository;
-    @Autowired
-    private ContactRepository contactRepository;
+    private TaskService taskService;
+
     @Override
-    public Task mapToEntity(TaskDto taskDto) {
+    public Task requestToTask(UpsertTaskRequest request) {
         return Task.builder()
-                .id(taskDto.getId())
-                .status(taskDto.getStatus())
-                .contact(contactRepository.findById(UUID.fromString(taskDto.getContactId())).orElseThrow(
-                        () -> new EntityNotFoundException("Contact with such id not found: " + taskDto.getContactId())
-                ))
-                .job(jobRepository.findByNumber(taskDto.getJobNumber()).orElseThrow(
-                        () -> new EntityNotFoundException("Job with such number not found: " + taskDto.getJobNumber())
-                ))
-                .requested(employeeRepository.findByName(taskDto.getRequested()).orElseThrow(
-                        () -> new EntityNotFoundException("Employee with such name not found: " + taskDto.getRequested())
-                ))
-                .description(taskDto.getDescription())
-                .notes(taskDto.getNotes())
-                .order(taskDto.getOrder())
-                .duration(taskDto.getDuration())
-                .targetStart(taskDto.getTargetStart())
-                .targetFinish(taskDto.getTargetFinish())
-                .actualFinish(taskDto.getActualFinish())
-                .marked(taskDto.getMarked())
+                .status(request.getStatus())
+                .contact(taskService.getContactById(request.getContactId()))
+                .job(taskService.getJobByNumber(request.getJobNumber()))
+                .requested(employeeService.findByName(request.getRequested()))
+                .description(request.getDescription())
+                .notes(request.getNotes())
+                .order(request.getOrder())
+                .duration(request.getDuration())
+                .targetStart(request.getTargetStart())
+                .targetFinish(request.getTargetFinish())
+                .actualFinish(request.getActualFinish())
+                .marked(request.getMarked())
                 .build();
     }
 }

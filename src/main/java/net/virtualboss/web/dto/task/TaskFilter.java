@@ -1,28 +1,22 @@
-package net.virtualboss.web.dto;
+package net.virtualboss.web.dto.task;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
+import net.virtualboss.web.dto.filter.Filter;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Getter
 @Setter
-public class TaskFilterDto {
+public class TaskFilter extends Filter {
     @JsonProperty("IsActive")
     private Boolean isActive;
     @JsonProperty("IsDone")
     private Boolean isDone;
     @JsonProperty("IsMarked")
     private Boolean isMarked;
-
-    @JsonProperty("FindString")
-    private String findString;
-    @JsonProperty("MatchType")
-    private Integer matchType;
-    @JsonProperty("Field")
-    private String field;
 
     @JsonProperty("TaskGroup")
     private String taskGroup;

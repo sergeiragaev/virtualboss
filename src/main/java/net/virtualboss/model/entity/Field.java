@@ -4,16 +4,16 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.Serializable;
+import java.util.function.Supplier;
 
 @Entity
 @Table(name = "fields")
 @Getter
 @Setter
-public class Field  implements Serializable {
+public class Field implements Supplier<Field> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @Column(nullable = false)
     private String name;
@@ -25,9 +25,13 @@ public class Field  implements Serializable {
     private String alias;
 
     @Column(nullable = false)
-    private boolean enabled = true;
+    private Boolean enabled = true;
 
     @Column(nullable = false, name = "\"order\"")
-    private short order;
+    private Short order;
 
+    @Override
+    public Field get() {
+        return this;
+    }
 }

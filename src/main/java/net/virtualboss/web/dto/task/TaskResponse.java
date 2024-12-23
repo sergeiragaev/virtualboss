@@ -78,6 +78,45 @@ public class TaskResponse implements Serializable {
     @Builder.Default
     private String follows = "";
 
+    @JsonProperty("TaskCustomField1")
+    @Builder.Default
+    private String customField1 = "";
+    @JsonProperty("TaskCustomField2")
+    @Builder.Default
+    private String customField2 = "";
+    @JsonProperty("TaskCustomField3")
+    @Builder.Default
+    private String customField3 = "";
+    @JsonProperty("TaskCustomField4")
+    @Builder.Default
+    private String customField4 = "";
+    @JsonProperty("TaskCustomField5")
+    @Builder.Default
+    private String customField5 = "";
+    @JsonProperty("TaskCustomField6")
+    @Builder.Default
+    private String customField6 = "";
+
+    @JsonProperty("TaskCustomList1")
+    @Builder.Default
+    private String customList1 = "";
+    @JsonProperty("TaskCustomList2")
+    @Builder.Default
+    private String customList2 = "";
+    @JsonProperty("TaskCustomList3")
+    @Builder.Default
+    private String customList3 = "";
+    @JsonProperty("TaskCustomList4")
+    @Builder.Default
+    private String customList4 = "";
+    @JsonProperty("TaskCustomList5")
+    @Builder.Default
+    private String customList5 = "";
+    @JsonProperty("TaskCustomList6")
+    @Builder.Default
+    private String customList6 = "";
+
+
     @JsonProperty("Job")
     @Builder.Default
     private JobResponse jobResponse = JobResponse.builder().build();

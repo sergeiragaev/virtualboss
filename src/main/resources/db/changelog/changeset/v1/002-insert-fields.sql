@@ -47,3 +47,5 @@ insert into fields (id, name, default_value, alias, enabled, "order") values (44
 insert into fields (id, name, default_value, alias, enabled, "order") values (45, 'ContactFax', 'Fax #', 'Fax #', true, 1);
 insert into fields (id, name, default_value, alias, enabled, "order") values (46, 'ContactEmail', 'EMail Address', 'EMail Address', true, 1);
 insert into fields (id, name, default_value, alias, enabled, "order") values (47, 'ContactPhones', 'Contact phone #s', 'Contact phone #s', true, 1);
+
+ALTER SEQUENCE fields_id_seq restart with 48 ;

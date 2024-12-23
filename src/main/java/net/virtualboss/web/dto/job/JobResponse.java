@@ -92,6 +92,44 @@ public class JobResponse implements Serializable {
     @Builder.Default
     private String country = "";
 
+    @JsonProperty("JobCustomField1")
+    @Builder.Default
+    private String customField1 = "";
+    @JsonProperty("JobCustomField2")
+    @Builder.Default
+    private String customField2 = "";
+    @JsonProperty("JobCustomField3")
+    @Builder.Default
+    private String customField3 = "";
+    @JsonProperty("JobCustomField4")
+    @Builder.Default
+    private String customField4 = "";
+    @JsonProperty("JobCustomField5")
+    @Builder.Default
+    private String customField5 = "";
+    @JsonProperty("JobCustomField6")
+    @Builder.Default
+    private String customField6 = "";
+
+    @JsonProperty("JobCustomList1")
+    @Builder.Default
+    private String customList1 = "";
+    @JsonProperty("JobCustomList2")
+    @Builder.Default
+    private String customList2 = "";
+    @JsonProperty("JobCustomList3")
+    @Builder.Default
+    private String customList3 = "";
+    @JsonProperty("JobCustomList4")
+    @Builder.Default
+    private String customList4 = "";
+    @JsonProperty("JobCustomList5")
+    @Builder.Default
+    private String customList5 = "";
+    @JsonProperty("JobCustomList6")
+    @Builder.Default
+    private String customList6 = "";
+    
     public static Map<String, Object> getFieldsMap(JobResponse jobResponse, List<String> fieldList) {
 
         Map<String, Object> responseMap = new HashMap<>();

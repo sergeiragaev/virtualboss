@@ -2,8 +2,11 @@ package net.virtualboss.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import net.virtualboss.mapper.v1.FieldMapperV1;
 import net.virtualboss.model.entity.Field;
 import net.virtualboss.repository.FieldRepository;
+import net.virtualboss.util.BeanUtils;
+import net.virtualboss.web.dto.FieldDto;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +17,7 @@ import java.util.*;
 @Log4j2
 public class FieldService {
     private final FieldRepository fieldRepository;
+    private final FieldMapperV1 fieldMapper;
 
     @Cacheable(value = "fieldCaptions", key = "#fieldList")
     public Map<String, String> getFieldCaptions(String fieldList) {
@@ -24,5 +28,17 @@ public class FieldService {
             captions.put(field.getName(), field.getAlias());
         }
         return captions;
+    }
+
+    public void updateField(FieldDto fieldDto) {
+
+        Field field = fieldMapper.mapToField(fieldDto);
+
+        Field fieldFromDb = fieldRepository.findByName(fieldDto.getName())
+                .orElseGet(field);
+
+        BeanUtils.copyNonNullProperties(field, fieldFromDb);
+
+        fieldRepository.save(fieldFromDb);
     }
 }

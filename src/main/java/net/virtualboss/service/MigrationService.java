@@ -6,6 +6,7 @@ import com.linuxense.javadbf.DBFUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.util.DBConnection;
+import net.virtualboss.web.dto.FieldDto;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -16,6 +17,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @Log4j2
 public class MigrationService {
+    private final FieldService fieldService;
 
     private final Map<String, String> jobCodes = new HashMap<>();
     private final Map<String, String> contactCodes = new HashMap<>();
@@ -29,10 +31,43 @@ public class MigrationService {
             dataPath = "db/sampleJobs/SampleCompanyInc";
         }
 
+        migrateFields(dataPath);
         migrateJobs(dataPath);
         migrateContacts(dataPath);
         migrateEmployees(dataPath);
         migrateTasks(dataPath);
+    }
+
+    private void migrateFields(String path) {
+        DBFReader reader = null;
+        try {
+            reader = new DBFReader(new FileInputStream(path + "/ctfields.dbf"));
+
+            DBFRow row;
+            while ((row = reader.nextRow()) != null) {
+
+                try {
+                    FieldDto fieldDto = FieldDto.builder()
+                            .name(row.getString("FI_VARNAME"))
+                            .defaultValue(row.getString("FI_NAME"))
+                            .alias(row.getString("FI_ALIAS"))
+                            .enabled(row.getBoolean("FI_RVBLIST"))
+                            .order((short) row.getInt("FI_RVBORDR"))
+                            .build();
+
+                    fieldService.updateField(fieldDto);
+
+                } catch (Exception e) {
+                    log.info("There is error occurred while parsing fields info: {}", e.getLocalizedMessage());
+                }
+
+            }
+
+        } catch (Exception e) {
+            log.info("There is error occurred while parsing ctfields.dbf: {}", e.getLocalizedMessage());
+        } finally {
+            DBFUtils.close(reader);
+        }
     }
 
     private List<String> getEmployeeColumns() {
@@ -123,6 +158,10 @@ public class MigrationService {
 
                 try {
                     values.add(newId);
+
+                    values.add(row.getDate("TA_CREATED").toString());
+                    values.add(row.getDate("TA_LASTMOD").toString());
+
                     values.add(row.getInt("TA_TASKNO"));
                     values.add(jobCodes.get(row.getString("TA_JOBNO")));
                     values.add(setDescription(row.getString("TA_TASK")).replace("'", "''"));
@@ -148,6 +187,20 @@ public class MigrationService {
                     values.add(row.getString("TA_DAYS"));
                     values.add(row.getString("TA_ISACT"));
                     values.add(employeeCodes.get(row.getString("TA_REQUEST")));
+
+                    values.add(row.getString("TA_CUSTF1").replace("'", "''"));
+                    values.add(row.getString("TA_CUSTF2").replace("'", "''"));
+                    values.add(row.getString("TA_CUSTF3").replace("'", "''"));
+                    values.add(row.getString("TA_CUSTF4").replace("'", "''"));
+                    values.add(row.getString("TA_CUSTF5").replace("'", "''"));
+                    values.add(row.getString("TA_CUSTF6").replace("'", "''"));
+
+                    values.add(row.getString("TA_CUSTL1").replace("'", "''"));
+                    values.add(row.getString("TA_CUSTL2").replace("'", "''"));
+                    values.add(row.getString("TA_CUSTL3").replace("'", "''"));
+                    values.add(row.getString("TA_CUSTL4").replace("'", "''"));
+                    values.add(row.getString("TA_CUSTL5").replace("'", "''"));
+                    values.add(row.getString("TA_CUSTL6").replace("'", "''"));
 
                     values.add(row.isDeleted());
 
@@ -188,6 +241,10 @@ public class MigrationService {
         List<String> columns = new ArrayList<>();
 
         columns.add("id");
+
+        columns.add("created_time");
+        columns.add("modified_time");
+
         columns.add("number");
         columns.add("job_id");
         columns.add("description");
@@ -202,6 +259,19 @@ public class MigrationService {
         columns.add("duration");
         columns.add("marked");
         columns.add("requested_id");
+
+        columns.add("custom_field1");
+        columns.add("custom_field2");
+        columns.add("custom_field3");
+        columns.add("custom_field4");
+        columns.add("custom_field5");
+        columns.add("custom_field6");
+        columns.add("custom_list1");
+        columns.add("custom_list2");
+        columns.add("custom_list3");
+        columns.add("custom_list4");
+        columns.add("custom_list5");
+        columns.add("custom_list6");
 
         columns.add("is_deleted");
 
@@ -231,6 +301,9 @@ public class MigrationService {
                 try {
                     values.add(newId);
 
+                    values.add(row.getDate("CU_ENTERED").toString());
+                    values.add(row.getDate("CU_LASTMOD").toString());
+
                     values.add(row.getString("CU_NAME").replace("'", "''"));
                     values.add(row.getString("CU_PROFESS").replace("'", "''"));
                     values.add(row.getString("CU_LAST").replace("'", "''"));
@@ -252,6 +325,21 @@ public class MigrationService {
                     values.add(
                             row.getDate("CU_INSDAT") == null ? null :
                                     row.getDate("CU_INSDAT").toString());
+
+                    values.add(row.getString("CU_CUSTF1").replace("'", "''"));
+                    values.add(row.getString("CU_CUSTF2").replace("'", "''"));
+                    values.add(row.getString("CU_CUSTF3").replace("'", "''"));
+                    values.add(row.getString("CU_CUSTF4").replace("'", "''"));
+                    values.add(row.getString("CU_CUSTF5").replace("'", "''"));
+                    values.add(row.getString("CU_CUSTF6").replace("'", "''"));
+
+                    values.add(row.getString("CU_CUSTL1").replace("'", "''"));
+                    values.add(row.getString("CU_CUSTL2").replace("'", "''"));
+                    values.add(row.getString("CU_CUSTL3").replace("'", "''"));
+                    values.add(row.getString("CU_CUSTL4").replace("'", "''"));
+                    values.add(row.getString("CU_CUSTL5").replace("'", "''"));
+                    values.add(row.getString("CU_CUSTL6").replace("'", "''"));
+
                     values.add(row.isDeleted());
 
                 } catch (Exception e) {
@@ -284,6 +372,10 @@ public class MigrationService {
     private List<String> getContactColumns() {
         List<String> columns = new ArrayList<>();
         columns.add("id");
+
+        columns.add("created_time");
+        columns.add("modified_time");
+
         columns.add("company");
         columns.add("profession");
         columns.add("last_name");
@@ -299,6 +391,20 @@ public class MigrationService {
         columns.add("fax");
         columns.add("workers_comp_date");
         columns.add("insurance_date");
+
+        columns.add("custom_field1");
+        columns.add("custom_field2");
+        columns.add("custom_field3");
+        columns.add("custom_field4");
+        columns.add("custom_field5");
+        columns.add("custom_field6");
+        columns.add("custom_list1");
+        columns.add("custom_list2");
+        columns.add("custom_list3");
+        columns.add("custom_list4");
+        columns.add("custom_list5");
+        columns.add("custom_list6");
+
         columns.add("is_deleted");
         return columns;
     }
@@ -321,6 +427,10 @@ public class MigrationService {
 
                 try {
                     values.add(newId);
+
+                    values.add(row.getDate("JO_CREATED").toString());
+                    values.add(row.getDate("JO_LASTMOD").toString());
+
                     values.add(row.getString("JO_JOBNO")
                             .replace("'", "''"));
                     values.add(row.getString("JO_LOTNO")
@@ -363,6 +473,21 @@ public class MigrationService {
                             .replace("'", "''"));
                     values.add(row.getString("JO_COMPANY")
                             .replace("'", "''"));
+
+                    values.add(row.getString("JO_CUSTF1").replace("'", "''"));
+                    values.add(row.getString("JO_CUSTF2").replace("'", "''"));
+                    values.add(row.getString("JO_CUSTF3").replace("'", "''"));
+                    values.add(row.getString("JO_CUSTF4").replace("'", "''"));
+                    values.add(row.getString("JO_CUSTF5").replace("'", "''"));
+                    values.add(row.getString("JO_CUSTF6").replace("'", "''"));
+
+                    values.add(row.getString("JO_CUSTL1").replace("'", "''"));
+                    values.add(row.getString("JO_CUSTL2").replace("'", "''"));
+                    values.add(row.getString("JO_CUSTL3").replace("'", "''"));
+                    values.add(row.getString("JO_CUSTL4").replace("'", "''"));
+                    values.add(row.getString("JO_CUSTL5").replace("'", "''"));
+                    values.add(row.getString("JO_CUSTL6").replace("'", "''"));
+
                     values.add(row.isDeleted());
 
                 } catch (Exception e) {
@@ -398,6 +523,10 @@ public class MigrationService {
         List<String> columns = new ArrayList<>();
 
         columns.add("id");
+
+        columns.add("created_time");
+        columns.add("modified_time");
+
         columns.add("number");
         columns.add("lot");
         columns.add("address1");
@@ -417,6 +546,20 @@ public class MigrationService {
         columns.add("cell_phone");
         columns.add("fax");
         columns.add("company");
+
+        columns.add("custom_field1");
+        columns.add("custom_field2");
+        columns.add("custom_field3");
+        columns.add("custom_field4");
+        columns.add("custom_field5");
+        columns.add("custom_field6");
+        columns.add("custom_list1");
+        columns.add("custom_list2");
+        columns.add("custom_list3");
+        columns.add("custom_list4");
+        columns.add("custom_list5");
+        columns.add("custom_list6");
+
         columns.add("is_deleted");
         return columns;
     }

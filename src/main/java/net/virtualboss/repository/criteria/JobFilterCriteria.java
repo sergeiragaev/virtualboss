@@ -1,9 +1,9 @@
-package net.virtualboss.web.criteria;
+package net.virtualboss.repository.criteria;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import net.virtualboss.model.entity.Contact;
+import net.virtualboss.model.entity.Job;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.lang.reflect.Field;
@@ -14,19 +14,18 @@ import java.util.Objects;
 @Getter
 @AllArgsConstructor
 @Builder
-public class ContactFilterCriteria {
+public class JobFilterCriteria {
 
     private String findString;
-//    private Boolean showUnassigned;
 
-    public Specification<Contact> getSpecification() {
+    public Specification<Job> getSpecification() {
         return getSpecification(this);
     }
 
-    private Specification<Contact> getSpecification(ContactFilterCriteria criteria) {
+    private Specification<Job> getSpecification(JobFilterCriteria criteria) {
         Map<String, Object> fields = new HashMap<>();
 
-        for (Field field : ContactFilterCriteria.class.getDeclaredFields()) {
+        for (Field field : JobFilterCriteria.class.getDeclaredFields()) {
             try {
                 fields.put(field.getName(), field.get(criteria));
             } catch (IllegalAccessException e) {
@@ -36,14 +35,14 @@ public class ContactFilterCriteria {
 
         return Specification.allOf(
                 fields.keySet().stream()
-                        .map(fieldName -> ContactFilterCriteria
+                        .map(fieldName -> JobFilterCriteria
                                 .getSpecification(fieldName, fields))
                         .filter(Objects::nonNull)
                         .toList()
         );
     }
 
-    private static Specification<Contact> getSpecification(
+    private static Specification<Job> getSpecification(
             String fieldName, Map<String, Object> fields) {
         Object fieldValue = fields.get(fieldName);
         if (fieldValue == null) {
@@ -52,20 +51,14 @@ public class ContactFilterCriteria {
         return switch (fieldName) {
             case "findString" -> (root, query, cb) ->
                     cb.or(
-                            cb.like(cb.lower(root.get("profession")), "%" + fieldValue.toString().toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("firstName")), "%" + fieldValue.toString().toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("lastName")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                            cb.like(cb.lower(root.get("number")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                            cb.like(cb.lower(root.get("subdivision")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                            cb.like(cb.lower(root.get("lot")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                            cb.like(cb.lower(root.get("directions")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("notes")), "%" + fieldValue.toString().toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("comments")), "%" + fieldValue.toString().toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("supervisor")), "%" + fieldValue.toString().toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("spouse")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                            cb.like(cb.lower(root.get("ownerName")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("company")), "%" + fieldValue.toString().toLowerCase() + "%")
                     );
-//            case "showUnassigned" -> (root, query, cb) ->
-//                    cb.or(
-//                            cb.notEqual(cb.lower(root.get("company")), "unassigned"),
-//                            cb.equal(root.get("company"), "NULL")
-//                    );
             default -> (root, query, cb) -> cb.equal(root.get(fieldName), fieldValue);
         };
     }

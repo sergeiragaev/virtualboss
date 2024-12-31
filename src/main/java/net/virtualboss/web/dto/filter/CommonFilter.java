@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Filter extends PageFilter {
+public class CommonFilter extends PageFilter {
     @JsonProperty("FindString")
     protected String findString;
     @JsonProperty("MatchType")

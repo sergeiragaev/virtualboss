@@ -1,8 +1,7 @@
 package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
-import net.virtualboss.web.dto.GroupDto;
-import net.virtualboss.web.dto.task.TaskResponse;
+import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.task.TaskFilter;
 import net.virtualboss.service.TaskService;
 import net.virtualboss.web.dto.task.UpsertTaskRequest;
@@ -24,7 +23,7 @@ public class TaskController {
     @GetMapping("/task")
     public ResponseEntity<List<Map<String, Object>>> getTasks(
             TaskFilter filter,
-            @RequestParam(required = false) String fields) {
+            @RequestParam String fields) {
         return ResponseEntity.ok(service.findAll(fields, filter));
     }
 
@@ -34,30 +33,29 @@ public class TaskController {
     }
 
     @GetMapping("/task/{id}")
-    public ResponseEntity<TaskResponse> taskDetails(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> taskDetails(@PathVariable String id) {
         return ResponseEntity.ok(service.findById(id));
     }
 
     @PutMapping("/task/{id}")
-    public ResponseEntity<TaskResponse> saveTask(
+    public ResponseEntity<Map<String, Object>> saveTask(
             @PathVariable String id,
-            UpsertTaskRequest request) {
-        return ResponseEntity.ok(service.saveTask(id, request));
+            UpsertTaskRequest request,
+            CustomFieldsAndLists customFieldsAndLists) {
+        return ResponseEntity.ok(service.saveTask(id, request, customFieldsAndLists));
     }
 
     @PostMapping("/task")
-    public ResponseEntity<TaskResponse> createTask(UpsertTaskRequest request) {
-        return ResponseEntity.ok(service.createTask(request));
+    public ResponseEntity<Map<String, Object>> createTask(
+            UpsertTaskRequest request,
+            CustomFieldsAndLists customFieldsAndLists) {
+        return new ResponseEntity<>(
+                service.createTask(request, customFieldsAndLists), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/task/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void deleteTask(@PathVariable String id) {
         service.deleteTask(id);
-    }
-
-    @GetMapping("/TaskGroupData")
-    public ResponseEntity<GroupDto[]> groupDetails() {
-        return ResponseEntity.ok(new GroupDto[]{GroupDto.builder().build()});
     }
 }

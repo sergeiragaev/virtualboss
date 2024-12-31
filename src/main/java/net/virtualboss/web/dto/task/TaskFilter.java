@@ -3,14 +3,17 @@ package net.virtualboss.web.dto.task;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
-import net.virtualboss.web.dto.filter.Filter;
+import net.virtualboss.model.enums.DateCriteria;
+import net.virtualboss.model.enums.DateRange;
+import net.virtualboss.model.enums.DateType;
+import net.virtualboss.web.dto.filter.CommonFilter;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Getter
 @Setter
-public class TaskFilter extends Filter {
+public class TaskFilter extends CommonFilter {
     @JsonProperty("IsActive")
     private Boolean isActive;
     @JsonProperty("IsDone")
@@ -25,6 +28,9 @@ public class TaskFilter extends Filter {
     private List<String> jobIds;
     @JsonProperty("CustIds")
     private List<String> custIds;
+
+    @JsonProperty("TaskIds")
+    private List<String> taskIds;
 
     @JsonProperty("TaskGroupIds")
     private List<String> taskGroupIds;
@@ -42,12 +48,16 @@ public class TaskFilter extends Filter {
     private LocalDate dateTo;
 
     @JsonProperty("DateType")
-    private Integer dateType = 1;
+    private Integer dateType = DateType.TARGET_START.getValue();
     @JsonProperty("DateRange")
-    private Integer dateRange = 1;
+    private Integer dateRange = DateRange.TODAY.getValue();
     @JsonProperty("DateCriteria")
-    private Integer dateCriteria = 1;
+    private Integer dateCriteria = DateCriteria.ON_OR_BEFORE.getValue();
 
     @JsonProperty("ThisDate")
     private LocalDate thisDate;
+
+    @JsonProperty("IsDeleted")
+    private Boolean isDeleted;
+
 }

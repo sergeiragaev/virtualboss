@@ -1,7 +1,7 @@
 package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
-import net.virtualboss.web.dto.filter.Filter;
+import net.virtualboss.web.dto.filter.CommonFilter;
 import net.virtualboss.web.dto.job.JobResponse;
 import net.virtualboss.service.JobService;
 import net.virtualboss.web.dto.job.UpsertJobRequest;
@@ -23,8 +23,8 @@ public class JobController {
     @GetMapping("/job")
     public ResponseEntity<List<Map<String, Object>>> getJobs(
             @RequestParam(required = false) String fields,
-            Filter filter) {
-        return ResponseEntity.ok(service.findAll(fields, filter));
+            CommonFilter commonFilter) {
+        return ResponseEntity.ok(service.findAll(fields, commonFilter));
     }
 
     @GetMapping("/job/{id}")

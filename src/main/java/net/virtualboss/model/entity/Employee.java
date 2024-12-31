@@ -3,6 +3,7 @@ package net.virtualboss.model.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import net.virtualboss.model.enums.RoleType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -35,6 +36,10 @@ public class Employee  implements Serializable {
 
     @Column(name = "is_deleted")
     private boolean isDeleted;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RoleType role;
 
     @OneToMany(cascade = CascadeType.DETACH)
     @JsonIgnore

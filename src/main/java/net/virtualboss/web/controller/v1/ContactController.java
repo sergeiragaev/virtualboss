@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import net.virtualboss.web.dto.contact.ContactResponse;
 import net.virtualboss.service.ContactService;
 import net.virtualboss.web.dto.contact.UpsertContactRequest;
-import net.virtualboss.web.dto.filter.Filter;
+import net.virtualboss.web.dto.filter.CommonFilter;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +23,8 @@ public class ContactController {
     @GetMapping("/contact")
     public ResponseEntity<List<Map<String, Object>>> getContacts(
             @RequestParam(required = false) String fields,
-            Filter filter) {
-        return ResponseEntity.ok(service.findAll(fields, filter));
+            CommonFilter commonFilter) {
+        return ResponseEntity.ok(service.findAll(fields, commonFilter));
     }
 
     @GetMapping("/contact/{id}")

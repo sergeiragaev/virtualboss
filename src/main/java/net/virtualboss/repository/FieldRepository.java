@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface FieldRepository extends JpaRepository<Field, Long> {
+public interface FieldRepository extends JpaRepository<Field, Integer> {
 
     List<Field> findAllByNameIn(Collection<String> name);
     Optional<Field> findByName(String name);

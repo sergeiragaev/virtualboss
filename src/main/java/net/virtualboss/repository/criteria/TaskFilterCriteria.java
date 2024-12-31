@@ -1,9 +1,11 @@
-package net.virtualboss.web.criteria;
+package net.virtualboss.repository.criteria;
 
+import jakarta.persistence.criteria.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import net.virtualboss.model.entity.Contact;
+import net.virtualboss.model.entity.FieldValue;
 import net.virtualboss.model.entity.Job;
 import net.virtualboss.model.entity.Task;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,8 +33,11 @@ public class TaskFilterCriteria {
 
     private List<Job> jobList;
     private List<Contact> contactList;
+    private List<UUID> taskList;
 
     private String findString;
+
+    private Boolean isDeleted;
 
     public Specification<Task> getSpecification() {
         return getSpecification(this);
@@ -52,7 +57,7 @@ public class TaskFilterCriteria {
         return Specification.allOf(
                 fields.keySet().stream()
                         .map(fieldName -> TaskFilterCriteria
-                                .getSpecification(fieldName, fields, jobList, contactList))
+                                .getSpecification(fieldName, fields, jobList, contactList, taskList))
                         .filter(Objects::nonNull)
                         .toList()
         );
@@ -60,7 +65,7 @@ public class TaskFilterCriteria {
 
     private static Specification<Task> getSpecification(
             String fieldName, Map<String, Object> fields,
-            List<Job> jobList, List<Contact> contactList) {
+            List<Job> jobList, List<Contact> contactList, List<UUID> taskList) {
         final String targetStart = "targetStart";
         final String targetFinish = "targetFinish";
         final String actualFinish = "actualFinish";
@@ -106,20 +111,35 @@ public class TaskFilterCriteria {
                             .map(TaskFilterCriteria::getSpecification)
                             .toList()
             );
+            case "taskList" -> Specification.anyOf(
+                    taskList
+                            .stream()
+                            .map(TaskFilterCriteria::getSpecification)
+                            .toList()
+            );
             case "findString" -> (root, query, cb) ->
                     cb.or(
                             cb.like(cb.lower(root.get("description")), "%" + fieldValue.toString().toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("notes")), "%" + fieldValue.toString().toLowerCase() + "%")
+                            cb.like(cb.lower(root.get("notes")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                            cb.like(cb.lower(root.get("order")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                            getCustomFieldsAndListsPredicate(root, cb, fieldValue)
                     );
             default -> (root, query, cb) -> cb.equal(root.get(fieldName), fieldValue);
         };
     }
 
+    private static Predicate getCustomFieldsAndListsPredicate(Root<Task> root, CriteriaBuilder cb, Object fieldValue) {
+        Join<Task, FieldValue> taskFieldValueJoin = root.join("customFieldsAndListsValues", JoinType.LEFT);
+        return cb.like(cb.lower(taskFieldValueJoin.get("value")), "%" + fieldValue.toString().toLowerCase() + "%");
+    }
+
     private static Specification<Task> getSpecification(Object field) {
         if (field instanceof Job) {
             return (root, query, cb) -> cb.equal(root.get("job"), field);
-        } else {
+        } else if (field instanceof Contact) {
             return (root, query, cb) -> cb.equal(root.get("contact"), field);
+        } else {
+            return (root, query, cb) -> cb.equal(root.get("id"), field);
         }
     }
 

@@ -4,12 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.mapper.v1.ContactMapperV1;
 import net.virtualboss.util.BeanUtils;
-import net.virtualboss.web.criteria.ContactFilterCriteria;
+import net.virtualboss.repository.criteria.ContactFilterCriteria;
 import net.virtualboss.web.dto.contact.ContactResponse;
 import net.virtualboss.model.entity.Contact;
 import net.virtualboss.repository.ContactRepository;
 import net.virtualboss.web.dto.contact.UpsertContactRequest;
-import net.virtualboss.web.dto.filter.Filter;
+import net.virtualboss.web.dto.filter.CommonFilter;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -26,21 +26,21 @@ import java.util.*;
 public class ContactService {
     private final ContactRepository repository;
     private final ContactMapperV1 mapper;
-    private final TaskService taskService;
+    private final MainService mainService;
 
     @Cacheable(value = "contact", key = "#id")
     public ContactResponse findById(String id) {
-        return mapper.contactToResponse(taskService.getContactById(id));
+        return mapper.contactToResponse(mainService.getContactById(id));
     }
 
-    public List<Map<String, Object>> findAll(String fields, Filter filter) {
+    public List<Map<String, Object>> findAll(String fields, CommonFilter commonFilter) {
         List<String> fieldList = Arrays.stream(fields.split(",")).toList();
 
-        if (filter.getSize() == null) filter.setSize(Integer.MAX_VALUE);
-        if (filter.getPage() == null) filter.setPage(1);
-        if (filter.getSort() == null) filter.setSort("firstName asc,lastName asc,company asc");
+        if (commonFilter.getSize() == null) commonFilter.setSize(Integer.MAX_VALUE);
+        if (commonFilter.getPage() == null) commonFilter.setPage(1);
+        if (commonFilter.getSort() == null) commonFilter.setSort("firstName asc,lastName asc,company asc");
 
-        String[] sorts = filter.getSort().split(",");
+        String[] sorts = commonFilter.getSort().split(",");
         List<Sort.Order> orders = new ArrayList<>();
         for (String sort : sorts) {
             String[] order = sort.split(" ");
@@ -50,10 +50,10 @@ public class ContactService {
 
         return repository.findAll(
                 ContactFilterCriteria.builder()
-                        .findString(filter.getFindString() == null || filter.getFindString().isBlank() ? null : filter.getFindString())
+                        .findString(commonFilter.getFindString() == null || commonFilter.getFindString().isBlank() ? null : commonFilter.getFindString())
 //                        .showUnassigned(false)
                         .build().getSpecification(),
-                PageRequest.of(filter.getPage() - 1, filter.getSize(),
+                PageRequest.of(commonFilter.getPage() - 1, commonFilter.getSize(),
                         Sort.by(orders)
                 ))
                 .map(mapper::contactToResponse).getContent().stream()
@@ -64,8 +64,8 @@ public class ContactService {
     @Transactional
     @CacheEvict(value = "contact", key = "#id")
     public void deleteContact(String id) {
-        Contact contact = taskService.getContactById(id);
-        taskService.reassignTasksContact(contact);
+        Contact contact = mainService.getContactById(id);
+        mainService.reassignTasksContact(contact);
         repository.delete(contact);
     }
 
@@ -73,7 +73,7 @@ public class ContactService {
     @CachePut(value = "contact", key = "#id")
     public ContactResponse saveContact(String id, UpsertContactRequest request) {
         Contact contact = mapper.requestToContact(id, request);
-        Contact contactFromDB = taskService.getContactById(id);
+        Contact contactFromDB = mainService.getContactById(id);
         BeanUtils.copyNonNullProperties(contact, contactFromDB);
         return mapper.contactToResponse(repository.save(contactFromDB));
     }

@@ -4,13 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.UUID;
+import java.io.Serializable;
 
 @Data
 @Builder
-public class GroupDto {
+public class GroupDto implements Serializable {
     @JsonProperty("Id")
-    private UUID id;
+    private Short id;
 
     @JsonProperty("Name")
     private String name;

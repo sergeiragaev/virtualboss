@@ -5,22 +5,20 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+
+import static jakarta.persistence.CascadeType.*;
 
 @Entity
 @Builder
-@Getter
 @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tasks")
-@ToString
-public class Task  implements Serializable {
+public class Task {
 
     @Id
     @GeneratedValue
@@ -75,7 +73,7 @@ public class Task  implements Serializable {
     private Boolean marked;
 
     @Column(name = "is_deleted")
-    private boolean isDeleted;
+    private Boolean isDeleted;
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "contact_id", referencedColumnName = "id")
@@ -89,30 +87,17 @@ public class Task  implements Serializable {
     @JoinColumn(name = "job_id", referencedColumnName = "id")
     private Job job;
 
-    @Column(name = "custom_field1")
-    private String customField1;
-    @Column(name = "custom_field2")
-    private String customField2;
-    @Column(name = "custom_field3")
-    private String customField3;
-    @Column(name = "custom_field4")
-    private String customField4;
-    @Column(name = "custom_field5")
-    private String customField5;
-    @Column(name = "custom_field6")
-    private String customField6;
+    @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
+    @JoinTable(
+            name = "task_custom_values",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "custom_value_id"))
+    private Set<FieldValue> customFieldsAndListsValues;
 
-    @Column(name = "custom_list1")
-    private String customList1;
-    @Column(name = "custom_list2")
-    private String customList2;
-    @Column(name = "custom_list3")
-    private String customList3;
-    @Column(name = "custom_list4")
-    private String customList4;
-    @Column(name = "custom_list5")
-    private String customList5;
-    @Column(name = "custom_list6")
-    private String customList6;
-
+    @ManyToMany
+    @JoinTable(name = "group_members",
+            joinColumns = @JoinColumn(name = "member_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    private Set<Group> groups = new HashSet<>();
 }

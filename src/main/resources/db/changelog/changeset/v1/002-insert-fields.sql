@@ -48,4 +48,17 @@ insert into fields (id, name, default_value, alias, enabled, "order") values (45
 insert into fields (id, name, default_value, alias, enabled, "order") values (46, 'ContactEmail', 'EMail Address', 'EMail Address', true, 1);
 insert into fields (id, name, default_value, alias, enabled, "order") values (47, 'ContactPhones', 'Contact phone #s', 'Contact phone #s', true, 1);
 
-ALTER SEQUENCE fields_id_seq restart with 48 ;
+insert into fields (id, name, default_value, alias, enabled, "order") values (48, 'TaskCustomField1', 'Field #1', 'Field #1', true, 13);
+insert into fields (id, name, default_value, alias, enabled, "order") values (49, 'TaskCustomField2', 'Field #2', 'Field #2', true, 14);
+insert into fields (id, name, default_value, alias, enabled, "order") values (50, 'TaskCustomField3', 'Field #3', 'Field #3', true, 14);
+insert into fields (id, name, default_value, alias, enabled, "order") values (51, 'TaskCustomField4', 'Field #4', 'Field #4', true, 14);
+insert into fields (id, name, default_value, alias, enabled, "order") values (52, 'TaskCustomField5', 'Field #5', 'Field #5', true, 14);
+insert into fields (id, name, default_value, alias, enabled, "order") values (53, 'TaskCustomField6', 'Field #6', 'Field #6', true, 14);
+insert into fields (id, name, default_value, alias, enabled, "order") values (54, 'TaskCustomList1', 'List #1', 'List #1', true, 13);
+insert into fields (id, name, default_value, alias, enabled, "order") values (55, 'TaskCustomList2', 'List #2', 'List #2', true, 14);
+insert into fields (id, name, default_value, alias, enabled, "order") values (56, 'TaskCustomList3', 'List #3', 'List #3', true, 14);
+insert into fields (id, name, default_value, alias, enabled, "order") values (57, 'TaskCustomList4', 'List #4', 'List #4', true, 14);
+insert into fields (id, name, default_value, alias, enabled, "order") values (58, 'TaskCustomList5', 'List #5', 'List #5', true, 14);
+insert into fields (id, name, default_value, alias, enabled, "order") values (59, 'TaskCustomList6', 'List #6', 'List #6', true, 14);
+
+ALTER SEQUENCE fields_id_seq restart with 60 ;

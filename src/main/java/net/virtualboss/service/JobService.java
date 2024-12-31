@@ -6,8 +6,8 @@ import net.virtualboss.exception.AlreadyExistsException;
 import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.mapper.v1.JobMapperV1;
 import net.virtualboss.util.BeanUtils;
-import net.virtualboss.web.criteria.JobFilterCriteria;
-import net.virtualboss.web.dto.filter.Filter;
+import net.virtualboss.repository.criteria.JobFilterCriteria;
+import net.virtualboss.web.dto.filter.CommonFilter;
 import net.virtualboss.web.dto.job.JobResponse;
 import net.virtualboss.model.entity.Job;
 import net.virtualboss.repository.JobRepository;
@@ -29,7 +29,7 @@ import java.util.*;
 public class JobService {
     private final JobRepository jobRepository;
     private final JobMapperV1 jobMapper;
-    private final TaskService taskService;
+    private final MainService mainService;
 
     @Cacheable(value = "job", key = "#id")
     public JobResponse findById(String id) {
@@ -37,20 +37,20 @@ public class JobService {
         return jobMapper.jobToResponse(job);
     }
 
-    public List<Map<String, Object>> findAll(String fields, Filter filter) {
+    public List<Map<String, Object>> findAll(String fields, CommonFilter commonFilter) {
 
         List<String> fieldList = Arrays.stream(fields.split(",")).toList();
 
-        if (filter.getSize() == null) filter.setSize(Integer.MAX_VALUE);
-        if (filter.getPage() == null) filter.setPage(1);
-        if (filter.getSort() == null) filter.setSort("number,asc");
-        String[] sorts = filter.getSort().split(",");
+        if (commonFilter.getSize() == null) commonFilter.setSize(Integer.MAX_VALUE);
+        if (commonFilter.getPage() == null) commonFilter.setPage(1);
+        if (commonFilter.getSort() == null) commonFilter.setSort("number,asc");
+        String[] sorts = commonFilter.getSort().split(",");
 
         return jobRepository.findAll(
                         JobFilterCriteria.builder()
-                                .findString(filter.getFindString() == null || filter.getFindString().isBlank() ? null : filter.getFindString())
+                                .findString(commonFilter.getFindString() == null || commonFilter.getFindString().isBlank() ? null : commonFilter.getFindString())
                                 .build().getSpecification(),
-                        PageRequest.of(filter.getPage() - 1, filter.getSize(),
+                        PageRequest.of(commonFilter.getPage() - 1, commonFilter.getSize(),
                                 Sort.by(
                                         Sort.Direction.valueOf(sorts[1].toUpperCase()), sorts[0]
                                 )
@@ -64,7 +64,7 @@ public class JobService {
     @CacheEvict(value = "job", key = "#id")
     public void deleteJob(String id) {
         Job job = getJobById(id);
-        taskService.eraseJobFromTasks(job);
+        mainService.eraseJobFromTasks(job);
         jobRepository.delete(job);
     }
 

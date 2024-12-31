@@ -84,44 +84,6 @@ public class ContactResponse implements Serializable {
     @Builder.Default
     private String phones = "";
 
-    @JsonProperty("ContactCustomField1")
-    @Builder.Default
-    private String customField1 = "";
-    @JsonProperty("ContactCustomField2")
-    @Builder.Default
-    private String customField2 = "";
-    @JsonProperty("ContactCustomField3")
-    @Builder.Default
-    private String customField3 = "";
-    @JsonProperty("ContactCustomField4")
-    @Builder.Default
-    private String customField4 = "";
-    @JsonProperty("ContactCustomField5")
-    @Builder.Default
-    private String customField5 = "";
-    @JsonProperty("ContactCustomField6")
-    @Builder.Default
-    private String customField6 = "";
-
-    @JsonProperty("ContactCustomList1")
-    @Builder.Default
-    private String customList1 = "";
-    @JsonProperty("ContactCustomList2")
-    @Builder.Default
-    private String customList2 = "";
-    @JsonProperty("ContactCustomList3")
-    @Builder.Default
-    private String customList3 = "";
-    @JsonProperty("ContactCustomList4")
-    @Builder.Default
-    private String customList4 = "";
-    @JsonProperty("ContactCustomList5")
-    @Builder.Default
-    private String customList5 = "";
-    @JsonProperty("ContactCustomList6")
-    @Builder.Default
-    private String customList6 = "";
-
     public static Map<String, Object> getFieldsMap(ContactResponse contactResponse, List<String> fieldList) {
 
         Map<String, Object> responseMap = new HashMap<>();
@@ -134,7 +96,7 @@ public class ContactResponse implements Serializable {
                 captionValue = field.getName();
             }
 
-            if (captionValue.equals("ContactPerson") && fieldList.contains(captionValue)) {
+            if (captionValue.equals("ContactPerson")) {
                 Object value = contactResponse.getPerson();
                 if (value != null) responseMap.put(captionValue, value);
                 continue;

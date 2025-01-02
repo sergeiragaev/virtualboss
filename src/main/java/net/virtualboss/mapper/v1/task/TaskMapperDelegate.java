@@ -1,4 +1,4 @@
-package net.virtualboss.mapper.v1;
+package net.virtualboss.mapper.v1.task;
 
 import net.virtualboss.model.entity.Task;
 import net.virtualboss.model.enums.EntityType;
@@ -32,7 +32,7 @@ public abstract class TaskMapperDelegate implements TaskMapperV1 {
                 .targetFinish(request.getTargetFinish())
                 .actualFinish(request.getActualFinish())
                 .marked(request.getMarked())
-                .isDeleted(request.getIsDeleted())
+                .isDeleted(request.getIsDeleted() != null && request.getIsDeleted())
                 .customFieldsAndListsValues(mainService.createCustomList(customFieldsAndLists, "Task"))
                 .groups(groupService.getGroups(EntityType.TASK, request.getGroups()))
                 .build();

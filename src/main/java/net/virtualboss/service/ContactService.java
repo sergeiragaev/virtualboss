@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +35,7 @@ public class ContactService {
     }
 
     public List<Map<String, Object>> findAll(String fields, CommonFilter commonFilter) {
-        List<String> fieldList = Arrays.stream(fields.split(",")).toList();
+        Set<String> fieldList = Arrays.stream(fields.split(",")).collect(Collectors.toSet());
 
         if (commonFilter.getSize() == null) commonFilter.setSize(Integer.MAX_VALUE);
         if (commonFilter.getPage() == null) commonFilter.setPage(1);

@@ -33,9 +33,7 @@ class TaskControllerIT extends TestDependenciesContainer {
     @DisplayName("test get task by id test")
     void getTaskById_ReturnsValidTask() throws Exception {
         Task task = saveTaskInDbAndGet(generateTestTaskRequest(), generateTestCustomFieldsRequest());
-        String customValue = task.getCustomFieldsAndListsValues().stream()
-                .filter(fieldValue -> fieldValue.getField().getName().equals("TaskCustomField1"))
-                .findFirst().orElseThrow().getValue();
+        String customValue = task.getCustomValueByName("TaskCustomField1");
         mockMvc.perform(get("/task/" + taskRepository.findAll().get(0).getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.TaskDescription").value(task.getDescription()))

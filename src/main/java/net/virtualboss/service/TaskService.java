@@ -1,11 +1,14 @@
 package net.virtualboss.service;
 
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.exception.EntityNotFoundException;
-import net.virtualboss.mapper.v1.TaskMapperV1;
+import net.virtualboss.mapper.v1.task.TaskMapperV1;
 import net.virtualboss.model.entity.Group;
 import net.virtualboss.model.enums.DateCriteria;
 import net.virtualboss.model.enums.DateRange;
@@ -25,6 +28,7 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +63,7 @@ public class TaskService {
 
     public List<Map<String, Object>> findAll(String fields, TaskFilter filter) {
 
-        List<String> fieldList = Arrays.stream(fields.split(",")).toList();
+        Set<String> fieldSet = Arrays.stream(fields.split(",")).collect(Collectors.toSet());
 
         if (filter.getSize() == null) filter.setSize(Integer.MAX_VALUE);
         if (filter.getPage() == null) filter.setPage(1);
@@ -97,9 +101,9 @@ public class TaskService {
                                         jobRepository.findAllById(
                                                 filter.getJobIds().stream()
                                                         .map(UUID::fromString).toList()))
-                                .contactList(filter.getCustIds() == null ? null :
+                                .contactList(filter.getContactIds() == null ? null :
                                         contactRepository.findAllById(
-                                                filter.getCustIds().stream()
+                                                filter.getContactIds().stream()
                                                         .map(UUID::fromString).toList()))
                                 .taskList(filter.getTaskIds() == null ? null :
                                         filter.getTaskIds().stream()
@@ -111,7 +115,7 @@ public class TaskService {
                                 )
                         ))
                 .map(taskMapper::taskToResponse).getContent().stream()
-                .map(taskResponse -> TaskResponse.getFieldsMap(taskResponse, fieldList))
+                .map(taskResponse -> TaskResponse.getFieldsMap(taskResponse, fieldSet))
                 .toList();
     }
 
@@ -160,7 +164,7 @@ public class TaskService {
 
     @Transactional
     @CacheEvict(value = "task", allEntries = true)
-    public Map<String, Object> createTask(
+    public Map<String, Object> createNewTask(
             UpsertTaskRequest request,
             CustomFieldsAndLists customFieldsAndLists) {
         Task task = taskMapper.requestToTask(request, customFieldsAndLists);
@@ -170,13 +174,10 @@ public class TaskService {
 
     @Transactional
     @CacheEvict(value = "task", key = "#id")
-    public void deleteTask(String id) {
-        Task task = taskRepository.findById(UUID.fromString(id)).orElseThrow(
-                () -> new EntityNotFoundException(
-                        MessageFormat.format("Task with Id: {0} not found!", id)
-                )
-        );
-        taskRepository.delete(task);
+    public void deleteTaskById(String id) {
+        Task task = getTaskById(id);
+        task.setIsDeleted(true);
+        taskRepository.save(task);
     }
 
     public Long getNextNumberSequenceValue() {
@@ -188,5 +189,13 @@ public class TaskService {
         return task.getGroups() == null ? null :
                 task.getGroups().stream().map(Group::getName)
                         .collect(Collectors.joining (","));
+    }
+
+    public MappingJacksonValue retrieveTaskValues(TaskResponse taskResponse, Set<String> fields) {
+        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept(fields);
+        FilterProvider filters = new SimpleFilterProvider().addFilter("TaskResponseFilter", filter);
+        MappingJacksonValue mapping = new MappingJacksonValue(taskResponse);
+        mapping.setFilters(filters);
+        return mapping;
     }
 }

@@ -6,10 +6,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Data
 @Builder
@@ -92,7 +89,7 @@ public class JobResponse implements Serializable {
     @Builder.Default
     private String country = "";
 
-    public static Map<String, Object> getFieldsMap(JobResponse jobResponse, List<String> fieldList) {
+    public static Map<String, Object> getFieldsMap(JobResponse jobResponse, Set<String> fieldList) {
 
         Map<String, Object> responseMap = new HashMap<>();
 

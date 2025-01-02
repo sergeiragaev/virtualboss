@@ -1,5 +1,8 @@
-package net.virtualboss.mapper.v1;
+package net.virtualboss.mapper.v1.task;
 
+import net.virtualboss.mapper.v1.ContactMapperV1;
+import net.virtualboss.mapper.v1.GroupMapperV1;
+import net.virtualboss.mapper.v1.JobMapperV1;
 import net.virtualboss.model.entity.Group;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.task.TaskResponse;
@@ -13,7 +16,7 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE,
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
-        uses = {JobMapperV1.class, ContactMapperV1.class, CustomFLMapperV1.class, GroupMapperV1.class})
+        uses = {JobMapperV1.class, ContactMapperV1.class, TaskCustomFLMapperV1.class, GroupMapperV1.class})
 @DecoratedWith(TaskMapperDelegate.class)
 public interface TaskMapperV1 {
 
@@ -39,7 +42,7 @@ public interface TaskMapperV1 {
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
     TaskResponse taskToResponse(Task task);
 
-    default String map(Set<Group> groups) {
+    default String mapToGroups(Set<Group> groups) {
         return groups.stream().map(Group::getName)
                 .collect(Collectors.joining (","));
     }

@@ -7,7 +7,6 @@ import net.virtualboss.model.entity.FieldValue;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,7 +52,7 @@ public class CustomFieldsAndLists {
     private String customList6 = "";
 
     public static Map<String, String> getFieldsMap(CustomFieldsAndLists customFieldsAndLists,
-                                                   String prefix, List<String> fieldList) {
+                                                   String prefix, Set<String> fieldList) {
 
         Map<String, String> fieldsValuesMap = new HashMap<>();
 
@@ -67,8 +66,10 @@ public class CustomFieldsAndLists {
             captionValue = prefix + captionValue;
             if (fieldList == null || fieldList.contains(captionValue)) {
                 try {
-                    String value = field.get(customFieldsAndLists).toString();
-                    if (value != null) fieldsValuesMap.put(captionValue, value);
+                    Object value = field.get(customFieldsAndLists);
+                    if (value != null) {
+                        fieldsValuesMap.put(captionValue, value.toString());
+                    }
                 } catch (IllegalAccessException e) {
                     throw new IllegalStateException("Failed to access field: " + field.getName(), e);
                 }
@@ -95,6 +96,7 @@ public class CustomFieldsAndLists {
                     } catch (IllegalAccessException e) {
                         throw new IllegalStateException("Failed to access field: " + field.getName(), e);
                     }
+                    break;
                 }
             }
         }

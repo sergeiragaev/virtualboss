@@ -1,4 +1,4 @@
-package net.virtualboss.mapper.v1;
+package net.virtualboss.mapper.v1.task;
 
 import net.virtualboss.model.entity.FieldValue;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
@@ -11,10 +11,8 @@ import java.util.Set;
 
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE,
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
-@DecoratedWith(CustomFLMapperDelegate.class)
-public interface CustomFLMapperV1 {
-
-//    CustomFieldsAndLists map(List<FieldValue> values);
+@DecoratedWith(TaskCustomFLMapperDelegate.class)
+public interface TaskCustomFLMapperV1 {
 
     record FieldsWrapper(Set<FieldValue> values) {}
 

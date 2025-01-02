@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -25,6 +24,4 @@ public class UpsertTaskRequest {
     private String requested;
     private Boolean isDeleted;
     private String groups;
-
-    private Map<String, String> CustomFieldsAndLists;
 }

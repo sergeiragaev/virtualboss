@@ -2,9 +2,11 @@ package net.virtualboss.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import net.virtualboss.exception.EntityNotFoundException;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -53,6 +55,7 @@ public class Task {
     private String status;
 
     @OneToMany
+    @Builder.Default
     private List<Task> follows = new ArrayList<>();
 
     @Column(name = "\"order\"")
@@ -99,5 +102,28 @@ public class Task {
             joinColumns = @JoinColumn(name = "member_id"),
             inverseJoinColumns = @JoinColumn(name = "group_id")
     )
+    @Builder.Default
     private Set<Group> groups = new HashSet<>();
+
+    public String getCustomValueByName(String name) {
+        return customFieldsAndListsValues.stream()
+                .filter(fieldValue -> fieldValue.getField().getName().equals(name))
+                .findAny().orElseThrow(() -> new EntityNotFoundException(
+                        MessageFormat.format("Custom field with name {0} does not exist", name)
+                )).getValue();
+    }
+
+    private void setCustomValueByName(String name, String value) {
+        customFieldsAndListsValues.stream()
+                .filter(fieldValue -> fieldValue.getField().getName().equals(name))
+                .findAny().orElseThrow(() -> new EntityNotFoundException(
+                        MessageFormat.format("Custom field with name {0} does not exist", name)
+                )).setValue(value);
+    }
+
+    public void setCustomFieldsAndListsValues(Set<FieldValue> values) {
+        for (FieldValue value : values) {
+            setCustomValueByName(value.getField().getName(), value.getValue());
+        }
+    }
 }

@@ -27,7 +27,7 @@ public class TaskFilter extends CommonFilter {
     @JsonProperty("JobIds")
     private List<String> jobIds;
     @JsonProperty("CustIds")
-    private List<String> custIds;
+    private List<String> contactIds;
 
     @JsonProperty("TaskIds")
     private List<String> taskIds;
@@ -58,6 +58,6 @@ public class TaskFilter extends CommonFilter {
     private LocalDate thisDate;
 
     @JsonProperty("IsDeleted")
-    private Boolean isDeleted;
+    private Boolean isDeleted = false;
 
 }

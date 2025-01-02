@@ -6,9 +6,7 @@ import lombok.*;
 import net.virtualboss.model.enums.RoleType;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "employees")
@@ -43,6 +41,6 @@ public class Employee  implements Serializable {
 
     @OneToMany(cascade = CascadeType.DETACH)
     @JsonIgnore
-    private List<Task> tasks = new ArrayList<>();
-
+    @Builder.Default
+    private Set<Task> tasks = new HashSet<>();
 }

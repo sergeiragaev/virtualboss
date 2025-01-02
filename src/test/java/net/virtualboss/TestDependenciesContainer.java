@@ -3,15 +3,13 @@ package net.virtualboss;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.virtualboss.mapper.v1.ContactMapperV1;
 import net.virtualboss.mapper.v1.JobMapperV1;
-import net.virtualboss.mapper.v1.TaskMapperV1;
+import net.virtualboss.mapper.v1.task.TaskMapperV1;
 import net.virtualboss.model.entity.Contact;
 import net.virtualboss.model.entity.Group;
 import net.virtualboss.model.entity.Job;
 import net.virtualboss.model.entity.Task;
 import net.virtualboss.model.enums.EntityType;
 import net.virtualboss.repository.*;
-import net.virtualboss.service.ContactService;
-import net.virtualboss.service.JobService;
 import net.virtualboss.service.TaskService;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.contact.UpsertContactRequest;
@@ -61,10 +59,6 @@ public class TestDependenciesContainer {
     protected ContactMapperV1 contactMapper;
     @Autowired
     protected TaskService taskService;
-    @Autowired
-    protected JobService jobService;
-    @Autowired
-    protected ContactService contactService;
 
     protected MockMvc mockMvc;
 
@@ -79,7 +73,7 @@ public class TestDependenciesContainer {
 
     @AfterAll
     static void afterAll() {
-        postgres.stop();
+//        postgres.stop();
     }
 
     @DynamicPropertySource

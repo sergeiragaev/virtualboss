@@ -7,9 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "contacts")
@@ -74,6 +72,6 @@ public class Contact {
     private boolean isDeleted;
 
     @OneToMany(cascade = CascadeType.DETACH)
-    public List<Task> tasks = new ArrayList<>();
+    public Set<Task> tasks = new HashSet<>();
 
 }

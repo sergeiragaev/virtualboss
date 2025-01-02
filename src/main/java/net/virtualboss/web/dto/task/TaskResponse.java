@@ -1,5 +1,6 @@
 package net.virtualboss.web.dto.task;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.util.*;
 
 @Builder
 @Data
+@JsonFilter("TaskResponseFilter")
 public class TaskResponse {
     @JsonProperty("TaskId")
     private UUID id;
@@ -98,7 +100,7 @@ public class TaskResponse {
     @Builder.Default
     private CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
 
-    public static Map<String, Object> getFieldsMap(TaskResponse taskResponse, List<String> fieldList) {
+    public static Map<String, Object> getFieldsMap(TaskResponse taskResponse, Set<String> fieldList) {
 
         Map<String, Object> responseMap = new HashMap<>();
 

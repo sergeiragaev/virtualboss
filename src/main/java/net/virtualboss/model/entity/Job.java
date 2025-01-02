@@ -6,9 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static jakarta.persistence.CascadeType.*;
 
@@ -84,7 +82,8 @@ public class Job {
     private boolean isDeleted;
 
     @OneToMany(cascade = DETACH)
-    private List<Task> tasks = new ArrayList<>();
+    @Builder.Default
+    private Set<Task> tasks = new HashSet<>();
 
 //    @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
 //    @JoinTable(

@@ -50,12 +50,12 @@ public class TaskController {
             UpsertTaskRequest request,
             CustomFieldsAndLists customFieldsAndLists) {
         return new ResponseEntity<>(
-                service.createTask(request, customFieldsAndLists), HttpStatus.CREATED);
+                service.createNewTask(request, customFieldsAndLists), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/task/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void deleteTask(@PathVariable String id) {
-        service.deleteTask(id);
+        service.deleteTaskById(id);
     }
 }

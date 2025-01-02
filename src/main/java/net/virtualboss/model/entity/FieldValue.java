@@ -9,15 +9,12 @@ import lombok.*;
 @NoArgsConstructor
 @Table(name = "custom_values")
 @Getter
+@Setter
 public class FieldValue {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-//    @Column(nullable = false)
-//    @Enumerated(EnumType.STRING)
-//    private OwnerType owner;
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "field_id", referencedColumnName = "id")

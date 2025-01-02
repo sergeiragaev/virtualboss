@@ -90,7 +90,7 @@ public class MainService {
         return values;
     }
 
-    public CustomFieldsAndLists getCustomFieldsAndLists(Set<FieldValue> values, String prefix) {
+    public CustomFieldsAndLists setCustomFieldsAndLists(Set<FieldValue> values, String prefix) {
         CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
         CustomFieldsAndLists.setCustomFieldsAndListsValues(customFieldsAndLists, values, prefix);
         return customFieldsAndLists;

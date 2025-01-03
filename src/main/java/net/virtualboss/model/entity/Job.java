@@ -2,9 +2,11 @@ package net.virtualboss.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import net.virtualboss.exception.EntityNotFoundException;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -15,7 +17,8 @@ import static jakarta.persistence.CascadeType.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 public class Job {
     @Id
     @GeneratedValue
@@ -79,16 +82,34 @@ public class Job {
     private String country;
 
     @Column(name = "is_deleted")
-    private boolean isDeleted;
+    @Builder.Default
+    private Boolean isDeleted = false;
 
     @OneToMany(cascade = DETACH)
     @Builder.Default
     private Set<Task> tasks = new HashSet<>();
 
-//    @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
-//    @JoinTable(
-//            name = "job_custom_values",
-//            joinColumns = @JoinColumn(name = "job_id"),
-//            inverseJoinColumns = @JoinColumn(name = "custom_value_id"))
-//    private Set<FieldValue> customFieldsAndListsValues;
+    @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
+    @JoinTable(
+            name = "job_custom_values",
+            joinColumns = @JoinColumn(name = "job_id"),
+            inverseJoinColumns = @JoinColumn(name = "custom_value_id"))
+    private Set<FieldValue> customFieldsAndListsValues;
+
+    @ManyToMany
+    @JoinTable(name = "group_members",
+            joinColumns = @JoinColumn(name = "member_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    @Builder.Default
+    private Set<Group> groups = new HashSet<>();
+
+    public String getCustomValueByName(String name) {
+        return customFieldsAndListsValues.stream()
+                .filter(fieldValue -> fieldValue.getField().getName().equals(name))
+                .findAny().orElseThrow(() -> new EntityNotFoundException(
+                        MessageFormat.format("Custom field with name {0} does not exist", name)
+                )).getValue();
+    }
+
 }

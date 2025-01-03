@@ -56,8 +56,4 @@ public class TaskFilter extends CommonFilter {
 
     @JsonProperty("ThisDate")
     private LocalDate thisDate;
-
-    @JsonProperty("IsDeleted")
-    private Boolean isDeleted = false;
-
 }

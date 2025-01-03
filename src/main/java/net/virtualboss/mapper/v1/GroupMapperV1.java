@@ -7,6 +7,8 @@ import org.mapstruct.NullValueCheckStrategy;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE,
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
@@ -17,4 +19,9 @@ public interface GroupMapperV1 {
     GroupDto mapToDto(Group group);
 
     List<GroupDto> map(List<Group> groups);
+
+    default String mapToGroups(Set<Group> groups) {
+        return groups.stream().map(Group::getName)
+                .collect(Collectors.joining(","));
+    }
 }

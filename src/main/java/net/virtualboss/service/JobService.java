@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.exception.AlreadyExistsException;
 import net.virtualboss.exception.EntityNotFoundException;
-import net.virtualboss.mapper.v1.JobMapperV1;
+import net.virtualboss.mapper.v1.job.JobMapperV1;
 import net.virtualboss.util.BeanUtils;
 import net.virtualboss.repository.criteria.JobFilterCriteria;
+import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.filter.CommonFilter;
 import net.virtualboss.web.dto.job.JobResponse;
 import net.virtualboss.model.entity.Job;
@@ -33,13 +34,13 @@ public class JobService {
     private final MainService mainService;
 
     @Cacheable(value = "job", key = "#id")
-    public JobResponse findById(String id) {
+    public Map<String, Object> findById(String id) {
         Job job = getJobById(id);
-        return jobMapper.jobToResponse(job);
+        return JobResponse.getFieldsMap(jobMapper.jobToResponse(job), null);
     }
 
     public List<Map<String, Object>> findAll(String fields, CommonFilter commonFilter) {
-
+        if (fields == null) fields = "JobId,JobNumber";
         Set<String> fieldList = Arrays.stream(fields.split(",")).collect(Collectors.toSet());
 
         if (commonFilter.getSize() == null) commonFilter.setSize(Integer.MAX_VALUE);
@@ -49,6 +50,7 @@ public class JobService {
 
         return jobRepository.findAll(
                         JobFilterCriteria.builder()
+                                .isDeleted(commonFilter.getIsDeleted())
                                 .findString(commonFilter.getFindString() == null || commonFilter.getFindString().isBlank() ? null : commonFilter.getFindString())
                                 .build().getSpecification(),
                         PageRequest.of(commonFilter.getPage() - 1, commonFilter.getSize(),
@@ -66,27 +68,29 @@ public class JobService {
     public void deleteJob(String id) {
         Job job = getJobById(id);
         mainService.eraseJobFromTasks(job);
-        jobRepository.delete(job);
+        job.setIsDeleted(true);
+        jobRepository.save(job);
     }
 
     @Transactional
     @CachePut(value = "job", key = "#id")
-    public JobResponse saveJob(String id, UpsertJobRequest request) {
+    public Map<String, Object> saveJob(String id, UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
         checkIfJobAlreadyExist(id, request);
-        Job job = jobMapper.requestToJob(id, request);
+        Job job = jobMapper.requestToJob(id, request, customFieldsAndLists);
         Job jobFromDb = getJobById(id);
+        job.getCustomFieldsAndListsValues().addAll(jobFromDb.getCustomFieldsAndListsValues());
         BeanUtils.copyNonNullProperties(job, jobFromDb);
-        return jobMapper.jobToResponse(jobRepository.save(jobFromDb));
+        return JobResponse.getFieldsMap(jobMapper.jobToResponse(jobRepository.save(jobFromDb)), null);
     }
 
     @Transactional
-    public JobResponse createJob(UpsertJobRequest request) {
+    public Map<String, Object> createJob(UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
         checkIfJobAlreadyExist(null, request);
-        Job job = jobMapper.requestToJob(request);
-        return jobMapper.jobToResponse(jobRepository.save(job));
+        Job job = jobMapper.requestToJob(request, customFieldsAndLists);
+        return JobResponse.getFieldsMap(jobMapper.jobToResponse(jobRepository.save(job)), null);
     }
 
-    private Job getJobById(String id) {
+    public Job getJobById(String id) {
         return jobRepository.findById(UUID.fromString(id))
                 .orElseThrow(
                         () -> new EntityNotFoundException(
@@ -97,7 +101,7 @@ public class JobService {
     private void checkIfJobAlreadyExist(String id, UpsertJobRequest request) {
         UUID uuid = id == null ? null : UUID.fromString(id);
         String jobNumber = request.getNumber();
-        Optional<Job> optionalJob = jobRepository.findByNumberIgnoreCase(jobNumber);
+        Optional<Job> optionalJob = jobRepository.findByNumberIgnoreCaseAndIsDeleted(jobNumber, false);
         if (optionalJob.isPresent()  && !optionalJob.get().getId().equals(uuid))
             throw new AlreadyExistsException(MessageFormat.format("Job with number <b>{0}</b> already exists!", jobNumber));
     }

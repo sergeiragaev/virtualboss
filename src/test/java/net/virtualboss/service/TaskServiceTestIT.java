@@ -39,7 +39,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @Transactional
     void getTaskById_ReturnsValidTask() {
         UpsertTaskRequest request = generateTestTaskRequest();
-        CustomFieldsAndLists customFieldsAndLists = generateTestCustomFieldsRequest();
+        CustomFieldsAndLists customFieldsAndLists = generateTestTaskCustomFieldsRequest();
         Map<String, Object> savedTask = taskService.createNewTask(request, customFieldsAndLists);
         Task result = taskService.getTaskById(savedTask.get("TaskId").toString());
         assertEquals(savedTask.get("TaskId"), result.getId());
@@ -53,7 +53,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @Transactional
     void updateTask_CorrectUpdate() {
         Map<String, Object> savedTask = taskService.createNewTask(
-                generateTestTaskRequest(), generateTestCustomFieldsRequest());
+                generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
         String taskId = savedTask.get("TaskId").toString();
         UpsertTaskRequest updatedTaskRequest = UpsertTaskRequest.builder()
                 .id(UUID.fromString(taskId))
@@ -69,17 +69,17 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @Transactional
     void deleteTask_CorrectDelete() {
         Map<String, Object> savedTask = taskService.createNewTask(
-                generateTestTaskRequest(), generateTestCustomFieldsRequest());
+                generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
         String taskId = savedTask.get("TaskId").toString();
         taskService.deleteTaskById(taskId);
-        assertTrue(taskRepository.findById(UUID.fromString(taskId)).get().getIsDeleted());
+        assertTrue(taskRepository.findById(UUID.fromString(taskId)).orElseThrow().getIsDeleted());
     }
 
     @Test
     @DisplayName("Search tasks with specific criteria")
     @Transactional
-    void searchPosts() {
-        taskService.createNewTask(generateTestTaskRequest(), generateTestCustomFieldsRequest());
+    void searchTasks() {
+        taskService.createNewTask(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
         TaskFilter filter = new TaskFilter();
         filter.setFindString("custom");
         List<Map<String, Object>> result = taskService.findAll("TaskId", filter);
@@ -91,7 +91,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @DisplayName("Search specific task by filters")
     @Transactional
     void searchSpecificTaskByFilters() {
-        Map<String, Object> savedTaskMap = taskService.createNewTask(generateTestTaskRequest(), generateTestCustomFieldsRequest());
+        Map<String, Object> savedTaskMap = taskService.createNewTask(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
         TaskFilter filter = new TaskFilter();
         String savedTaskId = savedTaskMap.get("TaskId").toString();
         filter.setTaskIds(Collections.singletonList(savedTaskId));
@@ -112,7 +112,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @DisplayName("Search task with non-matching filters")
     @Transactional
     void searchTaskWithNonMatchingFilters() {
-        Map<String, Object> savedTaskMap = taskService.createNewTask(generateTestTaskRequest(), generateTestCustomFieldsRequest());
+        Map<String, Object> savedTaskMap = taskService.createNewTask(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
         TaskFilter filter = new TaskFilter();
         String savedTaskId = savedTaskMap.get("TaskId").toString();
         filter.setTaskIds(Collections.singletonList(savedTaskId));
@@ -130,7 +130,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @DisplayName("Create new task")
     @Transactional
     void createNewTask() {
-        taskService.createNewTask(generateTestTaskRequest(), generateTestCustomFieldsRequest());
+        taskService.createNewTask(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
         assertEquals(1, taskRepository.count());
     }
 }

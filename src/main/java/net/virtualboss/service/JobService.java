@@ -45,8 +45,14 @@ public class JobService {
 
         if (commonFilter.getSize() == null) commonFilter.setSize(Integer.MAX_VALUE);
         if (commonFilter.getPage() == null) commonFilter.setPage(1);
-        if (commonFilter.getSort() == null) commonFilter.setSort("number,asc");
+        if (commonFilter.getSort() == null) commonFilter.setSort("number asc");
+
         String[] sorts = commonFilter.getSort().split(",");
+        List<Sort.Order> orders = new ArrayList<>();
+        for (String sort : sorts) {
+            String[] order = sort.split(" ");
+            orders.add(new Sort.Order(Sort.Direction.valueOf(order[1].toUpperCase()), order[0]));
+        }
 
         return jobRepository.findAll(
                         JobFilterCriteria.builder()
@@ -54,9 +60,7 @@ public class JobService {
                                 .findString(commonFilter.getFindString() == null || commonFilter.getFindString().isBlank() ? null : commonFilter.getFindString())
                                 .build().getSpecification(),
                         PageRequest.of(commonFilter.getPage() - 1, commonFilter.getSize(),
-                                Sort.by(
-                                        Sort.Direction.valueOf(sorts[1].toUpperCase()), sorts[0]
-                                )
+                                Sort.by(orders)
                         ))
                 .map(jobMapper::jobToResponse).getContent().stream()
                 .map(jobResponse -> JobResponse.getFieldsMap(jobResponse, fieldList))

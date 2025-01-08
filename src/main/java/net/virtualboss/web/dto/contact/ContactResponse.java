@@ -3,14 +3,14 @@ package net.virtualboss.web.dto.contact;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
+import net.virtualboss.web.dto.CustomFieldsAndLists;
 
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.*;
 
 @Data
 @Builder
-public class ContactResponse implements Serializable {
+public class ContactResponse {
     @JsonProperty("ContactId")
     private UUID id;
 
@@ -81,6 +81,18 @@ public class ContactResponse implements Serializable {
     @Builder.Default
     private String phones = "";
 
+    @JsonProperty("isDeleted")
+    @Builder.Default
+    private Boolean isDeleted = false;
+
+    @JsonProperty("CustomFieldsAndLists")
+    @Builder.Default
+    private CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
+
+    @JsonProperty("ContactGroups")
+    @Builder.Default
+    private String groups = "";
+
     public static Map<String, Object> getFieldsMap(ContactResponse contactResponse, Set<String> fieldList) {
 
         Map<String, Object> responseMap = new HashMap<>();
@@ -96,6 +108,12 @@ public class ContactResponse implements Serializable {
             if (captionValue.equals("ContactPerson")) {
                 Object value = contactResponse.getPerson();
                 if (value != null) responseMap.put(captionValue, value);
+                continue;
+            }
+
+            if (captionValue.equals("CustomFieldsAndLists")) {
+                if (contactResponse.customFieldsAndLists == null) continue;
+                responseMap.putAll(CustomFieldsAndLists.getFieldsMap(contactResponse.customFieldsAndLists, "Contact", fieldList));
                 continue;
             }
 

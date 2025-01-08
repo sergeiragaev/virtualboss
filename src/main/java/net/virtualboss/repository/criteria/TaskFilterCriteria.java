@@ -123,10 +123,27 @@ public class TaskFilterCriteria {
                             cb.like(cb.lower(root.get("notes")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("order")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             getTaskCustomFieldsAndListsPredicate(root, cb, fieldValue),
-                            getJobSpecificationPredicate(root, cb, fieldValue)
+                            getJobSpecificationPredicate(root, cb, fieldValue),
+                            getContactSpecificationPredicate(root, cb, fieldValue)
                     );
             default -> (root, query, cb) -> cb.equal(root.get(fieldName), fieldValue);
         };
+    }
+
+    private static Predicate getContactSpecificationPredicate(Root<Task> root, CriteriaBuilder cb, Object fieldValue) {
+        Join<Task, Contact> conactJoin = root.join("contact", JoinType.LEFT);
+        Join<Contact, FieldValue> contactFieldValueJoin = conactJoin.join("customFieldsAndListsValues", JoinType.LEFT);
+        return cb.or(
+                cb.like(cb.lower(conactJoin.get("profession")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(conactJoin.get("firstName")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(conactJoin.get("lastName")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(conactJoin.get("notes")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(conactJoin.get("comments")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(conactJoin.get("supervisor")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(conactJoin.get("spouse")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(conactJoin.get("company")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(contactFieldValueJoin.get("value")), "%" + fieldValue.toString().toLowerCase() + "%")
+        );
     }
 
     private static Predicate getJobSpecificationPredicate(Root<Task> root, CriteriaBuilder cb, Object fieldValue) {

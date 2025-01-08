@@ -1,7 +1,7 @@
 package net.virtualboss;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.virtualboss.mapper.v1.ContactMapperV1;
+import net.virtualboss.mapper.v1.contact.ContactMapperV1;
 import net.virtualboss.mapper.v1.job.JobMapperV1;
 import net.virtualboss.mapper.v1.task.TaskMapperV1;
 import net.virtualboss.model.entity.Contact;
@@ -95,8 +95,8 @@ public class TestDependenciesContainer {
         return jobRepository.save(job);
     }
 
-    protected Contact saveContactInDbAndGet(UpsertContactRequest request) {
-        Contact contact = contactMapper.requestToContact(request);
+    protected Contact saveContactInDbAndGet(UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
+        Contact contact = contactMapper.requestToContact(request, customFieldsAndLists);
         return contactRepository.save(contact);
     }
 
@@ -118,9 +118,18 @@ public class TestDependenciesContainer {
         return groupRepository.save(group);
     }
 
+    protected Group saveContactGroupInDbAndGet() {
+        Group group = Group.builder()
+                .type(EntityType.CONTACT)
+                .name("Test contact group")
+                .description("Test contact group description")
+                .build();
+        return groupRepository.save(group);
+    }
+
     protected UpsertTaskRequest generateTestTaskRequest() {
         Job job = saveJobInDbAndGet(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
-        Contact contact = saveContactInDbAndGet(generateTestContactRequest());
+        Contact contact = saveContactInDbAndGet(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
         Group group = saveTaskGroupInDbAndGet();
         return UpsertTaskRequest.builder()
 //                .requested("Admin")
@@ -134,7 +143,6 @@ public class TestDependenciesContainer {
                 .status("Active")
                 .targetStart(LocalDate.now())
                 .targetFinish(LocalDate.now().plusDays(1))
-                .isDeleted(false)
                 .groups(String.valueOf(group.getId()))
                 .build();
     }
@@ -157,10 +165,20 @@ public class TestDependenciesContainer {
                 .build();
     }
 
+    protected CustomFieldsAndLists generateTestContactCustomFieldsRequest() {
+        return CustomFieldsAndLists.builder()
+                .customField3("contact custom field 3")
+                .customField4("contact custom field 4")
+                .customList5("contact custom list 2")
+                .customList3("contact custom list 6")
+                .build();
+    }
+
     protected UpsertContactRequest generateTestContactRequest() {
+        Group group = saveContactGroupInDbAndGet();
         return UpsertContactRequest.builder()
                 .comments("Some comments")
-                .fax("Fax #")
+                .fax("Fax number")
                 .firstName("First name")
                 .lastName("Last name")
                 .notes("Contact notes")
@@ -173,7 +191,8 @@ public class TestDependenciesContainer {
                 .company("Contact company")
                 .insuranceDate(LocalDate.now().plusYears(2))
                 .workersCompDate(LocalDate.now().plusYears(1))
-                .phones("Contact phones #")
+                .phones("Contact phones number")
+                .groups(String.valueOf(group.getId()))
                 .build();
     }
 

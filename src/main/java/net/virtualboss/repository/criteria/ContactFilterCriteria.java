@@ -1,9 +1,11 @@
 package net.virtualboss.repository.criteria;
 
+import jakarta.persistence.criteria.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import net.virtualboss.model.entity.Contact;
+import net.virtualboss.model.entity.FieldValue;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.lang.reflect.Field;
@@ -17,7 +19,8 @@ import java.util.Objects;
 public class ContactFilterCriteria {
 
     private String findString;
-//    private Boolean showUnassigned;
+    private Boolean showUnassigned;
+    private Boolean isDeleted;
 
     public Specification<Contact> getSpecification() {
         return getSpecification(this);
@@ -59,14 +62,24 @@ public class ContactFilterCriteria {
                             cb.like(cb.lower(root.get("comments")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("supervisor")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("spouse")), "%" + fieldValue.toString().toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("company")), "%" + fieldValue.toString().toLowerCase() + "%")
+                            cb.like(cb.lower(root.get("company")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                            getCustomFieldsAndListsPredicate(root, cb, fieldValue)
                     );
-//            case "showUnassigned" -> (root, query, cb) ->
-//                    cb.or(
-//                            cb.notEqual(cb.lower(root.get("company")), "unassigned"),
-//                            cb.equal(root.get("company"), "NULL")
-//                    );
+            case "showUnassigned" -> (root, query, cb) -> getUnassignedContact(root, cb, fieldValue);
             default -> (root, query, cb) -> cb.equal(root.get(fieldName), fieldValue);
         };
+    }
+
+private static Predicate getUnassignedContact(Root<Contact> root, CriteriaBuilder cb, Object fieldValue) {
+        if ((boolean) fieldValue) {
+            return cb.or(cb.equal(cb.lower(root.get("company")), "unassigned"));
+        } else {
+            return cb.or(cb.equal(cb.lower(root.get("company")), "unassigned").not());
+        }
+}
+
+private static Predicate getCustomFieldsAndListsPredicate(Root<Contact> root, CriteriaBuilder cb, Object fieldValue) {
+        Join<Contact, FieldValue> taskFieldValueJoin = root.join("customFieldsAndListsValues", JoinType.LEFT);
+        return cb.like(cb.lower(taskFieldValueJoin.get("value")), "%" + fieldValue.toString().toLowerCase() + "%");
     }
 }

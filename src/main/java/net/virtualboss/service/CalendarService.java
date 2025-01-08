@@ -2,7 +2,7 @@ package net.virtualboss.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import net.virtualboss.mapper.v1.ContactMapperV1;
+import net.virtualboss.mapper.v1.contact.ContactMapperV1;
 import net.virtualboss.web.dto.CalendarDto;
 import net.virtualboss.model.entity.Task;
 import net.virtualboss.repository.ContactRepository;

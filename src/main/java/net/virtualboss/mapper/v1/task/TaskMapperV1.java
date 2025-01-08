@@ -1,6 +1,6 @@
 package net.virtualboss.mapper.v1.task;
 
-import net.virtualboss.mapper.v1.ContactMapperV1;
+import net.virtualboss.mapper.v1.contact.ContactMapperV1;
 import net.virtualboss.mapper.v1.GroupMapperV1;
 import net.virtualboss.mapper.v1.job.JobMapperV1;
 import net.virtualboss.web.dto.CustomFieldsAndLists;

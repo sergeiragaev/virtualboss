@@ -22,6 +22,5 @@ public class UpsertTaskRequest {
     private String jobNumber;
     private String contactId;
     private String requested;
-    private Boolean isDeleted;
     private String groups;
 }

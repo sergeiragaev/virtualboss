@@ -80,7 +80,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("fields", "TaskId,TaskDescription")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
-                        .param("sort", "id,asc")
+                        .param("sort", "id asc")
                         .param("isActive", String.valueOf(true))
                         .param("dateType", String.valueOf(DateType.TARGET_START.getValue()))
                         .param("isDateRange", String.valueOf(true))

@@ -1,19 +1,15 @@
 package net.virtualboss.web.dto.job;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
 public class UpsertJobRequest {
     private UUID id;
-private String number;
+    private String number;
     private String lot;
     private String subdivision;
     private String ownerName;
@@ -32,4 +28,6 @@ private String number;
     private String company;
     private String email;
     private String country;
+    private Boolean isDeleted;
+    private String groups;
 }

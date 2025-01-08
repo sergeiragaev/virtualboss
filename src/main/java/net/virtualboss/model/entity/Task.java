@@ -76,7 +76,8 @@ public class Task {
     private Boolean marked;
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted;
+    @Builder.Default
+    private Boolean isDeleted = false;
 
     @ManyToOne
     @JoinColumn(nullable = false, name = "contact_id", referencedColumnName = "id")
@@ -95,7 +96,8 @@ public class Task {
             name = "task_custom_values",
             joinColumns = @JoinColumn(name = "task_id"),
             inverseJoinColumns = @JoinColumn(name = "custom_value_id"))
-    private Set<FieldValue> customFieldsAndListsValues;
+    @Builder.Default
+    private Set<FieldValue> customFieldsAndListsValues = new HashSet<>();
 
     @ManyToMany
     @JoinTable(name = "group_members",
@@ -109,21 +111,7 @@ public class Task {
         return customFieldsAndListsValues.stream()
                 .filter(fieldValue -> fieldValue.getField().getName().equals(name))
                 .findAny().orElseThrow(() -> new EntityNotFoundException(
-                        MessageFormat.format("Custom field with name {0} does not exist", name)
+                        MessageFormat.format("{0} does not have value!", name)
                 )).getValue();
-    }
-
-    private void setCustomValueByName(String name, String value) {
-        customFieldsAndListsValues.stream()
-                .filter(fieldValue -> fieldValue.getField().getName().equals(name))
-                .findAny().orElseThrow(() -> new EntityNotFoundException(
-                        MessageFormat.format("Custom field with name {0} does not exist", name)
-                )).setValue(value);
-    }
-
-    public void setCustomFieldsAndListsValues(Set<FieldValue> values) {
-        for (FieldValue value : values) {
-            setCustomValueByName(value.getField().getName(), value.getValue());
-        }
     }
 }

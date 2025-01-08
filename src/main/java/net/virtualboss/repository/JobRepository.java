@@ -10,5 +10,5 @@ import java.util.UUID;
 
 @Repository
 public interface JobRepository extends JpaRepository<Job, UUID>, JpaSpecificationExecutor<Job> {
-    Optional<Job> findByNumberIgnoreCase(String name);
+    Optional<Job> findByNumberIgnoreCaseAndIsDeleted(String name, boolean isDeleted);
 }

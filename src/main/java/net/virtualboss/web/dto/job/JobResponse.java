@@ -3,14 +3,14 @@ package net.virtualboss.web.dto.job;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
+import net.virtualboss.web.dto.CustomFieldsAndLists;
 
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.*;
 
 @Data
 @Builder
-public class JobResponse implements Serializable {
+public class JobResponse {
     @JsonProperty("JobId")
     private UUID id;
 
@@ -89,6 +89,15 @@ public class JobResponse implements Serializable {
     @Builder.Default
     private String country = "";
 
+    @JsonProperty("CustomFieldsAndLists")
+    @Builder.Default
+    private CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
+
+    @JsonProperty("JobGroups")
+    @Builder.Default
+    private String groups = "";
+
+
     public static Map<String, Object> getFieldsMap(JobResponse jobResponse, Set<String> fieldList) {
 
         Map<String, Object> responseMap = new HashMap<>();
@@ -100,6 +109,13 @@ public class JobResponse implements Serializable {
             } else {
                 captionValue = field.getName();
             }
+
+            if (captionValue.equals("CustomFieldsAndLists")) {
+                if (jobResponse.customFieldsAndLists == null) continue;
+                responseMap.putAll(CustomFieldsAndLists.getFieldsMap(jobResponse.customFieldsAndLists, "Job", fieldList));
+                continue;
+            }
+
             if (fieldList == null || fieldList.contains(captionValue)) {
                 try {
                     Object value = field.get(jobResponse);

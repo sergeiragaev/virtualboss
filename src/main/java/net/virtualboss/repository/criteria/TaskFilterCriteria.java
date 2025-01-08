@@ -122,13 +122,29 @@ public class TaskFilterCriteria {
                             cb.like(cb.lower(root.get("description")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("notes")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("order")), "%" + fieldValue.toString().toLowerCase() + "%"),
-                            getCustomFieldsAndListsPredicate(root, cb, fieldValue)
+                            getTaskCustomFieldsAndListsPredicate(root, cb, fieldValue),
+                            getJobSpecificationPredicate(root, cb, fieldValue)
                     );
             default -> (root, query, cb) -> cb.equal(root.get(fieldName), fieldValue);
         };
     }
 
-    private static Predicate getCustomFieldsAndListsPredicate(Root<Task> root, CriteriaBuilder cb, Object fieldValue) {
+    private static Predicate getJobSpecificationPredicate(Root<Task> root, CriteriaBuilder cb, Object fieldValue) {
+        Join<Task, Job> jobJoin = root.join("job", JoinType.LEFT);
+        Join<Job, FieldValue> jobFieldValueJoin = jobJoin.join("customFieldsAndListsValues", JoinType.LEFT);
+        return cb.or(
+                cb.like(cb.lower(jobJoin.get("number")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(jobJoin.get("subdivision")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(jobJoin.get("lot")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(jobJoin.get("directions")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(jobJoin.get("notes")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(jobJoin.get("ownerName")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(jobJoin.get("company")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                cb.like(cb.lower(jobFieldValueJoin.get("value")), "%" + fieldValue.toString().toLowerCase() + "%")
+        );
+    }
+
+    private static Predicate getTaskCustomFieldsAndListsPredicate(Root<Task> root, CriteriaBuilder cb, Object fieldValue) {
         Join<Task, FieldValue> taskFieldValueJoin = root.join("customFieldsAndListsValues", JoinType.LEFT);
         return cb.like(cb.lower(taskFieldValueJoin.get("value")), "%" + fieldValue.toString().toLowerCase() + "%");
     }
@@ -142,5 +158,4 @@ public class TaskFilterCriteria {
             return (root, query, cb) -> cb.equal(root.get("id"), field);
         }
     }
-
 }

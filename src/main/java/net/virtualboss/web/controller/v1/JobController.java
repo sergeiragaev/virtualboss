@@ -1,8 +1,8 @@
 package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
+import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.filter.CommonFilter;
-import net.virtualboss.web.dto.job.JobResponse;
 import net.virtualboss.service.JobService;
 import net.virtualboss.web.dto.job.UpsertJobRequest;
 import org.springframework.cache.annotation.CacheConfig;
@@ -28,7 +28,7 @@ public class JobController {
     }
 
     @GetMapping("/job/{id}")
-    public ResponseEntity<JobResponse> getJobById(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> getJobById(@PathVariable String id) {
         return ResponseEntity.ok(service.findById(id));
     }
 
@@ -39,15 +39,18 @@ public class JobController {
     }
 
     @PutMapping("/job/{id}")
-    public ResponseEntity<JobResponse> saveJob(
+    public ResponseEntity<Map<String, Object>> saveJob(
             @PathVariable String id,
-            UpsertJobRequest request) {
-        return ResponseEntity.ok(service.saveJob(id, request));
+            UpsertJobRequest request,
+            CustomFieldsAndLists customFieldsAndLists) {
+        return ResponseEntity.ok(service.saveJob(id, request, customFieldsAndLists));
     }
 
     @PostMapping("/job")
-    public ResponseEntity<JobResponse> createJob(UpsertJobRequest request) {
-        return ResponseEntity.ok(service.createJob(request));
+    public ResponseEntity<Map<String, Object>> createJob(
+            UpsertJobRequest request,
+            CustomFieldsAndLists customFieldsAndLists) {
+        return new ResponseEntity<>(service.createJob(request, customFieldsAndLists), HttpStatus.CREATED);
     }
 
 }

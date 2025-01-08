@@ -55,6 +55,7 @@ public class CustomFieldsAndLists {
                                                    String prefix, Set<String> fieldList) {
 
         Map<String, String> fieldsValuesMap = new HashMap<>();
+        if (customFieldsAndLists == null) return fieldsValuesMap;
 
         for (Field field : customFieldsAndLists.getClass().getDeclaredFields()) {
             String captionValue;

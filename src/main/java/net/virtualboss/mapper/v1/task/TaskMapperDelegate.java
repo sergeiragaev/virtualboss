@@ -6,7 +6,6 @@ import net.virtualboss.service.EmployeeService;
 import net.virtualboss.service.GroupService;
 import net.virtualboss.service.MainService;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
-import net.virtualboss.web.dto.task.UpsertTaskRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class TaskMapperDelegate implements TaskMapperV1 {
@@ -18,23 +17,12 @@ public abstract class TaskMapperDelegate implements TaskMapperV1 {
     private GroupService groupService;
 
     @Override
-    public Task requestToTask(UpsertTaskRequest request, CustomFieldsAndLists customFieldsAndLists) {
-        return Task.builder()
-                .status(request.getStatus())
-                .contact(mainService.getContactById(request.getContactId()))
-                .job(mainService.getJobByNumber(request.getJobNumber()))
-                .requested(employeeService.findByName(request.getRequested()))
-                .description(request.getDescription())
-                .notes(request.getNotes())
-                .order(request.getOrder())
-                .duration(request.getDuration())
-                .targetStart(request.getTargetStart())
-                .targetFinish(request.getTargetFinish())
-                .actualFinish(request.getActualFinish())
-                .marked(request.getMarked())
-                .isDeleted(request.getIsDeleted() != null && request.getIsDeleted())
-                .customFieldsAndListsValues(mainService.createCustomList(customFieldsAndLists, "Task"))
-                .groups(groupService.getGroups(EntityType.TASK, request.getGroups()))
-                .build();
+    public Task addCFLAndGroupsToTask(Task task, CustomFieldsAndLists customFieldsAndLists, String contactId, String jobNumber, String requested, String taskGroups) {
+        task.setContact(mainService.getContactById(contactId));
+        task.setJob(mainService.getJobByNumber(jobNumber));
+        task.setRequested(employeeService.findByName(requested));
+        task.setCustomFieldsAndListsValues(mainService.createCustomList(customFieldsAndLists, "Task"));
+        task.setGroups(groupService.getGroups(EntityType.TASK, taskGroups));
+        return task;
     }
 }

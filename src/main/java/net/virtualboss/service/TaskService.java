@@ -63,6 +63,7 @@ public class TaskService {
 
     public List<Map<String, Object>> findAll(String fields, TaskFilter filter) {
 
+        if (fields == null) fields = "TaskId,TaskDescription";
         Set<String> fieldSet = Arrays.stream(fields.split(",")).collect(Collectors.toSet());
 
         if (filter.getSize() == null) filter.setSize(Integer.MAX_VALUE);
@@ -158,6 +159,7 @@ public class TaskService {
     public Map<String, Object> saveTask(String id, UpsertTaskRequest request, CustomFieldsAndLists customFieldsAndLists) {
         Task task = taskMapper.requestToTask(id, request, customFieldsAndLists);
         Task taskFromDb = getTaskById(id);
+        task.getCustomFieldsAndListsValues().addAll(taskFromDb.getCustomFieldsAndListsValues());
         BeanUtils.copyNonNullProperties(task, taskFromDb);
         return TaskResponse.getFieldsMap(taskMapper.taskToResponse(taskRepository.save(taskFromDb)), null);
     }
@@ -188,7 +190,7 @@ public class TaskService {
     public static String mapGroupsToResponse(Task task) {
         return task.getGroups() == null ? null :
                 task.getGroups().stream().map(Group::getName)
-                        .collect(Collectors.joining (","));
+                        .collect(Collectors.joining(","));
     }
 
     public MappingJacksonValue retrieveTaskValues(TaskResponse taskResponse, Set<String> fields) {

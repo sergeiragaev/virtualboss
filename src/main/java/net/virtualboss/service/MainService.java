@@ -61,7 +61,7 @@ public class MainService {
 
     public Job getJobByNumber(String jobNumber) {
         if (jobNumber == null || jobNumber.isBlank()) return null;
-        return jobRepository.findByNumberIgnoreCase(jobNumber).orElseThrow(
+        return jobRepository.findByNumberIgnoreCaseAndIsDeleted(jobNumber, false).orElseThrow(
                 () -> new EntityNotFoundException(
                         MessageFormat.format("Job with number: {0} not found!", jobNumber)));
     }
@@ -75,7 +75,10 @@ public class MainService {
             if (entry.getValue() == null) continue;
             String fieldValue = entry.getValue();
             if (!fieldValue.isBlank()) {
-                Field field = fieldRepository.findByName(fieldCaption).orElseThrow();
+                Field field = fieldRepository
+                        .findByName(fieldCaption)
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                MessageFormat.format("Field with name {0} not found!", fieldCaption)) );
                 FieldValue value = fieldValueRepository
                         .findByFieldAndValue(field, fieldValue).orElse(
                                 FieldValue.builder()

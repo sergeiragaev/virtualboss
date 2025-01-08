@@ -1,4 +1,4 @@
-package net.virtualboss.controller;
+package net.virtualboss.web.controller.v1;
 
 import net.virtualboss.TestDependenciesContainer;
 import net.virtualboss.model.entity.Task;
@@ -32,7 +32,7 @@ class TaskControllerIT extends TestDependenciesContainer {
     @Test
     @DisplayName("test get task by id test")
     void getTaskById_ReturnsValidTask() throws Exception {
-        Task task = saveTaskInDbAndGet(generateTestTaskRequest(), generateTestCustomFieldsRequest());
+        Task task = saveTaskInDbAndGet(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
         String customValue = task.getCustomValueByName("TaskCustomField1");
         mockMvc.perform(get("/task/" + taskRepository.findAll().get(0).getId()))
                 .andExpect(status().isOk())
@@ -65,7 +65,7 @@ class TaskControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("task deletion failed of fake id test")
-    void deletePostById_NotAccess() throws Exception {
+    void deleteTaskById_NotFound() throws Exception {
         Task task = saveAndGetTestTaskToDelete();
         task.setId(UUID.randomUUID());
         mockMvc.perform(delete("/task/" + task.getId())).andExpect(status().isNotFound());
@@ -75,7 +75,7 @@ class TaskControllerIT extends TestDependenciesContainer {
     @DisplayName("search tasks with specific criteria api test")
     void searchTasks() throws Exception {
         UpsertTaskRequest testTaskRequest = generateTestTaskRequest();
-        saveTaskInDbAndGet(testTaskRequest, generateTestCustomFieldsRequest());
+        saveTaskInDbAndGet(testTaskRequest, generateTestTaskCustomFieldsRequest());
         mockMvc.perform(get("/task")
                         .param("fields", "TaskId,TaskDescription")
                         .param("page", String.valueOf(1))
@@ -89,10 +89,9 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("dateTo", LocalDate.now().plusDays(1).toString())
                         .param("dateCriteria", String.valueOf(DateCriteria.EXACT.getValue()))
                         .param("jobIds", String.valueOf(
-                                jobRepository.findByNumberIgnoreCase(testTaskRequest.getJobNumber()).orElseThrow().getId()))
+                                jobRepository.findByNumberIgnoreCaseAndIsDeleted(testTaskRequest.getJobNumber(), false).orElseThrow().getId()))
                         .param("custIds", String.valueOf(testTaskRequest.getContactId()))
-                        .param("isDeleted", String.valueOf(false))
-                        .param("findString", "task custom field 6")
+                        .param("findString", "Subdivision")
                 )
                 .andExpect(jsonPath("[0].TaskDescription").value(testTaskRequest.getDescription()))
                 .andExpect(status().isOk());
@@ -126,7 +125,7 @@ class TaskControllerIT extends TestDependenciesContainer {
         UpsertTaskRequest updatedTaskRequest = getUpdatedTaskRequestByTask(newTask);
         String updatedTaskJson = objectMapper.writeValueAsString(updatedTaskRequest);
         String updatedTaskQueryString = getQueryString(updatedTaskJson, false);
-        CustomFieldsAndLists customFL = generateTestCustomFieldsRequest();
+        CustomFieldsAndLists customFL = generateTestTaskCustomFieldsRequest();
         customFL.setCustomField1("new custom field 1 value");
         String updatedCustomFL = getQueryString(objectMapper.writeValueAsString(customFL), true);
         mockMvc.perform(put("/task/" + taskRepository.findAll().get(0).getId() +
@@ -155,9 +154,8 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .description("Test Task to update")
                         .actualFinish(LocalDate.now())
                         .status("Done")
-                        .isDeleted(false)
                         .build(),
-                generateTestCustomFieldsRequest());
+                generateTestTaskCustomFieldsRequest());
     }
 
     private UpsertTaskRequest getUpdatedTaskRequestByTask(Task newTask) {
@@ -169,6 +167,6 @@ class TaskControllerIT extends TestDependenciesContainer {
     }
 
     private Task saveAndGetTestTaskToDelete() {
-        return saveTaskInDbAndGet(generateTestTaskRequest(), generateTestCustomFieldsRequest());
+        return saveTaskInDbAndGet(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
     }
 }

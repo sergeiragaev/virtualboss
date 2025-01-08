@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import net.virtualboss.model.enums.RoleType;
 
-import java.io.Serializable;
 import java.util.*;
 
 @Entity
@@ -14,7 +13,7 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class Employee  implements Serializable {
+public class Employee {
     @Id
     @GeneratedValue
     private UUID id;

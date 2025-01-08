@@ -112,22 +112,22 @@ public class TaskResponse {
                 captionValue = field.getName();
             }
 
-            if (captionValue.equals("Contact")) {
-                if (taskResponse.contactResponse == null) continue;
-                responseMap.putAll(ContactResponse.getFieldsMap(taskResponse.contactResponse, fieldList));
-                continue;
-            }
-
-            if (captionValue.equals("Job")) {
-                if (taskResponse.jobResponse == null) continue;
-                responseMap.putAll(JobResponse.getFieldsMap(taskResponse.jobResponse, fieldList));
-                continue;
-            }
-
-            if (captionValue.equals("CustomFieldsAndLists")) {
-                if (taskResponse.customFieldsAndLists == null) continue;
-                responseMap.putAll(CustomFieldsAndLists.getFieldsMap(taskResponse.customFieldsAndLists, "Task", fieldList));
-                continue;
+            switch (captionValue) {
+                case "Contact" -> {
+                    if (taskResponse.contactResponse == null) continue;
+                    responseMap.putAll(ContactResponse.getFieldsMap(taskResponse.contactResponse, fieldList));
+                    continue;
+                }
+                case "Job" -> {
+                    if (taskResponse.jobResponse == null) continue;
+                    responseMap.putAll(JobResponse.getFieldsMap(taskResponse.jobResponse, fieldList));
+                    continue;
+                }
+                case "CustomFieldsAndLists" -> {
+                    if (taskResponse.customFieldsAndLists == null) continue;
+                    responseMap.putAll(CustomFieldsAndLists.getFieldsMap(taskResponse.customFieldsAndLists, "Task", fieldList));
+                    continue;
+                }
             }
 
             if (fieldList == null || fieldList.contains(captionValue)) {

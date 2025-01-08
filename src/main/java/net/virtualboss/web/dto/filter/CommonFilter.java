@@ -13,4 +13,6 @@ public class CommonFilter extends PageFilter {
     protected Integer matchType;
     @JsonProperty("Field")
     protected String field;
+    @JsonProperty("IsDeleted")
+    private Boolean isDeleted = false;
 }

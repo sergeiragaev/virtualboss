@@ -2,7 +2,7 @@ package net.virtualboss;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.virtualboss.mapper.v1.ContactMapperV1;
-import net.virtualboss.mapper.v1.JobMapperV1;
+import net.virtualboss.mapper.v1.job.JobMapperV1;
 import net.virtualboss.mapper.v1.task.TaskMapperV1;
 import net.virtualboss.model.entity.Contact;
 import net.virtualboss.model.entity.Group;
@@ -90,8 +90,8 @@ public class TestDependenciesContainer {
         return taskRepository.save(task);
     }
 
-    protected Job saveJobInDbAndGet(UpsertJobRequest request) {
-        Job job = jobMapper.requestToJob(request);
+    protected Job saveJobInDbAndGet(UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
+        Job job = jobMapper.requestToJob(request, customFieldsAndLists);
         return jobRepository.save(job);
     }
 
@@ -109,8 +109,17 @@ public class TestDependenciesContainer {
         return groupRepository.save(group);
     }
 
+    protected Group saveJobGroupInDbAndGet() {
+        Group group = Group.builder()
+                .type(EntityType.JOB)
+                .name("Test job group")
+                .description("Test job group description")
+                .build();
+        return groupRepository.save(group);
+    }
+
     protected UpsertTaskRequest generateTestTaskRequest() {
-        Job job = saveJobInDbAndGet(generateTestJobRequest());
+        Job job = saveJobInDbAndGet(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
         Contact contact = saveContactInDbAndGet(generateTestContactRequest());
         Group group = saveTaskGroupInDbAndGet();
         return UpsertTaskRequest.builder()
@@ -130,7 +139,7 @@ public class TestDependenciesContainer {
                 .build();
     }
 
-    protected CustomFieldsAndLists generateTestCustomFieldsRequest() {
+    protected CustomFieldsAndLists generateTestTaskCustomFieldsRequest() {
         return CustomFieldsAndLists.builder()
                 .customField1("task custom field 1")
                 .customField6("task custom field 6")
@@ -139,6 +148,14 @@ public class TestDependenciesContainer {
                 .build();
     }
 
+    protected CustomFieldsAndLists generateTestJobCustomFieldsRequest() {
+        return CustomFieldsAndLists.builder()
+                .customField2("job custom field 2")
+                .customField5("job custom field 5")
+                .customList1("job custom list 1")
+                .customList4("job custom list 4")
+                .build();
+    }
 
     protected UpsertContactRequest generateTestContactRequest() {
         return UpsertContactRequest.builder()
@@ -161,26 +178,28 @@ public class TestDependenciesContainer {
     }
 
     protected UpsertJobRequest generateTestJobRequest() {
+        Group group = saveJobGroupInDbAndGet();
         return UpsertJobRequest.builder()
                 .address1("Address first row")
                 .address2("Address second row")
                 .city("City")
                 .state("State")
                 .email("job@email.com")
-                .fax("Fax #")
-                .lot("Lot #")
+                .fax("Fax number")
+                .lot("Lot number")
                 .company("Job Company")
                 .country("Country")
-                .cellPhone("Cellphone #")
+                .cellPhone("Cellphone number")
                 .directions("Directions to job")
-                .lockBox("Loc box #")
+                .lockBox("Loc box number")
                 .notes("Job notes")
-                .homePhone("Home phone #")
+                .homePhone("Home phone number")
                 .postal("zip")
                 .ownerName("Owner name")
                 .subdivision("Subdivision")
                 .number("Some job")
-                .workPhone("Work phone #")
+                .workPhone("Work phone number")
+                .groups(String.valueOf(group.getId()))
                 .build();
     }
 

@@ -1,8 +1,10 @@
 package net.virtualboss.repository.criteria;
 
+import jakarta.persistence.criteria.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import net.virtualboss.model.entity.FieldValue;
 import net.virtualboss.model.entity.Job;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -17,6 +19,8 @@ import java.util.Objects;
 public class JobFilterCriteria {
 
     private String findString;
+
+    private Boolean isDeleted;
 
     public Specification<Job> getSpecification() {
         return getSpecification(this);
@@ -57,9 +61,14 @@ public class JobFilterCriteria {
                             cb.like(cb.lower(root.get("directions")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("notes")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("ownerName")), "%" + fieldValue.toString().toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("company")), "%" + fieldValue.toString().toLowerCase() + "%")
+                            cb.like(cb.lower(root.get("company")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                            getCustomFieldsAndListsPredicate(root, cb, fieldValue)
                     );
             default -> (root, query, cb) -> cb.equal(root.get(fieldName), fieldValue);
         };
+    }
+    private static Predicate getCustomFieldsAndListsPredicate(Root<Job> root, CriteriaBuilder cb, Object fieldValue) {
+        Join<Job, FieldValue> taskFieldValueJoin = root.join("customFieldsAndListsValues", JoinType.LEFT);
+        return cb.like(cb.lower(taskFieldValueJoin.get("value")), "%" + fieldValue.toString().toLowerCase() + "%");
     }
 }

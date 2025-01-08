@@ -34,5 +34,4 @@ public interface JobMapperV1 {
 
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
     JobResponse jobToResponse(Job job);
-
 }

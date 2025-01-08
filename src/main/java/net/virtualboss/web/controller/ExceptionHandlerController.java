@@ -1,6 +1,7 @@
 package net.virtualboss.web.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import net.virtualboss.exception.AccessDeniedException;
 import net.virtualboss.exception.AlreadyExistsException;
 import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.web.dto.error.ErrorDetails;
@@ -63,6 +64,13 @@ public class ExceptionHandlerController {
     @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> alreadyExistsHandler(AlreadyExistsException ex) {
         log.error("There is error occurred while trying to create new/update entity", ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(ex.getLocalizedMessage(), new ArrayList<>()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> accessDeniedHandler(AccessDeniedException ex) {
+        log.error("There is error occurred while trying to update entity", ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(ex.getLocalizedMessage(), new ArrayList<>()));
     }

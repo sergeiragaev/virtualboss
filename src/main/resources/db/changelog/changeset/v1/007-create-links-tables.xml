@@ -131,6 +131,17 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="createContactCustomValuesTable" author="Sergei Ragaev">
+        <createTable tableName="contact_custom_values">
+            <column name="contact_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="custom_value_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
     <changeSet id="addUniqueConstraintTaskFollows" author="Sergei Ragaev">
         <addUniqueConstraint columnNames="follows_id" constraintName="tasks_follows_follows_id_key"
                              tableName="tasks_follows"/>
@@ -249,6 +260,18 @@
                                  constraintName="fk_job_id" deferrable="false"
                                  initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
                                  referencedColumnNames="id" referencedTableName="jobs" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKContactCustomValuesConstraintCustomValueId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="custom_value_id" baseTableName="contact_custom_values"
+                                 constraintName="fk_custom_value_id" deferrable="false"
+                                 initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
+                                 referencedColumnNames="id" referencedTableName="custom_values" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKContactCustomValuesConstraintContactId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="contact_id" baseTableName="contact_custom_values"
+                                 constraintName="fk_job_id" deferrable="false"
+                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="contacts" validate="true"/>
     </changeSet>
 
 </databaseChangeLog>

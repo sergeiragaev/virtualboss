@@ -1,7 +1,7 @@
 package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
-import net.virtualboss.web.dto.contact.ContactResponse;
+import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.service.ContactService;
 import net.virtualboss.web.dto.contact.UpsertContactRequest;
 import net.virtualboss.web.dto.filter.CommonFilter;
@@ -28,7 +28,7 @@ public class ContactController {
     }
 
     @GetMapping("/contact/{id}")
-    public ResponseEntity<ContactResponse> getContactById(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> getContactById(@PathVariable String id) {
         return ResponseEntity.ok(service.findById(id));
     }
 
@@ -39,15 +39,18 @@ public class ContactController {
     }
 
     @PutMapping("/contact/{id}")
-    public ResponseEntity<ContactResponse> saveContact(
+    public ResponseEntity<Map<String, Object>> saveContact(
             @PathVariable String id,
-            UpsertContactRequest request) {
-        return ResponseEntity.ok(service.saveContact(id, request));
+            UpsertContactRequest request,
+            CustomFieldsAndLists customFieldsAndLists) {
+        return ResponseEntity.ok(service.saveContact(id, request, customFieldsAndLists));
     }
 
     @PostMapping("/contact")
-    public ResponseEntity<ContactResponse> createContact(UpsertContactRequest request) {
-        return ResponseEntity.ok(service.createContact(request));
+    public ResponseEntity<Map<String, Object>> createContact(
+            UpsertContactRequest request,
+            CustomFieldsAndLists customFieldsAndLists) {
+        return new ResponseEntity<>(service.createContact(request, customFieldsAndLists), HttpStatus.CREATED);
     }
 
 }

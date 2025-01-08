@@ -55,7 +55,7 @@ class JobControllerIT extends TestDependenciesContainer {
     void deleteJobById_NotFound() throws Exception {
         Job job = saveAndGetTestJobToDelete();
         job.setId(UUID.randomUUID());
-        mockMvc.perform(delete("/task/" + job.getId())).andExpect(status().isNotFound());
+        mockMvc.perform(delete("/job/" + job.getId())).andExpect(status().isNotFound());
     }
 
     @Test
@@ -111,7 +111,7 @@ class JobControllerIT extends TestDependenciesContainer {
                         .param("fields", "JobId,JobNumber")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
-                        .param("sort", "number,asc")
+                        .param("sort", "number asc")
                         .param("findString", "custom field")
                 )
                 .andExpect(jsonPath("[0].JobNumber").value(testRequest.getNumber()))

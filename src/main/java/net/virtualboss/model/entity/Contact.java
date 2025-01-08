@@ -1,17 +1,28 @@
 package net.virtualboss.model.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import net.virtualboss.exception.EntityNotFoundException;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.CascadeType.REFRESH;
+
 @Entity
 @Table(name = "contacts")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Contact {
     @Id
     @GeneratedValue
@@ -69,9 +80,34 @@ public class Contact {
     private String phones;
 
     @Column(name = "is_deleted")
-    private boolean isDeleted;
+    @Builder.Default
+    private Boolean isDeleted = false;
 
-    @OneToMany(cascade = CascadeType.DETACH)
-    public Set<Task> tasks = new HashSet<>();
+    @OneToMany(cascade = DETACH)
+    @Builder.Default
+    private Set<Task> tasks = new HashSet<>();
+
+    @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
+    @JoinTable(
+            name = "contact_custom_values",
+            joinColumns = @JoinColumn(name = "contact_id"),
+            inverseJoinColumns = @JoinColumn(name = "custom_value_id"))
+    private Set<FieldValue> customFieldsAndListsValues;
+
+    @ManyToMany
+    @JoinTable(name = "group_members",
+            joinColumns = @JoinColumn(name = "member_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    @Builder.Default
+    private Set<Group> groups = new HashSet<>();
+
+    public String getCustomValueByName(String name) {
+        return customFieldsAndListsValues.stream()
+                .filter(fieldValue -> fieldValue.getField().getName().equals(name))
+                .findAny().orElseThrow(() -> new EntityNotFoundException(
+                        MessageFormat.format("Custom field with name {0} does not exist", name)
+                )).getValue();
+    }
 
 }

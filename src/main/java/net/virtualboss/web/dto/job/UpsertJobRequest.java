@@ -28,6 +28,5 @@ public class UpsertJobRequest {
     private String company;
     private String email;
     private String country;
-    private Boolean isDeleted;
     private String groups;
 }

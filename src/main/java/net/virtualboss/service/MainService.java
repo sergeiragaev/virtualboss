@@ -55,7 +55,7 @@ public class MainService {
 
     private Contact createUnassigned() {
         Contact contact = new Contact();
-        contact.setCompany("UNASSIGNED");
+        contact.setCompany("Unassigned");
         return contactRepository.save(contact);
     }
 

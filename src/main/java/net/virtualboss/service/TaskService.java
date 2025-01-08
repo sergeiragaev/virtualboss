@@ -68,8 +68,14 @@ public class TaskService {
 
         if (filter.getSize() == null) filter.setSize(Integer.MAX_VALUE);
         if (filter.getPage() == null) filter.setPage(1);
-        if (filter.getSort() == null) filter.setSort("description,asc");
+        if (filter.getSort() == null) filter.setSort("description asc");
+
         String[] sorts = filter.getSort().split(",");
+        List<Sort.Order> orders = new ArrayList<>();
+        for (String sort : sorts) {
+            String[] order = sort.split(" ");
+            orders.add(new Sort.Order(Sort.Direction.valueOf(order[1].toUpperCase()), order[0]));
+        }
 
         String status = null;
         boolean isActive = filter.getIsActive() != null && filter.getIsActive();
@@ -111,9 +117,7 @@ public class TaskService {
                                                 .map(UUID::fromString).toList())
                                 .build().getSpecification(),
                         PageRequest.of(filter.getPage() - 1, filter.getSize(),
-                                Sort.by(
-                                        Sort.Direction.valueOf(sorts[1].toUpperCase()), sorts[0]
-                                )
+                                Sort.by(orders)
                         ))
                 .map(taskMapper::taskToResponse).getContent().stream()
                 .map(taskResponse -> TaskResponse.getFieldsMap(taskResponse, fieldSet))

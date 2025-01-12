@@ -93,8 +93,8 @@ public class Task {
 
     @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
     @JoinTable(
-            name = "task_custom_values",
-            joinColumns = @JoinColumn(name = "task_id"),
+            name = "entity_custom_values",
+            joinColumns = @JoinColumn(name = "entity_id"),
             inverseJoinColumns = @JoinColumn(name = "custom_value_id"))
     @Builder.Default
     private Set<FieldValue> customFieldsAndListsValues = new HashSet<>();
@@ -113,5 +113,18 @@ public class Task {
                 .findAny().orElseThrow(() -> new EntityNotFoundException(
                         MessageFormat.format("{0} does not have value!", name)
                 )).getValue();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Task task = (Task) o;
+        return Objects.equals(id, task.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }

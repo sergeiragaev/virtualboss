@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -77,7 +78,7 @@ class TaskControllerIT extends TestDependenciesContainer {
         UpsertTaskRequest testTaskRequest = generateTestTaskRequest();
         saveTaskInDbAndGet(testTaskRequest, generateTestTaskCustomFieldsRequest());
         mockMvc.perform(get("/task")
-                        .param("fields", "TaskId,TaskDescription")
+                        .param("fields", "TaskId,TaskDescription,TaskCustomField1")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("sort", "id asc")
@@ -94,6 +95,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("findString", "Subdivision")
                 )
                 .andExpect(jsonPath("[0].TaskDescription").value(testTaskRequest.getDescription()))
+                .andExpect(jsonPath("[0].TaskCustomField1").value("task custom field 1"))
                 .andExpect(status().isOk());
     }
 
@@ -120,7 +122,7 @@ class TaskControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("update task description is correct test")
-    void updateTaskDescriptionById_CorrectUpdate() throws Exception {
+    void updateTaskDescription_CorrectUpdate() throws Exception {
         Task newTask = saveAndGetTestTaskToUpdate();
         UpsertTaskRequest updatedTaskRequest = getUpdatedTaskRequestByTask(newTask);
         String updatedTaskJson = objectMapper.writeValueAsString(updatedTaskRequest);
@@ -141,6 +143,37 @@ class TaskControllerIT extends TestDependenciesContainer {
         Task task = taskService.getTaskById(newTask.getId().toString());
         assertEquals(task.getNotes(), newTask.getNotes());
         assertEquals(task.getDescription(), updatedTaskRequest.getDescription());
+    }
+
+    @Test
+    @DisplayName("update assigning task to Unassigned contact and empty job is correct test")
+    void updateAssigningTaskToUnassignedContactAndEmptyJob_CorrectUpdate() throws Exception {
+        Task newTask = saveAndGetTestTaskToUpdate();
+        UpsertTaskRequest updatedTaskRequest = getUpdatedTaskRequestByTask(newTask);
+        updatedTaskRequest.setContactId("");
+        updatedTaskRequest.setJobNumber("");
+        String updatedTaskJson = objectMapper.writeValueAsString(updatedTaskRequest);
+        String updatedTaskQueryString = getQueryString(updatedTaskJson, false);
+        CustomFieldsAndLists customFL = generateTestTaskCustomFieldsRequest();
+        customFL.setCustomField1("new custom field 1 value");
+        String updatedCustomFL = getQueryString(objectMapper.writeValueAsString(customFL), true);
+        mockMvc.perform(put("/task/" + taskRepository.findAll().get(0).getId() +
+                                updatedTaskQueryString +
+                                updatedCustomFL)
+//                        .header("id", 1L)
+                )
+                .andExpect(jsonPath("$.TaskCustomField1").value(
+                        customFL.getCustomField1()))
+                .andExpect(jsonPath("$.ContactId").value(
+                        contactRepository.getUnassigned().orElseThrow().getId().toString()))
+                .andExpect(jsonPath("$.JobNumber").value(""))
+                .andExpect(status().isOk()
+                );
+
+        Task task = taskService.getTaskById(newTask.getId().toString());
+        assertEquals(task.getNotes(), newTask.getNotes());
+        assertEquals(task.getDescription(), updatedTaskRequest.getDescription());
+        assertNull(task.getJob());
     }
 
     //-------------------------UTIL-METHODS------------------------------

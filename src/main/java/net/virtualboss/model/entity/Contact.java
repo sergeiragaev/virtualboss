@@ -89,8 +89,8 @@ public class Contact {
 
     @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
     @JoinTable(
-            name = "contact_custom_values",
-            joinColumns = @JoinColumn(name = "contact_id"),
+            name = "entity_custom_values",
+            joinColumns = @JoinColumn(name = "entity_id"),
             inverseJoinColumns = @JoinColumn(name = "custom_value_id"))
     private Set<FieldValue> customFieldsAndListsValues;
 

@@ -2,6 +2,7 @@ package net.virtualboss.service;
 
 import net.virtualboss.TestDependenciesContainer;
 import net.virtualboss.model.entity.Task;
+import net.virtualboss.repository.ContactRepository;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.task.TaskFilter;
 import net.virtualboss.web.dto.task.UpsertTaskRequest;
@@ -27,6 +28,8 @@ class TaskServiceTestIT extends TestDependenciesContainer {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
+    @Autowired
+    private ContactRepository contactRepository;
 
     @BeforeEach
     void init() {
@@ -58,10 +61,14 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         UpsertTaskRequest updatedTaskRequest = UpsertTaskRequest.builder()
                 .id(UUID.fromString(taskId))
                 .description("Updated task description")
+                .contactId("")
+                .jobNumber("")
                 .build();
         taskService.saveTask(taskId, updatedTaskRequest, CustomFieldsAndLists.builder().build());
         Task updatedTask = taskRepository.findById(UUID.fromString(taskId)).orElseThrow();
         assertEquals("Updated task description", updatedTask.getDescription());
+        assertEquals(contactRepository.getUnassigned().orElseThrow(), updatedTask.getContact());
+        assertNull(updatedTask.getJob());
     }
 
     @Test
@@ -76,9 +83,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     }
 
     @Test
-    @DisplayName("Search tasks with specific criteria")
+    @DisplayName("Search tasks with custom fields values")
     @Transactional
-    void searchTasks() {
+    void searchTasksWithCustomFieldsValues() {
         taskService.createNewTask(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
         TaskFilter filter = new TaskFilter();
         filter.setFindString("custom");

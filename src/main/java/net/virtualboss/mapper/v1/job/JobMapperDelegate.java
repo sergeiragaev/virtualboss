@@ -15,7 +15,7 @@ public abstract class JobMapperDelegate implements JobMapperV1 {
 
     @Override
     public Job addCustomFLAndGroups(Job job, CustomFieldsAndLists customFieldsAndLists, String jobGroups) {
-        job.setCustomFieldsAndListsValues(mainService.createCustomList(customFieldsAndLists, "Job"));
+        job.setCustomFieldsAndListsValues(mainService.createCustomList(customFieldsAndLists, EntityType.JOB));
         job.setGroups(groupService.getGroups(EntityType.JOB, jobGroups));
         return job;
     }

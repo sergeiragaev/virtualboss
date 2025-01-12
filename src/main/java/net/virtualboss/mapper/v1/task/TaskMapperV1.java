@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE,
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
-        uses = {JobMapperV1.class, ContactMapperV1.class, TaskCustomFLMapperV1.class, GroupMapperV1.class})
+        uses = {JobMapperV1.class, ContactMapperV1.class, GroupMapperV1.class, TaskCustomFLMapperV1.class})
 @DecoratedWith(TaskMapperDelegate.class)
 public interface TaskMapperV1 {
 
@@ -50,5 +50,4 @@ public interface TaskMapperV1 {
     @Mapping(target = "isDeleted", ignore = true)
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
     TaskResponse taskToResponse(Task task);
-
 }

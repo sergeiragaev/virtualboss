@@ -15,7 +15,7 @@ public abstract class ContactMapperDelegate implements ContactMapperV1 {
 
     @Override
     public Contact addCustomFLAndGroups(Contact contact, CustomFieldsAndLists customFieldsAndLists, String contactGroups) {
-        contact.setCustomFieldsAndListsValues(mainService.createCustomList(customFieldsAndLists, "Contact"));
+        contact.setCustomFieldsAndListsValues(mainService.createCustomList(customFieldsAndLists, EntityType.CONTACT));
         contact.setGroups(groupService.getGroups(EntityType.CONTACT, contactGroups));
         return contact;
     }

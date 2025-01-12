@@ -16,21 +16,6 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="addUniqueConstraintJobsTasks" author="Sergei Ragaev">
-        <addUniqueConstraint columnNames="tasks_id" constraintName="jobs_tasks_tasks_id_key" tableName="jobs_tasks"/>
-    </changeSet>
-
-    <changeSet id="createTasksContactsTable" author="Sergei Ragaev">
-        <createTable tableName="tasks_contacts">
-            <column name="contact_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-            <column name="tasks_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
-
     <changeSet id="createContactsTasksTable" author="Sergei Ragaev">
         <createTable tableName="contacts_tasks">
             <column name="contact_id" type="UUID">
@@ -87,9 +72,9 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="createTaskCustomValuesTable" author="Sergei Ragaev">
-        <createTable tableName="task_custom_values">
-            <column name="task_id" type="UUID">
+    <changeSet id="createEntityCustomValuesTable" author="Sergei Ragaev">
+        <createTable tableName="entity_custom_values">
+            <column name="entity_id" type="UUID">
                 <constraints nullable="false"/>
             </column>
             <column name="custom_value_id" type="BIGINT">
@@ -120,28 +105,6 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="createJobCustomValuesTable" author="Sergei Ragaev">
-        <createTable tableName="job_custom_values">
-            <column name="job_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-            <column name="custom_value_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
-
-    <changeSet id="createContactCustomValuesTable" author="Sergei Ragaev">
-        <createTable tableName="contact_custom_values">
-            <column name="contact_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-            <column name="custom_value_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
-
     <changeSet id="addUniqueConstraintTaskFollows" author="Sergei Ragaev">
         <addUniqueConstraint columnNames="follows_id" constraintName="tasks_follows_follows_id_key"
                              tableName="tasks_follows"/>
@@ -152,20 +115,10 @@
                                  deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
                                  referencedColumnNames="id" referencedTableName="jobs" validate="true"/>
     </changeSet>
-    <changeSet id="addFKTasksContactsConstraintTasksId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="tasks_contacts" constraintName="fk_tasks_id"
-                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
-                                 referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
-    </changeSet>
-    <changeSet id="addFKTasksContactsConstraintContactId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="contact_id" baseTableName="tasks_contacts"
-                                 constraintName="fk_contact_id" deferrable="false" initiallyDeferred="false"
-                                 onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id"
-                                 referencedTableName="contacts" validate="true"/>
-    </changeSet>
+
     <changeSet id="addFKJobsTasksConstraintTasksId" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="jobs_tasks" constraintName="fk_tasks_id"
-                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
                                  referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
     </changeSet>
     <changeSet id="addFKJobsTasksConstraintJobId" author="Sergei Ragaev">
@@ -186,7 +139,7 @@
     </changeSet>
     <changeSet id="addFKTasksEmployeesConstraintTasksId" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="tasks_employees" constraintName="fk_tasks_id"
-                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
                                  referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
     </changeSet>
     <changeSet id="addFKTasksEmployeesConstraintEmployeeId" author="Sergei Ragaev">
@@ -197,7 +150,7 @@
     </changeSet>
     <changeSet id="addFKEmployeesTasksConstraintTasksId" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="employees_tasks" constraintName="fk_tasks_id"
-                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
                                  referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
     </changeSet>
     <changeSet id="addFKEmployeesTasksConstraintEmployeeId" author="Sergei Ragaev">
@@ -208,7 +161,7 @@
     </changeSet>
     <changeSet id="addFKContactsTasksConstraintTasksId" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="contacts_tasks" constraintName="fk_tasks_id"
-                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
                                  referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
     </changeSet>
     <changeSet id="addFKContactsTasksConstraintContactId" author="Sergei Ragaev">
@@ -219,17 +172,12 @@
     </changeSet>
 
     <changeSet id="addFKTaskCustomValuesConstraintCustomValueId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="custom_value_id" baseTableName="task_custom_values"
+        <addForeignKeyConstraint baseColumnNames="custom_value_id" baseTableName="entity_custom_values"
                                  constraintName="fk_custom_value_id" deferrable="false"
                                  initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
                                  referencedColumnNames="id" referencedTableName="custom_values" validate="true"/>
     </changeSet>
-    <changeSet id="addFKTaskCustomValuesConstraintTaskId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="task_id" baseTableName="task_custom_values"
-                                 constraintName="fk_task_id" deferrable="false"
-                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
-                                 referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
-    </changeSet>
+
     <changeSet id="addFKCustomValuesConstraintFieldId" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="field_id" baseTableName="custom_values"
                                  constraintName="fk_field_id" deferrable="false"
@@ -243,35 +191,4 @@
                                  initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
                                  referencedColumnNames="id" referencedTableName="groups" validate="true"/>
     </changeSet>
-<!--    <changeSet id="addFKGroupMembersConstraintMemberId" author="Sergei Ragaev">-->
-<!--        <addForeignKeyConstraint baseColumnNames="member_id" baseTableName="group_members"-->
-<!--                                 constraintName="fk_member_id" deferrable="false"-->
-<!--                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"-->
-<!--                                 referencedColumnNames="id" referencedTableName="tasks" validate="true"/>-->
-<!--    </changeSet>-->
-    <changeSet id="addFKJobCustomValuesConstraintCustomValueId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="custom_value_id" baseTableName="job_custom_values"
-                                 constraintName="fk_custom_value_id" deferrable="false"
-                                 initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
-                                 referencedColumnNames="id" referencedTableName="custom_values" validate="true"/>
-    </changeSet>
-    <changeSet id="addFKJobCustomValuesConstraintJobId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="job_custom_values"
-                                 constraintName="fk_job_id" deferrable="false"
-                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
-                                 referencedColumnNames="id" referencedTableName="jobs" validate="true"/>
-    </changeSet>
-    <changeSet id="addFKContactCustomValuesConstraintCustomValueId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="custom_value_id" baseTableName="contact_custom_values"
-                                 constraintName="fk_custom_value_id" deferrable="false"
-                                 initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
-                                 referencedColumnNames="id" referencedTableName="custom_values" validate="true"/>
-    </changeSet>
-    <changeSet id="addFKContactCustomValuesConstraintContactId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="contact_id" baseTableName="contact_custom_values"
-                                 constraintName="fk_job_id" deferrable="false"
-                                 initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
-                                 referencedColumnNames="id" referencedTableName="contacts" validate="true"/>
-    </changeSet>
-
 </databaseChangeLog>

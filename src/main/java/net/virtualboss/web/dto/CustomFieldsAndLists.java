@@ -91,7 +91,7 @@ public class CustomFieldsAndLists {
             }
             captionValue = prefix + captionValue;
             for (FieldValue value : values) {
-                if (value.getField().getName().equals(captionValue)) {
+                if (value.getField().getName().equalsIgnoreCase(captionValue)) {
                     try {
                         field.set(customFieldsAndLists, value.getValue());
                     } catch (IllegalAccessException e) {

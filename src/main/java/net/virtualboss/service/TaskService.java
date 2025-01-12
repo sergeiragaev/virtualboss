@@ -9,7 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.mapper.v1.task.TaskMapperV1;
+import net.virtualboss.model.entity.Contact;
 import net.virtualboss.model.entity.Group;
+import net.virtualboss.model.entity.Job;
 import net.virtualboss.model.enums.DateCriteria;
 import net.virtualboss.model.enums.DateRange;
 import net.virtualboss.model.enums.DateType;
@@ -119,7 +121,8 @@ public class TaskService {
                         PageRequest.of(filter.getPage() - 1, filter.getSize(),
                                 Sort.by(orders)
                         ))
-                .map(taskMapper::taskToResponse).getContent().stream()
+                .getContent().stream()
+                .map(taskMapper::taskToResponse)
                 .map(taskResponse -> TaskResponse.getFieldsMap(taskResponse, fieldSet))
                 .toList();
     }
@@ -164,8 +167,28 @@ public class TaskService {
         Task task = taskMapper.requestToTask(id, request, customFieldsAndLists);
         Task taskFromDb = getTaskById(id);
         task.getCustomFieldsAndListsValues().addAll(taskFromDb.getCustomFieldsAndListsValues());
+        removeTasksFromJobAndContact(taskFromDb);
         BeanUtils.copyNonNullProperties(task, taskFromDb);
+        taskFromDb.setJob(task.getJob());
+        assignTasksToJobAndContact(taskFromDb);
         return TaskResponse.getFieldsMap(taskMapper.taskToResponse(taskRepository.save(taskFromDb)), null);
+    }
+
+    private void removeTasksFromJobAndContact(Task taskFromDb) {
+        Job job = taskFromDb.getJob();
+        if (job != null) {
+            job.getTasks().remove(taskFromDb);
+            jobRepository.save(job);
+        }
+        Contact contact = taskFromDb.getContact();
+        contact.getTasks().remove(taskFromDb);
+        contactRepository.save(contact);
+    }
+
+    private void assignTasksToJobAndContact(Task savedTask) {
+        Job job = savedTask.getJob();
+        if (job != null) job.getTasks().add(savedTask);
+        savedTask.getContact().getTasks().add(savedTask);
     }
 
     @Transactional
@@ -175,7 +198,9 @@ public class TaskService {
             CustomFieldsAndLists customFieldsAndLists) {
         Task task = taskMapper.requestToTask(request, customFieldsAndLists);
         task.setNumber(getNextNumberSequenceValue());
-        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(taskRepository.save(task)), null);
+        Task savedTask = taskRepository.save(task);
+        assignTasksToJobAndContact(savedTask);
+        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(taskRepository.save(savedTask)), null);
     }
 
     @Transactional
@@ -184,11 +209,6 @@ public class TaskService {
         Task task = getTaskById(id);
         task.setIsDeleted(true);
         taskRepository.save(task);
-    }
-
-    public Long getNextNumberSequenceValue() {
-        return (Long) entityManager.createNativeQuery("SELECT NEXTVAL('tasks_number_seq')")
-                .getSingleResult();
     }
 
     public static String mapGroupsToResponse(Task task) {
@@ -203,5 +223,9 @@ public class TaskService {
         MappingJacksonValue mapping = new MappingJacksonValue(taskResponse);
         mapping.setFilters(filters);
         return mapping;
+    }
+    public Long getNextNumberSequenceValue() {
+        return (Long) entityManager.createNativeQuery("SELECT NEXTVAL('tasks_number_seq')")
+                .getSingleResult();
     }
 }

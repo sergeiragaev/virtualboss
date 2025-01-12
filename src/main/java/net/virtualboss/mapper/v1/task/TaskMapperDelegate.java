@@ -21,7 +21,7 @@ public abstract class TaskMapperDelegate implements TaskMapperV1 {
         task.setContact(mainService.getContactById(contactId));
         task.setJob(mainService.getJobByNumber(jobNumber));
         task.setRequested(employeeService.findByName(requested));
-        task.setCustomFieldsAndListsValues(mainService.createCustomList(customFieldsAndLists, "Task"));
+        task.setCustomFieldsAndListsValues(mainService.createCustomList(customFieldsAndLists, EntityType.TASK));
         task.setGroups(groupService.getGroups(EntityType.TASK, taskGroups));
         return task;
     }

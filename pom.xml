@@ -11,7 +11,7 @@
 	<groupId>net.virtualboss</groupId>
 	<artifactId>virtualboss</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>remote</name>
+	<name>virtualboss</name>
 	<description>Remote VirtualBoss project</description>
 	<url/>
 	<licenses>

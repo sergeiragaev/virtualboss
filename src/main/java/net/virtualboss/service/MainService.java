@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.model.entity.*;
+import net.virtualboss.model.enums.EntityType;
 import net.virtualboss.repository.*;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
 import org.springframework.cache.annotation.CacheEvict;
@@ -66,8 +67,9 @@ public class MainService {
                         MessageFormat.format("Job with number: {0} not found!", jobNumber)));
     }
 
-    public Set<FieldValue> createCustomList(CustomFieldsAndLists customFieldsAndLists, String prefix) {
+    public Set<FieldValue> createCustomList(CustomFieldsAndLists customFieldsAndLists, EntityType type) {
         Set<FieldValue> values = new HashSet<>();
+        String prefix = type.name().charAt(0) + type.name().toLowerCase().substring(1);
         Map<String, String> customFieldsMap =
                 CustomFieldsAndLists.getFieldsMap(customFieldsAndLists, prefix, null);
         for (Map.Entry<String, String> entry : customFieldsMap.entrySet()) {
@@ -93,9 +95,9 @@ public class MainService {
         return values;
     }
 
-    public CustomFieldsAndLists setCustomFieldsAndLists(Set<FieldValue> values, String prefix) {
+    public CustomFieldsAndLists setCustomFieldsAndLists(Set<FieldValue> values, EntityType type) {
         CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
-        CustomFieldsAndLists.setCustomFieldsAndListsValues(customFieldsAndLists, values, prefix);
+        CustomFieldsAndLists.setCustomFieldsAndListsValues(customFieldsAndLists, values, type.name());
         return customFieldsAndLists;
     }
 }

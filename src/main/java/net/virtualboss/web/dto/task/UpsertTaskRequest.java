@@ -2,6 +2,7 @@ package net.virtualboss.web.dto.task;
 
 import lombok.Builder;
 import lombok.Data;
+import net.virtualboss.model.enums.TaskStatus;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -12,15 +13,11 @@ public class UpsertTaskRequest {
     private UUID id;
     private String description;
     private LocalDate targetStart;
-    private Short duration;
+    private Integer duration;
     private LocalDate targetFinish;
     private LocalDate actualFinish;
-    private String status;
+    private TaskStatus status;
     private String order;
     private String notes;
     private Boolean marked;
-    private String jobNumber;
-    private String contactId;
-    private String requested;
-    private String groups;
 }

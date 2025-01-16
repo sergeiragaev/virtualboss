@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -99,5 +100,19 @@ public class MainService {
         CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
         CustomFieldsAndLists.setCustomFieldsAndListsValues(customFieldsAndLists, values, type.name());
         return customFieldsAndLists;
+    }
+
+    public Set<Task> createFollows(String follows) {
+        if (follows == null || follows.isBlank()) return new HashSet<>();
+        Set<Task> set = new HashSet<>();
+        for (String id : follows.split(",")) {
+            Task task = taskRepository.findByNumber(Integer.parseInt(id)).orElseThrow(
+                    () -> new EntityNotFoundException(
+                            MessageFormat.format("Task with number {0} not found!", id)
+                    )
+            );
+            set.add(task);
+        }
+        return set;
     }
 }

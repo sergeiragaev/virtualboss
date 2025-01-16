@@ -1,0 +1,1716 @@
+﻿a[href]:after{
+    content:"";
+}
+body{
+	background-color:#f3f3f3;
+  padding:10px;
+}
+
+.bootbox-input{
+  border-radius:0px;
+}
+
+.fsBox{
+  display:inline-block;
+  width:400px;
+  border-radius:0px;
+  margin-left:8px;
+}
+
+.loginPageBG{
+	background-color:#ffffff;
+}
+
+.searchLine .input-group-btn{
+  display:inline;
+  left:-1px;
+  width:50px;
+  font-size:12px;
+  top:-1px;
+}
+
+.searchLine .btn-sm{
+}
+
+#tabs input[name=ThisDate], #tabs input[name=ToDate], #tabs input[name=FromDate]{
+  display:inline-block;
+  width:100px;
+  font-size:12px;
+}
+
+.table-condensed > tbody > tr > td{
+  padding:3px 5px 3px 0px;
+  font-size:12px;
+}
+
+h3{
+  margin-top:10px;
+  margin-bottom:15px;
+}
+
+.selectDT{
+  width:150px;
+  display:inline-block;
+  font-family:inherit;
+  font-size:12px !important;
+}
+
+.sharpCorner{
+  border-radius:0px;
+}
+
+#tabs{
+  font-size:12px;
+  font-family:inherit;
+	height:auto;
+	min-height:125px;
+	margin:0px;
+	margin-bottom:7px;
+	display:none;
+	min-width:850px;
+	background-color:#fff;
+	border:1px #c0c0c0 solid;
+}
+
+#tabs fieldset{
+	border:none;
+	padding-top:2px;
+}
+
+#tabs legend{
+  font-size:inherit;  
+  margin-bottom:5px;
+}
+
+#tabs ul span{
+}
+#tabs table span{
+}
+table{
+	border-collapse:collapse;
+}
+
+#tabs .ui-tabs-nav{
+	border-radius:0px;
+}
+
+.ui-tabs{
+	border-radius:0px;
+	background-color:#ffffff;
+	background:#ffffff;
+}
+
+#tabs select.form-control{
+  height:30px;
+}
+
+/****************************************************/
+/* Page Styles - filter options line above the tabs */
+/****************************************************/
+
+.pdBuffer{
+	height:5px;
+}
+
+.ui-multiselect-menu .ui-helper-reset a {
+	display:none !important;
+}
+
+ul.ui-multiselect-checkboxes li span{
+  font-weight:normal;
+}
+
+.ui-widget-header{
+  font-size:inherit;
+  font-family:inherit;
+  font-weight:normal;
+}
+
+.yourCompanyNameLine{
+	color:#000;
+	white-space:nowrap;
+}
+
+.yourCompanyNameLine h4{
+  margin-top:10px;
+}
+
+.teDescription{
+	
+	font-size:inherit;
+	color:#000;
+	
+}
+
+.taskFilterLine, .jobFilterLine{
+	margin-top:3px;
+	margin-bottom:3px;
+	color:inherit;
+	white-space:nowrap;
+	font-family:inherit;
+	font-size:12px;	
+}
+
+.buffer{
+	padding-right:15px;
+}
+
+.taskFilterLine span, .jobFilterLine span{
+	border:none;
+	box-shadow:none;
+}
+
+
+.jobListFilters input[type=text], .jobListFilters select{
+}
+
+.jobListFilters{
+	/*text-shadow:1px 1px #000;*/
+}
+
+.jobListFilters select{
+	margin-right:2px;
+}
+
+.menuDrop select.form-control{
+  font-size:12px;
+  height:20px;
+  border-radius:0px;
+}
+
+
+/******************* BUTTONS **********************************/
+
+
+.btn{
+  border-radius:0px;
+  margin-right:5px;
+}
+
+
+.taskFilterLine input[type=submit], .teTable button, input[name=btnCancel], input[type=button], .teButtonBar button, .taskFilterLine input[type=button], input.btnAddToList, input[type=submit], .changeButton, #toggleFilters, .grpButtons button, button[name=btnBack], input[name=btnAddToPDTL], button[name=btnSubmit]{
+	
+}
+
+.taskFilterLine input[type=submit]:active, .teTable button:active, input[name=btnCancel]:active, input[type=button]:active, .teButtonBar button:active, .taskFilterLine input[type=button]:active, .btnAddToList:active, input[type=submit]:active, input[name=btnAddToPDTL]:active, .changeButton:active, #toggleFilters:active, .grpButtons button:active, button[name=btnBack]:active{
+
+}
+
+.taskFilterLine input[type=submit]:hover, .teTable button:hover, input[name=btnCancel]:hover, input[type=button]:hover, .teButtonBar button:hover, .taskFilterLine input[type=button]:hover, .btnAddToList:hover, input[type=submit]:hover, input[name=btnAddToPDTL]:hover, .changeButton:hover, #toggleFilters:hover, .grpButtons button:hover, button[name=btnBack]:hover{
+
+}
+
+.btnAddToList{
+	width:50px;
+}
+
+.teButtonBar button{
+	margin-top:5px;
+	font-weight:normal;
+}
+
+.teTable a img{
+	border:1px #fff solid;
+	box-shadow:1px 1px 3px #444;
+	width:200px;
+	margin-left:2px;
+}
+
+#saveChanges{
+	/* second save button on task details window */	
+	display:none;
+}
+
+#addNew, #deleteTask{
+	position:relative;
+	margin-top:3px;
+}
+
+.hide{
+	display:none;
+}
+
+
+/**************************************************************/
+
+.taskFilterText{
+	font-weight:bold;
+	font-style:italic;
+	padding-right:5px;
+	display:none;
+}
+
+.numOfTasks{
+	font-weight:normal;
+	margin-left:2px;
+	margin-right:10px;
+}
+
+.numOfTasks span{
+	font-weight:bold;
+}
+
+.showPerPage{
+	font-weight:normal;
+	margin-right:10px;
+}
+
+.showPerPage, .jobListFilters input, .jobListFilters select, .jobFilterLine select{
+	/*border:1px #333 solid;*/
+	/*box-shadow:0px 1px #999;*/
+	/*padding-left:2px;*/
+}
+
+.multiDataBaseLine{
+	margin:3px 0px 3px 0px;
+}
+
+.poweredBy{
+	text-align:right;
+	padding-top:10px;
+	padding-right:5px;
+	visibility:hidden;
+}
+
+/*********************************************/
+/* Basic Filters Tab */
+/*********************************************/
+
+#bas, #dat, #grp, #adv, #cusT, #cusJ, #cusC{
+	min-height:55px;
+	color:#000;
+	
+}
+
+#bas fieldset{
+	padding-right:10px;
+}
+
+#dat{
+	padding:0px 5px 5px 10px;
+}
+
+#cusT, #cusJ, #cusC{
+
+}
+
+#bas td, #dat td, #adv td, #grp td, #cusT td, #cusJ td, #cusC td{
+	border:none;
+}
+
+.ui-tabs .ui-tabs-panel {
+  padding:10px;
+}
+
+#bas select, #adv select, #dat select, #grp select, #cusT select, #cusJ select, #cusC select{
+}
+
+#tabs input{
+}
+/*********************************************/
+/* Basic Filters Main Table */
+/*********************************************/
+
+.basicFiltersTable{
+}
+
+.basicFiltersTable td{
+	padding:5px 5px 5px 0px;
+	vertical-align:top;
+}
+
+.basicFiltersTable div{
+	text-align:left;
+	color:#333;
+}
+
+.activeText, .doneText, .markedText{
+  font-size:12px;
+}
+
+#tabs label{
+  font-weight:normal;
+  font-size:12px;
+}
+
+#tabs ul label{
+  font-size:14px;
+}
+
+#tabs ul .checkbox{
+  margin-top:0px;
+  margin-bottom:0px;
+}
+
+.activeText{
+	color:#990000;
+	padding-right:10px;
+}
+
+.ui-widget {
+  font-family:inherit;
+  font-size:inherit;
+}
+
+.ui-state-hover, .ui-widget-content .ui-state-hover{
+  background:#222;
+}
+
+.ui-tabs-anchor{
+}
+
+.ui-corner-all, .ui-corner-top, .ui-corner-left, .ui-corner-tl{
+  border-radius:0px;
+}
+
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button{
+  font-family:inherit;
+  font-size:inherit;
+}
+
+#tabs placeholder{
+  font-family:inherit;
+  font-size:inherit;
+}
+
+.doneText{
+	color:#0033CC;
+	padding-right:8px;
+}
+
+fieldset{
+	padding:0px 3px 5px 3px;
+}
+
+button.ui-multiselect{
+}
+
+.ui-multiselect-filter { 
+  float: none;
+  margin-right: 5px;
+}
+
+.ui-multiselect-filter input {
+  
+}
+
+.dropdown-menu > li > a {
+  padding-left:30px;
+  padding-top:5px;
+  padding-bottom:5px;
+  padding-right:0px;
+}
+
+.dropdown-menu {
+  border-radius:0px;
+  padding:0px;
+}
+
+.input-group-btn {
+  font-size:inherit;
+}
+
+.input-group-btn .btn{
+}
+
+.input-group-btn:last-child > .btn{
+  margin-left:-1px;
+}
+
+.input-group-addon {
+  border-radius:0px;
+}
+
+.ui-multiselect-checkboxes li{
+  font-size:inherit;
+}
+
+/**************************************************/
+/* Search Line */
+/**************************************************/
+
+.searchLine{
+	margin-bottom:0px;
+	white-space:nowrap;
+}
+
+.searchLine input[type=text]{
+	border:1px #c0c0c0 solid;
+	font-family:inherit;
+	font-size:12px;
+}
+
+.searchLine input[type=submit]{
+}
+
+.searchLine input[name=btnAddTask], .searchLine input[type=text]{
+
+}
+/*
+.searchLine input[name=btnDisplay]{
+	padding-left:30px;
+	padding-right:15px;
+	background-image:url(../../images/filter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;
+}
+
+.searchLine input[name=FindString]{
+	background-image:url(../../images/search.gif);
+	background-repeat:no-repeat;
+	background-position:2px center;
+	padding-left:20px;
+}
+
+.searchLine input[name=btnReset]{
+	background-image:url(../../images/removefilter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;
+}
+
+.searchLine input[name=btnAddTask]{
+	background-image:url(../../images/AddaTask.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.taskFilterLine input[name=btnDisplay]{
+	background-image:url(../../images/filter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;		
+}
+
+.taskFilterLine input[name=btnFullCalendar]{
+	background-image:url(../../images/calendar2.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;		
+}
+
+.taskFilterLine input[value="Gantt Chart"]{
+	background-image:url(../../images/ganttchart.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;		
+}
+
+.taskFilterLine input[name=btnContactList]{
+	background-image:url(../../images/contactlist.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;		
+}
+
+.taskFilterLine input[name=btnJobList]{
+	background-image:url(../../images/joblist.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;		
+}
+
+.taskFilterLine input[name=btnLogin]{
+	background-image:url(../../images/logout.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;		
+}
+
+.taskFilterLine input[name=btnTaskList]{
+	background-image:url(../../images/viewtasklist.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;		
+}
+*/
+.autoApplyBox{
+	display:inline-block;
+	display:none;
+}
+
+/*
+.jobListButtons input[name=btnDisplay]{
+	background-image:url(../../images/filter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.jobListButtons input[name=btnFullCalendar]{
+	background-image:url(../../images/Calendar2.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.jobListButtons input[name=btnTaskList]{
+	background-image:url(../../images/viewtasklist.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.jobListButtons input[name=btnContactList]{
+	background-image:url(../../images/contactlist.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.jobListButtons input[name=btnLogin]{
+	background-image:url(../../images/logout.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.controlWrap input[name=btnAddJob]{
+	background-image:url(../../images/AddaTask.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.jobFilterButtons input[value="Set Filter"]{
+	background-image:url(../../images/filter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.jobFilterButtons input[name=btnReset]{
+	background-image:url(../../images/removefilter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.contactListButtons input[name=btnDisplay]{
+	background-image:url(../../images/filter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.contactListButtons input[name=btnFullCalendar]{
+	background-image:url(../../images/Calendar2.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.contactListButtons input[name=btnJobList]{
+	background-image:url(../../images/joblist.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.contactListButtons input[name=btnTaskList]{
+	background-image:url(../../images/viewtasklist.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.contactListButtons input[name=btnLogin]{
+	background-image:url(../../images/logout.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.controlWrap input[name=btnAddContact]{
+	background-image:url(../../images/AddaTask.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.controlWrap input[name=btnSubmit]{
+	background-image:url(../../images/filter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.controlWrap input[name=btnReset]{
+	background-image:url(../../images/removefilter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.predFiltersButtons input[name=btnDisplay]{
+	background-image:url(../../images/filter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+
+.predFiltersButtons input[name=btnReset]{
+	background-image:url(../../images/removefilter.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+}
+*/
+input.btnAddToList, input[name=btnAdd], input[value="Add item"]{
+	/*background-image:url(../../images/addNew.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:20px;	*/
+}
+
+input[name=btnDelete]{
+	/*
+	background-image:url(../../images/remove.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:23px;	
+	*/
+}
+
+input[name=btnContactGroup], input[name=btnJobGroup], input[name=btnTaskGroup]{
+	/*background-image:url(../../images/cgroup.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:25px;	*/
+}
+
+.jeButtonBar input[value="Delete this Contact"], input[value="Delete this Contact"], .jeButtonBar input[value="Delete this Job"], input[value="Delete this Job"]{
+	/*
+	background-image:url(../../images/delete.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:30px;	
+	*/
+}
+
+.jeButtonBar input[name=btnBack], .grpButtons input[name=btnBack]{
+	/*
+	background-image:url(../../images/cancel.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:27px;	
+	*/
+}
+
+input[name=btnCancel]{
+  /*
+	background-image:url(../../images/undo.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:23px;	
+	*/
+}
+
+
+.grpButtons input[value=Save], input[value="Save New Item"], .jeButtonBar input[value=Save], .grpButtons input[value="Add New Item"], .grpButtons input[value="Add New Job"], input[value="Save New List Item"]{
+	/*
+	background-image:url(../../images/save.gif);
+	background-repeat:no-repeat;
+	background-position:7px center;	
+	padding-left:27px;	
+	*/
+}
+
+
+.autoApplyBox input{
+	
+}
+
+/*************************************************/
+/* Main Table for Task Manager List Screen (RVB) */
+/*************************************************/
+
+.taskListTable{
+	background-color:#eee;
+	box-shadow:0px 0px 2px #777;
+	margin-top:12px;
+	font-size:12px;
+	font-family:inherit;
+}
+
+.taskListTable th{
+	padding:3px 0px 3px 6px;
+	border-color:#000;
+	text-align:left;
+	font-weight:normal;
+	background-color:#104EAB;
+	box-shadow:inset 0px 1px 1px #aaa;
+	text-shadow:0px -1px #333;
+
+  background-color:#333;
+
+ /* 
+  background: #3c95e8; 
+  background: -moz-linear-gradient(top,  #3c95e8 0%, #0023ed 100%); 
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#3c95e8), color-stop(100%,#0023ed)); 
+  background: -webkit-linear-gradient(top,  #3c95e8 0%,#0023ed 100%); 
+  background: -o-linear-gradient(top,  #3c95e8 0%,#0023ed 100%);
+  background: -ms-linear-gradient(top,  #3c95e8 0%,#0023ed 100%); 
+  background: linear-gradient(to bottom,  #3c95e8 0%,#0023ed 100%); 
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3c95e8', endColorstr='#0023ed',GradientType=0 ); 
+  */
+background: #45484d;
+background: -moz-linear-gradient(top,  #45484d 0%, #000000 100%);
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#45484d), color-stop(100%,#000000));
+background: -webkit-linear-gradient(top,  #45484d 0%,#000000 100%);
+background: -o-linear-gradient(top,  #45484d 0%,#000000 100%);
+background: -ms-linear-gradient(top,  #45484d 0%,#000000 100%);
+background: linear-gradient(to bottom,  #45484d 0%,#000000 100%);
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#45484d', endColorstr='#000000',GradientType=0 );
+	
+}
+
+.taskListTable th img{
+/*	vertical-align:middle;*/
+}
+
+.taskListTable td{
+	padding:3px 5px 3px 8px;
+	vertical-align:middle;
+	text-align:left;
+}
+
+.taskListTable td a{
+  text-decoration:underline;
+}
+
+.taskListTable td a:hover{
+	color:#800000;
+
+}
+
+.pagination{
+	background-color:#104EAB;
+}
+
+
+/***********************************************/
+/* Job List */
+/***********************************************/
+
+.jobListButtons input[type=submit]{
+	margin-bottom:2px;
+	margin-top:2px;
+}
+.jobFilterText{
+	font-weight:bold;
+	font-style:italic;
+	padding-right:5px;
+	display:none;
+}
+
+.jobListFilters{
+	display:inline-block;
+	margin:3px 0px 0px 0px;
+	margin-bottom:5px;
+}
+
+
+.jobFilterButtons{
+	display:inline-block;
+	margin-left:5px;
+}
+
+
+.jobDeleteText{
+	margin-bottom:5px;
+		
+}
+
+.jobDeleteText span{
+	font-style:italic;
+	color:#555;
+}
+
+.jobParaText{
+	margin-top:5px;
+	margin-bottom:5px;
+}
+
+.jobDeleteInput{
+	padding:6px 10px 6px 10px;
+	border:1px #999 solid;
+	background-color:#fff;
+	display:inline-block;
+	color:#990000;
+	margin-bottom:5px;
+}
+
+/*************************************************/
+/* Job Edit */
+/*************************************************/
+
+.jobEditStatusLine{
+	/*color:#fff;
+	text-shadow:1px 1px #000;*/
+  padding:5px;
+  margin-top:8px;
+}
+
+.jobEditStatusLine input[type=radio]{
+	position:relative;
+	top:2px;
+}
+
+.floater{
+	position:relative;
+	bottom:3px;
+}
+
+.floater .btn-xs{
+  border-radius:0px;
+  font-size:11px;
+}
+
+.jeButtonBar{
+	margin-top:3px; 
+	margin-bottom:3px;
+	
+}
+
+.jeButtonBar form{
+	display:inline-block;
+}
+
+.jobStatusActiveText{
+
+}
+
+.jobStatusInactiveText{
+	font-style:italic;
+}
+.jobFilterLine input[type=checkbox]{
+	position:relative;
+	top:2px;
+}
+
+/***************************************************/
+/* Contact List */
+/***************************************************/
+
+.contactListButtons{
+	margin-top:3px;
+	margin-bottom:5px;
+}
+
+
+.conAddrTypeText{
+	width:600px;
+	text-align:left;
+	padding-left:5px;
+}
+
+.conAddrList{
+	padding:3px;
+	background-color:#fff;
+	display:inline-block;
+	margin-top:5px;
+	box-shadow:1px 1px 2px #000;
+	margin-bottom:2px;
+}
+
+
+
+
+
+/************************************************/
+/* Date Filter Tab */
+/************************************************/
+
+.dateFilterTable{
+	margin-top:5px;
+}
+
+.dateFilterTable td{
+	padding:2px 5px 2px 0px;
+	vertical-align:top;
+	color:#000;
+
+}
+
+.todayLine{
+	padding-left:15px !important;
+}
+
+/*************************************************/
+/* Group filter tab */
+/*************************************************/
+
+.groupFilterTable{
+	margin-top:5px;
+}
+
+.groupFilterTable td{
+	padding:4px 5px 4px 5px;
+	vertical-align:top;
+}
+
+/*************************************************/
+/* Custom Field Table */
+/*************************************************/
+
+.customFieldTable{
+	display:inline-block;
+	vertical-align:top;
+}
+
+.customFieldTable td{
+	padding:0px 5px 0px 5px;
+	vertical-align:top;	
+	
+}
+
+#tabs .btn-sm{
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/*************************************************/
+/* Calendar Event Styles */
+/*************************************************/
+
+.fc-event-title{
+	padding:3px 3px 2px 2px;
+}
+
+div.fc-event-skin{
+	box-shadow:inset 0px 1px 1px 0px #f1f1f1, 1px 1px 2px #333;
+}
+
+.fc-button-content{
+}
+
+
+/**************************************************/
+/* Task Edit Screen */
+/**************************************************/
+
+.glyphicon{
+  margin-right:5px;
+}
+
+input[type=radio], input[type=checkbox]{
+  margin:2px;
+  margin-right:6px;
+  position:relative;
+  top:2px;
+}
+
+.teTable legend{
+  margin-bottom:10px;
+  font-size:18px;
+}
+
+.teTable fieldset ul{
+  list-style:none;
+  padding-left:15px;
+}
+
+.teTable fieldset ul li{
+  margin:2px;
+}
+
+.teDescription{
+	font-size:14pt;
+}
+
+.teDescription span{
+	color:#006699;
+}
+
+.teButtonBar{
+}
+
+.teButtonBar form{
+	display:inline-block;
+}
+
+.teTable{
+	margin-top:5px;
+}
+
+.teTable input[type=text], .teTable select, .teTable textarea{
+	border:1px #999 solid;
+	padding:3px;
+	margin-top:0px;
+	color:#000;
+}
+
+
+.teTable textarea{
+	width:100%;
+}
+
+
+.teTable td{
+	vertical-align:top;
+	padding-bottom:4px;
+}
+
+
+.teTable div{
+	padding:4px;
+	text-align:left;
+	background-color:#104EAB;
+	color:#fff;
+	/*box-shadow:inset 0px 1px 1px 0px #fff;*/
+	
+}
+
+.roInput{
+	color:#333;
+	text-align:left;
+}
+
+.roMsg{
+	padding:3px;
+	color:#666666;
+	font-style:italic;
+}
+
+.teTable div a{
+}
+
+.teTable fieldset{
+	display:inline-block;
+	padding-right:5px;
+}
+
+.lastChangedBy{
+	color:#000;
+	font-style:italic;
+	position:relative;
+	top:-1px;
+}
+
+.lastChangedBy span{
+}
+
+input[name=Follows_Task]{
+	border:1px #fff solid !important;
+}
+
+input.hasDatepicker{
+	margin-right:3px;
+}
+
+.controlWrap{
+	/*padding:5px 5px 0px 5px;*/
+	/*border:1px #ccc solid;*/
+	/*background-color:#ffffff;*/
+	margin-bottom:10px;
+		
+}
+
+.ui-datepicker{
+	box-shadow:1px 1px 3px #555;
+	z-index:50 !important;
+}
+
+.ui-datepicker-buttonpane{
+	
+}
+
+input[name=StartChange]{
+	display:none;
+}
+
+.ui-button {
+	background:none;
+	/* add a button style here to change the button look of rvb */
+	transition:background-color .3s;
+	border-radius:0px;
+	/*border:1px #555 solid;*/
+	color:#000;
+	/*box-shadow:inset 0px 1px 0px #aaa, 0px 0px 1px #fff;*/
+	box-shadow:none !important;
+
+}
+
+.ui-button:hover{
+	background-color:#104eab;
+}
+
+.ui-button:active{
+	/*box-shadow:inset 0px 0px 2px #333, 1px 1px 1px -1px #fff;*/
+}
+
+.ui-widget input, .ui-widget select{
+	/*padding:3px;*/
+	border:1px #ccc solid;
+}
+
+.ui-multiselect-filter input {
+   width:100%;
+   height:25px;
+   color:#222;
+   margin:0px;
+}
+
+.ui-widget input{
+  
+}
+
+.ui-state-default, .ui-state-hover span{
+	font-weight:normal !important;
+}
+
+#tabs .ui-state-default{
+	background:#333 !important;
+	border-radius:0px;
+}
+
+#tabs .ui-state-active{
+	background:#ffffff !important;
+}
+/*************************************************************/
+/* Calendar */
+/*************************************************************/
+
+#calendar{
+	background-color:#fff;
+	padding:10px;
+	margin-top:10px;
+	border:1px #e1e1e1 solid;
+}
+
+
+
+/*************************************************************/
+/* Task Linking Page */
+/*************************************************************/
+
+.predFilters{
+	display:inline-block;
+	margin:3px 0px 0px 0px;
+		
+}
+
+.predFilters fieldset{
+	padding-right:8px;
+}
+.predFilters table td{
+
+}
+
+.predFiltersButtons{
+	vertical-align:bottom;
+	padding-left:10px;
+}
+
+.predFilters select{
+	padding:4px;
+}
+
+
+/*************************************************************/
+/* Add new List Item */
+/*************************************************************/
+
+.liMsg1{
+	color:#800000;
+	margin-bottom:10px;
+}
+
+.liTitle{
+	margin-bottom:5px;
+	color:#000;
+	text-shadow:0px 1px #fff;
+}
+
+input[type=button]{
+}
+
+button[name=btnBack]{
+}
+
+.liInput{
+	margin-bottom:10px;
+}
+
+/************************************************************/
+/* Assign Groups page */
+/************************************************************/
+
+.grpTitle{
+	margin-bottom:5px;
+	color:#000;
+	text-shadow:0px 1px #fff;
+}
+
+.grpTitleLine span{
+	color:#006699;
+}
+
+.grpTitleLine{
+  margin-bottom:0px;
+  padding-top:3px;
+}
+
+.grpSelect select{
+	width:400px;
+	height:auto;
+	overflow:hidden;
+	padding:3px;
+	border:1px #999 solid;
+}
+
+.grpSelect{
+	margin-bottom:5px;
+}
+
+.grpTipLine{
+	font-style:italic;
+}
+
+.grpButtons{
+	margin-bottom:3px;
+}
+
+
+.grpButtons form{
+	display:inline-block;
+}
+
+.grpNameAdd{
+	margin-bottom:10px;
+}
+
+.grpNameAdd input{
+	width:300px;
+}
+
+.liMsg1 span{
+	font-weight:bold;
+}
+
+
+.grpNewAssign{
+}
+
+.grpTable{
+	background-color:inherit !important;
+	color:#000 !important;
+	display:inline-block;
+	border:none;
+	margin-top:2px;
+}
+
+.grpTableText{
+	margin:8px 0px 0px 3px;
+	padding:0px;
+}
+
+.taskLinkOptions{
+	background-color:inherit !important;
+	border:none;
+	color:#000 !important;
+	font-weight:normal !important;
+}
+
+.taskLinkText{
+	color:blue;
+}
+
+
+.taskLinkText input{
+	border:1px #999 solid !important;
+}
+
+.finishPlusText{
+	color:#666;
+	font-style:italic;
+}
+
+#followsTaskTableWrap{
+	background-color:inherit !important;
+	margin:0px;
+	padding:0px;
+	border:none;
+}
+
+.grpTable table th{
+	text-align:center;
+}
+
+/******************************************************/
+/* Task Delete Page */
+/******************************************************/
+
+.tDeleteText{
+	color:#990000;
+	padding:5px 5px 10px 5px;
+}
+
+.tDeleteTitle{
+	text-shadow:0px 1px #fff;
+}
+
+.tDeleteTitle span{
+	color:#006699;
+}
+
+.tDeleteLine1{
+	font-weight:normal;
+}
+
+.tDeleteLine1 span{
+	color:#006699;
+}
+
+.tDeleteLine2{
+}
+
+.tDeleteLine3{
+	text-indent:25px;
+	font-weight:normal;
+}
+
+.tDeleteLine2 span{
+	color:#006699;
+}
+
+.tDeleteLinkedList{
+	padding:10px;
+	font-weight:bold;
+	
+}
+
+.tDeleteLinkedList span{
+	color:#006699;
+}
+
+.tDeleteButtons button[name=btnSubmit]{
+}
+
+
+/***********************************************************/
+/* RVB Login Page */
+/***********************************************************/
+
+.pageHeader{
+	padding:5px;
+	text-align:center;
+	color:#fff;
+	background-color:#337AB7;	
+	box-shadow:0px 0px 3px #919191;
+
+	font-size:1.1em;
+}
+
+.specialNotesLoginPage{
+	width:400px;
+	margin:auto;
+	margin-top:50px;
+	margin-bottom:50px;
+	
+}
+
+.lFormWrap{
+	width:400px;
+	margin:auto;
+	height:auto;
+	overflow:hidden;
+	padding:5px;
+	background-color:#0a0e0a;
+	border:1px #585858 solid;
+	background: #aebcbf;
+	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjYWViY2JmIiBzdG9wLW9wYWNpdHk9IjEiLz4KICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjNmU3Nzc0IiBzdG9wLW9wYWNpdHk9IjEiLz4KICAgIDxzdG9wIG9mZnNldD0iNTElIiBzdG9wLWNvbG9yPSIjMGEwZTBhIiBzdG9wLW9wYWNpdHk9IjEiLz4KICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzBhMDgwOSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgPC9saW5lYXJHcmFkaWVudD4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2dyYWQtdWNnZy1nZW5lcmF0ZWQpIiAvPgo8L3N2Zz4=);
+	background: -moz-linear-gradient(-45deg,  #aebcbf 0%, #6e7774 50%, #0a0e0a 51%, #0a0809 100%);
+	background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,#aebcbf), color-stop(50%,#6e7774), color-stop(51%,#0a0e0a), color-stop(100%,#0a0809));
+	background: -webkit-linear-gradient(-45deg,  #aebcbf 0%,#6e7774 50%,#0a0e0a 51%,#0a0809 100%);
+	background: -o-linear-gradient(-45deg,  #aebcbf 0%,#6e7774 50%,#0a0e0a 51%,#0a0809 100%);
+	background: -ms-linear-gradient(-45deg,  #aebcbf 0%,#6e7774 50%,#0a0e0a 51%,#0a0809 100%);
+	background: linear-gradient(135deg,  #aebcbf 0%,#6e7774 50%,#0a0e0a 51%,#0a0809 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#aebcbf', endColorstr='#0a0809',GradientType=1 );
+
+	box-shadow:0px 0px 5px #777;	
+  font-size:inherit;
+  font-family:inherit;
+}
+
+.lForm{
+	background-color:#fff;
+	background-color:#f4f4f4;
+
+}
+
+.errorMsgLogin{
+	color:#990000;
+	width:400px;
+	margin:auto;
+	margin-top:10px;
+	padding:5px;
+	text-shadow:0px 0px 20px #fff;
+	font-size:12px;
+}
+
+.lFormHead{
+	padding:10px;
+	background: #ffffff;
+	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjZmZmZmZmIiBzdG9wLW9wYWNpdHk9IjEiLz4KICAgIDxzdG9wIG9mZnNldD0iNjglIiBzdG9wLWNvbG9yPSIjZjNmM2YzIiBzdG9wLW9wYWNpdHk9IjEiLz4KICAgIDxzdG9wIG9mZnNldD0iNjklIiBzdG9wLWNvbG9yPSIjZWRlZGVkIiBzdG9wLW9wYWNpdHk9IjEiLz4KICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2ZmZmZmZiIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgPC9saW5lYXJHcmFkaWVudD4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSJ1cmwoI2dyYWQtdWNnZy1nZW5lcmF0ZWQpIiAvPgo8L3N2Zz4=);
+	background: -moz-linear-gradient(-45deg,  #ffffff 0%, #f3f3f3 68%, #ededed 69%, #ffffff 100%);
+	background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,#ffffff), color-stop(68%,#f3f3f3), color-stop(69%,#ededed), color-stop(100%,#ffffff));
+	background: -webkit-linear-gradient(-45deg,  #ffffff 0%,#f3f3f3 68%,#ededed 69%,#ffffff 100%);
+	background: -o-linear-gradient(-45deg,  #ffffff 0%,#f3f3f3 68%,#ededed 69%,#ffffff 100%);
+	background: -ms-linear-gradient(-45deg,  #ffffff 0%,#f3f3f3 68%,#ededed 69%,#ffffff 100%);
+	background: linear-gradient(135deg,  #ffffff 0%,#f3f3f3 68%,#ededed 69%,#ffffff 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ffffff',GradientType=1 );
+  font-weight:700;
+	border:1px #777 solid;
+	color:#444;
+	-webkit-box-shadow: 0px 1px 3px rgba(50, 50, 50, 0.55);
+	-moz-box-shadow:    0px 1px 3px rgba(50, 50, 50, 0.55);
+	box-shadow:         0px 1px 3px rgba(50, 50, 50, 0.55);
+	text-shadow:0px 1px #fff;
+}
+
+.lFormBody{
+	padding:10px 10px 10px 10px;
+	border-left:1px #777 solid;
+}
+
+.lFormText{
+	padding:5px 0px 5px 0px;
+	font-size:12px;
+	font-family:inherit;
+}
+
+
+.lFormInput{
+	
+}
+
+.lFormInput input{
+	padding:5px;
+	border:1px #c0c0c0 solid;
+}
+
+
+.lFormRememberMe{
+	display:inline-block;
+	color:#555;
+	font-family:inherit;
+	font-size:11px;
+}
+
+.lFormRememberMe.checkbox{
+  margin-top:17px;
+  margin-bottom:5px;
+}
+
+.lFormRememberMe input[type=checkbox]{
+  position:relative;
+  top:3px;
+}
+
+.lFormRememberMe span{
+	position:relative;
+}
+
+.lFormLoginButton{
+	margin-top:13px;
+	display:inline-block;
+	position:relative;
+	float:right;
+}
+
+.lFormLoginButton button{
+
+}
+
+.lFormLoginButton button:hover{
+	
+}
+
+.lFormReadOnlyButton{
+	margin-top:10px;
+	
+}
+
+.btn-sm{
+  border-radius:0px;
+}
+
+.lFormReadOnlyButton input{
+	
+}
+.lFormReadOnlyButton input:hover{
+
+}
+
+/*************************************************************/
+/* Ajax Search */
+/*************************************************************/
+
+.cResults, .jResults{
+	background-color:#fff !important;
+	/*color:#000;*/
+	padding:0px !important;
+	border:1px #999 solid;
+	box-shadow:1px 1px 2px #999 !important;
+	display:none;
+	position:absolute;
+	margin-top:2px;
+	z-index:99999;
+	font-weight:normal !important;
+	max-height:500px;
+	overflow:auto;
+	min-width:250px;
+	
+}
+
+.fAjaxSearch{
+	padding-top:5px !important;
+}
+
+.fCResults{
+	background-color:#fff !important;
+	padding:5px 1px 5px 1px !important;
+	border:1px #999 solid;
+	box-shadow:1px 1px 2px #999 !important;
+	display:none;
+	position:absolute;
+	margin-top:2px;
+	z-index:99999;
+	font-weight:normal !important;
+	max-height:500px;
+	min-width:250px;
+	overflow:auto;
+	vertical-align:top;
+	
+}
+
+.fieldPadding{
+  padding:0px 0px 5px 0px;
+}
+
+select[name=JobIds], select[name=CustIds]{
+	width:100%;
+	height:20px;
+	margin-top:2px;
+	display:none;
+}
+
+.jResults p, .fCResults p{
+	padding:5px;
+	margin:0px;
+	white-space:nowrap;
+}
+
+.jResults ul li a, .fCResults ul li a, .cResults ul li a{
+	display:inline-block;
+	width:100%;
+	padding:5px;
+}
+
+.jResults ul li a:focus, .fCResults ul li a:focus, .cResults ul li a:focus{
+	outline:0;
+}
+
+.jResults p img, .fCResults p img{
+	vertical-align:middle;
+}
+
+.cResults p{
+	padding:0px 5px 0px 5px;
+	margin:0px;
+	white-space:nowrap;
+}
+
+.cResults p img{
+	vertical-align:middle;
+}
+
+#cResult{
+}
+
+#jResult{
+}
+
+
+#cSearch, #ccSearch, #jSearch{
+	min-width:250px;
+	border-radius:0px;
+	font-size:12px;
+	font-family:inherit;
+}
+
+.cSearchWrap{
+	position:relative;
+	background-color:inherit !important;
+	box-shadow:none !important;
+	border:none !important;
+	padding:0px !important;
+	display:inline-block;
+}
+
+.cSearchList{
+	list-style:none;
+	padding:0px;
+	margin:0px;
+}
+
+.cSearchList li{
+	white-space:nowrap;
+	padding:1px 5px 1px 5px;
+}
+
+.cSearchList li:hover{
+	background-color:#4281F4;
+	*cursor:pointer;
+	white-space:nowrap;
+	
+}
+
+.cSearchList li a{
+	text-decoration:none;
+}
+
+.cSearchList li a:hover{
+	color:#fff;
+}
+
+
+/******************************************************************/
+
+.smTitle{
+}
+
+.smTitle2{
+	text-decoration:underline;
+	font-weight:bold;
+}
+
+.smMsgWrp{
+}
+
+.smMsgWrp span{
+	color:#0066FF;
+}
+
+.smMsgWrp ul{
+}
+
+.smMsgWrp ul li span{
+	font-style:italic;
+	color:inherit;
+	font-weight:bold;
+}
+
+
+
+
+
+
+
+
+
+
+

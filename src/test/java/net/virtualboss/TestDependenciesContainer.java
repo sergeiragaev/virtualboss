@@ -9,11 +9,13 @@ import net.virtualboss.model.entity.Group;
 import net.virtualboss.model.entity.Job;
 import net.virtualboss.model.entity.Task;
 import net.virtualboss.model.enums.EntityType;
+import net.virtualboss.model.enums.TaskStatus;
 import net.virtualboss.repository.*;
 import net.virtualboss.service.TaskService;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.contact.UpsertContactRequest;
 import net.virtualboss.web.dto.job.UpsertJobRequest;
+import net.virtualboss.web.dto.task.TaskReferencesRequest;
 import net.virtualboss.web.dto.task.UpsertTaskRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -69,7 +71,7 @@ public class TestDependenciesContainer {
     );
 
     static GenericContainer<?> redis =
-                new GenericContainer<>(DockerImageName.parse("redis:5.0.3-alpine")).withExposedPorts(6379);
+            new GenericContainer<>(DockerImageName.parse("redis:5.0.3-alpine")).withExposedPorts(6379);
 
     @BeforeAll
     static void beforeAll() {
@@ -91,14 +93,18 @@ public class TestDependenciesContainer {
         registry.add("spring.datasource.password", postgres::getPassword);
     }
 
-    protected Task saveTaskInDbAndGet(UpsertTaskRequest request,
-                                      CustomFieldsAndLists customFieldsAndLists) {
-        Task task = taskMapper.requestToTask(request, customFieldsAndLists);
+    protected Task saveTaskInDbAndGet(
+            UpsertTaskRequest request,
+            CustomFieldsAndLists customFieldsAndLists,
+            TaskReferencesRequest referenceRequest) {
+        Task task = taskMapper.requestToTask(request, customFieldsAndLists, referenceRequest);
         task.setNumber(taskService.getNextNumberSequenceValue());
         return taskRepository.save(task);
     }
 
-    protected Job saveJobInDbAndGet(UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
+    protected Job saveJobInDbAndGet(
+            UpsertJobRequest request,
+            CustomFieldsAndLists customFieldsAndLists) {
         Job job = jobMapper.requestToJob(request, customFieldsAndLists);
         return jobRepository.save(job);
     }
@@ -136,21 +142,26 @@ public class TestDependenciesContainer {
     }
 
     protected UpsertTaskRequest generateTestTaskRequest() {
+        return UpsertTaskRequest.builder()
+                .order("100")
+                .notes("Task notes")
+                .duration(1)
+                .description("Test task")
+                .marked(true)
+                .status(TaskStatus.Active)
+                .targetStart(LocalDate.now())
+                .targetFinish(LocalDate.now().plusDays(1))
+                .build();
+    }
+
+    protected TaskReferencesRequest generateTestTaskReferenceRequest() {
         Job job = saveJobInDbAndGet(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
         Contact contact = saveContactInDbAndGet(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
         Group group = saveTaskGroupInDbAndGet();
-        return UpsertTaskRequest.builder()
+        return TaskReferencesRequest.builder()
 //                .requested("Admin")
-                .order("100")
-                .notes("Task notes")
-                .duration((short) 1)
-                .description("Test task")
-                .marked(true)
                 .jobNumber(job.getNumber())
                 .contactId(String.valueOf(contact.getId()))
-                .status("Active")
-                .targetStart(LocalDate.now())
-                .targetFinish(LocalDate.now().plusDays(1))
                 .groups(String.valueOf(group.getId()))
                 .build();
     }

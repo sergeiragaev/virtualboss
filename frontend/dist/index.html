@@ -1,0 +1,217 @@
+﻿<!-- saved from url=(0022)http://internet.e-mail -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <!-- view port -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- site theme -->
+    <meta name="theme-color" content=""/>
+    <!-- JQuery JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script>
+        // check for login cookies.  If they don't exist, redirect to login screen.
+        $.ajax({
+            url: '/api/v1/taskdata?logincheck=true',
+            async: false,
+            success: function (response) {
+                if (response == 'InvalidLogin') {
+                    var parameters = location.href.split("/").slice(-1);
+                    location.href = 'login.htm?URL=' + parameters;
+                }
+            },
+            error: function (jqXhr, status, error) {
+                BootstrapDialog.show({
+                    type: BootstrapDialog.TYPE_DANGER,
+                    title: "Something went wrong",
+                    message: jqXhr.responseText
+                });
+            }
+        });
+    </script>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!--<link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/lumen/bootstrap.min.css" rel="stylesheet">-->
+
+    <!-- Font Awesome CSS -->
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- BootstrapDialog -->
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.35.3/css/bootstrap-dialog.min.css">
+    <!--<link rel="stylesheet" type="text/css" href="css/bootstrap-switch.min.css">-->
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker.min.css">
+    <link rel="stylesheet" href="css/mainstyles.css">
+    <link rel="stylesheet" href="css/taskstyles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400italic,700">
+
+    <title>Remote VirtualBoss</title>
+</head>
+
+<body>
+<!-- Fixed navbar -->
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="index.html">Remote VirtualBoss</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="index.html">Task Manager</a></li>
+                <li><a href="contactlist.htm">Contact Manager</a></li>
+                <li><a href="joblist.htm">Job Manager</a></li>
+                <li class="hidden-sm hidden-md hidden-lg"><a href="ganttview.htm">Gantt Chart View</a></li>
+                <li class="hidden-sm hidden-md hidden-lg"><a href="calendarview.htm">Calendar View</a></li>
+                <li class="hidden-sm hidden-md hidden-lg"><a href="#"
+                                                             onclick="openBasicFilters('TaskManager'); return false;"><i
+                        class="fa fa-commonFilter" style="color:#0099FF; margin-right:5px;"></i> Filter Options</a></li>
+                <li class="hidden-sm hidden-md hidden-lg"><a href="#" onclick="editListColumns(); return false;"><i
+                        class="fa fa-list" style="color:#0099FF; margin-right:5px;"></i> Task List Fields</a></li>
+                <li class="hidden-sm hidden-md hidden-lg"><a href="#" onclick="editFieldOrder(); return false;"><i
+                        class="fa fa-list-ol" style="color:#0099FF; margin-right:5px;"></i> Change Field Order</a></li>
+                <li class="dropdown hidden-xs">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                       aria-expanded="false">More <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="ganttview.htm">Gantt Chart View</a></li>
+                        <li><a href="calendarview.htm">Calendar View</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" onclick="openBasicFilters('TaskManager'); return false;">Filter Options</a></li>
+                        <li><a href="#" onclick="editListColumns(); return false;">Task List Fields</a></li>
+                        <li><a href="#" onclick="editFieldOrder(); return false;">Change Column Order</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</nav>
+
+<div id="tMain" class="container tMain">
+    <div class="tSettings">
+        <div class="btn-group hidden-xs hidden-sm hidden-md">
+            <button class="btn btn-primary active" onclick="location.href='index.html';">Task Manager</button>
+            <button class="btn btn-primary" onclick="location.href='contactlist.htm';">Contact Manager</button>
+            <button class="btn btn-primary" onclick="location.href='joblist.htm';">Job Manager</button>
+            <button class="btn btn-primary" onclick="location.href='calendarview.htm';">Calendar View</button>
+            <button class="btn btn-primary" onclick="location.href='ganttview.htm';">Gantt Chart View</button>
+        </div>
+        <div class="btn-group hidden-lg">
+            <button type="button" class="btn btn-primary">Task Manager</button>
+            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false">
+                <span class="caret"></span>
+                <span class="sr-only">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a href="index.html">Task Manager</a></li>
+                <li><a href="joblist.htm">Job Manager</a></li>
+                <li><a href="contactlist.htm">Contact Manager</a></li>
+                <li role="separator" class="divider"></li>
+                <li><a href="calendarview.htm">Calendar</a></li>
+                <li><a href="ganttview.htm">Gantt Chart</a></li>
+            </ul>
+        </div>
+
+        <div class="btn-group" style="float:right;">
+            <button type="button" class="btn btn-default" onclick="logout();" title="Log Out"><i
+                    class="fa fa-sign-out"></i> Log Out
+            </button>
+        </div>
+        <form role="form" name="taskListSearchForm">
+            <div class="row tmSearchBar">
+                <div class="col-xs-12">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="taskListSearchBox" placeholder="Search for...">
+                        <span class="input-group-btn">
+                <button class="btn btn-primary" type="button"
+                        onclick="$('#taskListSearchBox').val(''); Cookies.set('filterFindString', ''); createTaskList();">Reset</button>
+                <button class="btn btn-primary" id="taskListSearchButton" type="submit"><i
+                        class="fa fa-search"></i><span class="hidden-xs"> Search</span></button>
+              </span>
+                    </div><!-- /input-group -->
+                </div>
+            </div>
+        </form>
+        <div class="row" style="margin-top:10px;">
+            <div class="col-xs-12">
+                <div class="btn-group">
+                    <button type="button" title="Add New Task" onclick="editNewTask('TaskManager');"
+                            class="btn btn-primary"><i class="fa fa-file-text-o" style="margin-right:5px;"></i> New Task
+                    </button>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" title="Settings"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-cog hidden-xs"></i><span> Settings</span> <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" onclick="editListColumns();return false;">Task List Fields</a></li>
+                        <li><a href="#" onclick="editFieldOrder(); return false;">Change Column Order</a></li>
+                        <li><a href="#" onclick="editOptions(); return false;">Options...</a></li>
+                    </ul>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="printSection('tTaskList');">
+                        <i class="fa fa-print"></i> Print
+                    </button>
+                </div>
+                <div class="btn-group" style="float:right;">
+                    <button type="button" title="Filter Options" onclick="openBasicFilters('TaskManager');"
+                            class="btn btn-primary">
+                        <i class="fa fa-commonFilter"></i><span class=""><span class="hidden-xs"> Filters</span></span>
+                    </button>
+                    <button class="btn btn-primary" type="button" onclick="removeFilters('TaskManager');"
+                            title="Reset Filters"><i class="fa fa-ban"></i></button>
+                </div>
+                <!--<div class="activeFiltersMessage"></div>-->
+            </div>
+        </div>
+    </div>
+    <div style="background-color:#fff; padding:3px; border-radius:4px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);">
+        <div class="tSettingsInfo">
+            Number of Tasks: <span id="tCount"></span> <span id="activeFiltersMessage" style="margin-left:10px;"></span>
+        </div>
+        <div id="tTaskList" class="tTaskList"></div>
+    </div>
+
+</div>
+
+<!-- JQuery UI -->
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<!-- Touch Punch -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+<!-- Modernizr -->
+<script src="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!--<script src="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js"></script>-->
+<!-- Bootstrap Dialog -->
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.35.3/js/bootstrap-dialog.min.js"></script>-->
+<script src="jquery/js/bootstrap-dialog.js"></script>
+<!-- JS Cookie -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.min.js"></script>
+<!-- Date Picker -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.min.js"></script>
+<!-- Jquery Print -->
+<script src="js/jQuery.print.js"></script>
+<script src="js/tablesorter/jquery.tablesorter.min.js"></script>
+<script src="js/moment.min.js"></script>
+<script src="js/momentjs-business.js"></script>
+<!--<script src="js/bootstrap-switch.min.js"></script>-->
+<script src="js/editTask.js?v=3"></script>
+<script src="js/newTask.js?v=1"></script>
+<script src="js/tasklogic.js?v=1"></script>
+<script src="js/filterlogic.js?v=1"></script>
+<script src="js/printThis.js"></script>
+<script src="js/logout.js?v=1"></script>
+</body>
+
+</html>

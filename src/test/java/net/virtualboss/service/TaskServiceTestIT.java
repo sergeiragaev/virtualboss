@@ -5,6 +5,7 @@ import net.virtualboss.model.entity.Task;
 import net.virtualboss.repository.ContactRepository;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.task.TaskFilter;
+import net.virtualboss.web.dto.task.TaskReferencesRequest;
 import net.virtualboss.web.dto.task.UpsertTaskRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,7 +44,10 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     void getTaskById_ReturnsValidTask() {
         UpsertTaskRequest request = generateTestTaskRequest();
         CustomFieldsAndLists customFieldsAndLists = generateTestTaskCustomFieldsRequest();
-        Map<String, Object> savedTask = taskService.createNewTask(request, customFieldsAndLists);
+        Map<String, Object> savedTask = taskService.createNewTask(
+                request,
+                customFieldsAndLists,
+                generateTestTaskReferenceRequest());
         Task result = taskService.getTaskById(savedTask.get("TaskId").toString());
         assertEquals(savedTask.get("TaskId"), result.getId());
         assertEquals(request.getDescription(), result.getDescription());
@@ -56,15 +60,24 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @Transactional
     void updateTask_CorrectUpdate() {
         Map<String, Object> savedTask = taskService.createNewTask(
-                generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest()
+        );
         String taskId = savedTask.get("TaskId").toString();
         UpsertTaskRequest updatedTaskRequest = UpsertTaskRequest.builder()
                 .id(UUID.fromString(taskId))
                 .description("Updated task description")
+                .build();
+        TaskReferencesRequest referenceRequest = TaskReferencesRequest.builder()
                 .contactId("")
                 .jobNumber("")
                 .build();
-        taskService.saveTask(taskId, updatedTaskRequest, CustomFieldsAndLists.builder().build());
+        taskService.saveTask(
+                taskId, updatedTaskRequest,
+                CustomFieldsAndLists.builder().build(),
+                referenceRequest
+        );
         Task updatedTask = taskRepository.findById(UUID.fromString(taskId)).orElseThrow();
         assertEquals("Updated task description", updatedTask.getDescription());
         assertEquals(contactRepository.getUnassigned().orElseThrow(), updatedTask.getContact());
@@ -76,7 +89,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @Transactional
     void deleteTask_CorrectDelete() {
         Map<String, Object> savedTask = taskService.createNewTask(
-                generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
         String taskId = savedTask.get("TaskId").toString();
         taskService.deleteTaskById(taskId);
         assertTrue(taskRepository.findById(UUID.fromString(taskId)).orElseThrow().getIsDeleted());
@@ -86,7 +101,10 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @DisplayName("Search tasks with custom fields values")
     @Transactional
     void searchTasksWithCustomFieldsValues() {
-        taskService.createNewTask(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
+        taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
         TaskFilter filter = new TaskFilter();
         filter.setFindString("custom");
         List<Map<String, Object>> result = taskService.findAll("TaskId", filter);
@@ -98,7 +116,10 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @DisplayName("Search specific task by filters")
     @Transactional
     void searchSpecificTaskByFilters() {
-        Map<String, Object> savedTaskMap = taskService.createNewTask(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
+        Map<String, Object> savedTaskMap = taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
         TaskFilter filter = new TaskFilter();
         String savedTaskId = savedTaskMap.get("TaskId").toString();
         filter.setTaskIds(Collections.singletonList(savedTaskId));
@@ -119,7 +140,10 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @DisplayName("Search task with non-matching filters")
     @Transactional
     void searchTaskWithNonMatchingFilters() {
-        Map<String, Object> savedTaskMap = taskService.createNewTask(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
+        Map<String, Object> savedTaskMap = taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
         TaskFilter filter = new TaskFilter();
         String savedTaskId = savedTaskMap.get("TaskId").toString();
         filter.setTaskIds(Collections.singletonList(savedTaskId));
@@ -137,7 +161,35 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @DisplayName("Create new task")
     @Transactional
     void createNewTask() {
-        taskService.createNewTask(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
+        taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
         assertEquals(1, taskRepository.count());
+    }
+
+    @Test
+    @DisplayName("Create 2 pending tasks")
+    @Transactional
+    void create2PendingTasks() {
+        Map<String, Object> savedTask = taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
+        assertEquals(1, taskRepository.count());
+        String parentTaskNumber = savedTask.get("TaskNumber").toString();
+        Map<String, Object> pendingTask1 = taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                TaskReferencesRequest.builder().pending(parentTaskNumber).build());
+        assertEquals(2, taskRepository.count());
+        assertEquals(pendingTask1.get("TaskFollows"), parentTaskNumber);
+        String parentTasks = parentTaskNumber + "," + pendingTask1.get("TaskNumber").toString();
+        Map<String, Object> pendingTask2 = taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                TaskReferencesRequest.builder().pending(parentTasks).build());
+        assertEquals(3, taskRepository.count());
+        assertEquals(pendingTask2.get("TaskFollows"), parentTasks);
     }
 }

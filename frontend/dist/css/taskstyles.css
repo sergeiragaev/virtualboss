@@ -1,0 +1,49 @@
+﻿.tSettings{
+  background-color:#fff;
+  padding:10px;
+  border-radius:4px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+}
+
+.tSettings{
+  margin-bottom:10px;
+}
+
+.tSettings hr{
+  margin-bottom:8px;
+  margin-top:15px;
+}
+
+.tTaskList{
+  background-color:#fff;
+}
+
+.tMain{
+  padding-left:5px;
+  padding-right:5px;
+}
+
+.tSettingsInfo{
+  font-size:12px;  
+  padding:3px;
+}
+
+.tTaskList table th{
+  cursor:pointer;
+}
+
+.tmSearchBar{
+  margin-top:10px;
+}
+
+form[name=taskFieldsToShowForm] .checkbox input[type=checkbox]{
+
+}
+
+.modal { 
+  overflow: auto !important; 
+}
+
+.headerSortUp, .headerSortDown{
+  padding-right:20px !important;
+}

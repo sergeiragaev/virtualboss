@@ -5,7 +5,9 @@ import net.virtualboss.model.entity.Task;
 import net.virtualboss.model.enums.DateCriteria;
 import net.virtualboss.model.enums.DateRange;
 import net.virtualboss.model.enums.DateType;
+import net.virtualboss.model.enums.TaskStatus;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
+import net.virtualboss.web.dto.task.TaskReferencesRequest;
 import net.virtualboss.web.dto.task.UpsertTaskRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +35,10 @@ class TaskControllerIT extends TestDependenciesContainer {
     @Test
     @DisplayName("test get task by id test")
     void getTaskById_ReturnsValidTask() throws Exception {
-        Task task = saveTaskInDbAndGet(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
+        Task task = saveTaskInDbAndGet(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
         String customValue = task.getCustomValueByName("TaskCustomField1");
         mockMvc.perform(get("/task/" + taskRepository.findAll().get(0).getId()))
                 .andExpect(status().isOk())
@@ -76,7 +81,10 @@ class TaskControllerIT extends TestDependenciesContainer {
     @DisplayName("search tasks with specific criteria api test")
     void searchTasks() throws Exception {
         UpsertTaskRequest testTaskRequest = generateTestTaskRequest();
-        saveTaskInDbAndGet(testTaskRequest, generateTestTaskCustomFieldsRequest());
+        TaskReferencesRequest testTaskReference = generateTestTaskReferenceRequest();
+        saveTaskInDbAndGet(testTaskRequest,
+                generateTestTaskCustomFieldsRequest(),
+                testTaskReference);
         mockMvc.perform(get("/task")
                         .param("fields", "TaskId,TaskDescription,TaskCustomField1")
                         .param("page", String.valueOf(1))
@@ -90,8 +98,8 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("dateTo", LocalDate.now().plusDays(1).toString())
                         .param("dateCriteria", String.valueOf(DateCriteria.EXACT.getValue()))
                         .param("jobIds", String.valueOf(
-                                jobRepository.findByNumberIgnoreCaseAndIsDeleted(testTaskRequest.getJobNumber(), false).orElseThrow().getId()))
-                        .param("custIds", String.valueOf(testTaskRequest.getContactId()))
+                                jobRepository.findByNumberIgnoreCaseAndIsDeleted(testTaskReference.getJobNumber(), false).orElseThrow().getId()))
+                        .param("custIds", String.valueOf(testTaskReference.getContactId()))
                         .param("findString", "Subdivision")
                 )
                 .andExpect(jsonPath("[0].TaskDescription").value(testTaskRequest.getDescription()))
@@ -110,8 +118,13 @@ class TaskControllerIT extends TestDependenciesContainer {
         String taskQueryString = getQueryString(taskJson, false);
         String taskCustomQueryString = getQueryString(
                 objectMapper.writeValueAsString(customFieldsAndLists), true);
+        String taskReferenceQueryString = getQueryString(
+                objectMapper.writeValueAsString(generateTestTaskReferenceRequest()), true);
 
-        mockMvc.perform(post("/task" + taskQueryString + taskCustomQueryString)
+        mockMvc.perform(post("/task" +
+                                taskQueryString +
+                                taskCustomQueryString +
+                                taskReferenceQueryString)
 //                        .header("id", 1L)
                 )
                 .andExpect(jsonPath("$.TaskGroups").value("Test task group"))
@@ -150,16 +163,20 @@ class TaskControllerIT extends TestDependenciesContainer {
     void updateAssigningTaskToUnassignedContactAndEmptyJob_CorrectUpdate() throws Exception {
         Task newTask = saveAndGetTestTaskToUpdate();
         UpsertTaskRequest updatedTaskRequest = getUpdatedTaskRequestByTask(newTask);
-        updatedTaskRequest.setContactId("");
-        updatedTaskRequest.setJobNumber("");
         String updatedTaskJson = objectMapper.writeValueAsString(updatedTaskRequest);
         String updatedTaskQueryString = getQueryString(updatedTaskJson, false);
         CustomFieldsAndLists customFL = generateTestTaskCustomFieldsRequest();
         customFL.setCustomField1("new custom field 1 value");
         String updatedCustomFL = getQueryString(objectMapper.writeValueAsString(customFL), true);
+        TaskReferencesRequest updatedTaskReference = TaskReferencesRequest.builder()
+                .contactId("")
+                .jobNumber("")
+                .build();
+        String updatedReference = getQueryString(objectMapper.writeValueAsString(updatedTaskReference), true);
         mockMvc.perform(put("/task/" + taskRepository.findAll().get(0).getId() +
                                 updatedTaskQueryString +
-                                updatedCustomFL)
+                                updatedCustomFL +
+                                updatedReference)
 //                        .header("id", 1L)
                 )
                 .andExpect(jsonPath("$.TaskCustomField1").value(
@@ -181,14 +198,15 @@ class TaskControllerIT extends TestDependenciesContainer {
     private Task saveAndGetTestTaskToUpdate() {
         return saveTaskInDbAndGet(UpsertTaskRequest.builder()
                         .targetStart(LocalDate.now())
-                        .duration((short) 2)
+                        .duration(2)
                         .targetFinish(LocalDate.now().plusDays(2))
                         .notes("Some task notes")
                         .description("Test Task to update")
                         .actualFinish(LocalDate.now())
-                        .status("Done")
+                        .status(TaskStatus.Done)
                         .build(),
-                generateTestTaskCustomFieldsRequest());
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
     }
 
     private UpsertTaskRequest getUpdatedTaskRequestByTask(Task newTask) {
@@ -200,6 +218,10 @@ class TaskControllerIT extends TestDependenciesContainer {
     }
 
     private Task saveAndGetTestTaskToDelete() {
-        return saveTaskInDbAndGet(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
+        return saveTaskInDbAndGet(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest()
+        );
     }
 }

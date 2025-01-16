@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.task.TaskFilter;
 import net.virtualboss.service.TaskService;
+import net.virtualboss.web.dto.task.TaskReferencesRequest;
 import net.virtualboss.web.dto.task.UpsertTaskRequest;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.http.HttpStatus;
@@ -41,16 +42,18 @@ public class TaskController {
     public ResponseEntity<Map<String, Object>> saveTask(
             @PathVariable String id,
             UpsertTaskRequest request,
-            CustomFieldsAndLists customFieldsAndLists) {
-        return ResponseEntity.ok(service.saveTask(id, request, customFieldsAndLists));
+            CustomFieldsAndLists customFieldsAndLists,
+            TaskReferencesRequest referenceRequest) {
+        return ResponseEntity.ok(service.saveTask(id, request, customFieldsAndLists, referenceRequest));
     }
 
     @PostMapping("/task")
     public ResponseEntity<Map<String, Object>> createTask(
             UpsertTaskRequest request,
-            CustomFieldsAndLists customFieldsAndLists) {
+            CustomFieldsAndLists customFieldsAndLists,
+            TaskReferencesRequest referenceRequest) {
         return new ResponseEntity<>(
-                service.createNewTask(request, customFieldsAndLists), HttpStatus.CREATED);
+                service.createNewTask(request, customFieldsAndLists, referenceRequest), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/task/{id}")

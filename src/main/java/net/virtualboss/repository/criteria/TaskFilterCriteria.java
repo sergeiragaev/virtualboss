@@ -8,6 +8,7 @@ import net.virtualboss.model.entity.Contact;
 import net.virtualboss.model.entity.FieldValue;
 import net.virtualboss.model.entity.Job;
 import net.virtualboss.model.entity.Task;
+import net.virtualboss.model.enums.TaskStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.lang.reflect.Field;
@@ -28,7 +29,7 @@ public class TaskFilterCriteria {
     private LocalDate anyDateFieldFrom;
     private LocalDate anyDateFieldTo;
 
-    private String status;
+    private TaskStatus status;
     private Boolean marked;
 
     private List<Job> jobList;

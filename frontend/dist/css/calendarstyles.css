@@ -1,0 +1,19 @@
+﻿.tTaskList{
+  background-color:#fff;
+  border:1px #c0c0c0 solid;
+  border-radius:4px;
+  padding:6px;
+}
+
+.fc-toolbar{
+  margin-bottom:5px;
+}
+
+.fc-toolbar h2{
+  font-size:18px;
+  margin-top:5px;
+}
+
+.fc-event{
+  font-size:14px;
+}

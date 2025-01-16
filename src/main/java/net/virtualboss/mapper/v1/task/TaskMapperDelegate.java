@@ -6,6 +6,7 @@ import net.virtualboss.service.EmployeeService;
 import net.virtualboss.service.GroupService;
 import net.virtualboss.service.MainService;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
+import net.virtualboss.web.dto.task.TaskReferencesRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class TaskMapperDelegate implements TaskMapperV1 {
@@ -17,12 +18,13 @@ public abstract class TaskMapperDelegate implements TaskMapperV1 {
     private GroupService groupService;
 
     @Override
-    public Task addCFLAndGroupsToTask(Task task, CustomFieldsAndLists customFieldsAndLists, String contactId, String jobNumber, String requested, String taskGroups) {
-        task.setContact(mainService.getContactById(contactId));
-        task.setJob(mainService.getJobByNumber(jobNumber));
-        task.setRequested(employeeService.findByName(requested));
+    public Task setCFLAndReferencesToTask(Task task, CustomFieldsAndLists customFieldsAndLists, TaskReferencesRequest request) {
         task.setCustomFieldsAndListsValues(mainService.createCustomList(customFieldsAndLists, EntityType.TASK));
-        task.setGroups(groupService.getGroups(EntityType.TASK, taskGroups));
+        task.setContact(mainService.getContactById(request.getContactId()));
+        task.setJob(mainService.getJobByNumber(request.getJobNumber()));
+        task.setRequested(employeeService.findByName(request.getRequested()));
+        task.setGroups(groupService.getGroups(EntityType.TASK, request.getGroups()));
+        task.setFollows(mainService.createFollows(request.getPending()));
         return task;
     }
 }

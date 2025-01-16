@@ -87,7 +87,9 @@ class ContactServiceIT extends TestDependenciesContainer {
     @Transactional
     void deleteContact_CorrectDelete() {
         Map<String, Object> savedTask = taskService.createNewTask(
-                generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
         String taskId = savedTask.get("TaskId").toString();
         String contactId = savedTask.get("ContactId").toString();
         Contact taskContact = contactRepository.findById(UUID.fromString(contactId)).orElseThrow();

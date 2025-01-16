@@ -1,0 +1,41 @@
+﻿.cSettings{
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+  background-color:#fff;
+  padding:10px;
+  border-radius:4px;
+}
+
+.cSettings{
+  margin-bottom:10px;
+}
+
+.cSettings hr{
+  margin-bottom:8px;
+  margin-top:15px;
+}
+
+.cContactList{
+  background-color:#fff;
+}
+
+.cMain{
+  padding-left:5px;
+  padding-right:5px;
+}
+
+.cSettingsInfo{
+  font-size:12px;  
+  padding:3px;
+}
+
+.cContactList table th{
+  cursor:pointer;
+}
+
+.cmSearchBar{
+  margin-top:10px;
+}
+
+.modal{
+  overflow: auto !important; 
+}

@@ -152,6 +152,9 @@ class ContactControllerIT extends TestDependenciesContainer {
     }
 
     private Contact saveAndGetTestContactToDelete() {
-        return saveTaskInDbAndGet(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest()).getContact();
+        return saveTaskInDbAndGet(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest()).getContact();
     }
 }

@@ -3,13 +3,17 @@ package net.virtualboss.mapper.v1.task;
 import net.virtualboss.mapper.v1.contact.ContactMapperV1;
 import net.virtualboss.mapper.v1.GroupMapperV1;
 import net.virtualboss.mapper.v1.job.JobMapperV1;
+import net.virtualboss.model.entity.Group;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
+import net.virtualboss.web.dto.task.TaskReferencesRequest;
 import net.virtualboss.web.dto.task.TaskResponse;
 import net.virtualboss.model.entity.Task;
 import net.virtualboss.web.dto.task.UpsertTaskRequest;
 import org.mapstruct.*;
 
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE,
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
@@ -17,24 +21,26 @@ import java.util.UUID;
 @DecoratedWith(TaskMapperDelegate.class)
 public interface TaskMapperV1 {
 
-    default Task requestToTask(UpsertTaskRequest request, CustomFieldsAndLists customFieldsAndLists) {
+    default Task requestToTask(UpsertTaskRequest request,
+                               CustomFieldsAndLists customFieldsAndLists,
+                               TaskReferencesRequest referenceRequest) {
         Task task = requestToTask(request);
-        return addCFLAndGroupsToTask(task,
-                customFieldsAndLists,
-                request.getContactId(),
-                request.getJobNumber(),
-                request.getRequested(),
-                request.getGroups());
+        return setCFLAndReferencesToTask(task,
+                customFieldsAndLists, referenceRequest);
     }
 
-    Task addCFLAndGroupsToTask(Task task, CustomFieldsAndLists customFieldsAndLists, String contactId, String jobNumber, String requested, String taskGroups);
-
     @Mapping(target = "requested", ignore = true)
+    @Mapping(target = "follows", ignore = true)
     @Mapping(target = "groups", ignore = true)
+    Task setCFLAndReferencesToTask(Task task, CustomFieldsAndLists customFieldsAndLists, TaskReferencesRequest request);
+
     Task requestToTask(UpsertTaskRequest request);
 
-    default Task requestToTask(String id, UpsertTaskRequest request, CustomFieldsAndLists customFieldsAndLists) {
-        Task task = requestToTask(request, customFieldsAndLists);
+    default Task requestToTask(String id,
+                               UpsertTaskRequest request,
+                               CustomFieldsAndLists customFieldsAndLists,
+                               TaskReferencesRequest referenceRequest) {
+        Task task = requestToTask(request, customFieldsAndLists, referenceRequest);
         task.setId(UUID.fromString(id));
         return task;
     }
@@ -46,8 +52,13 @@ public interface TaskMapperV1 {
     @Mapping(source = "contact.id", target = "contactId")
     @Mapping(source = "contact", target = "contactResponse")
     @Mapping(source = "requested.name", target = "requested")
-    @Mapping(target = "follows", ignore = true)
     @Mapping(target = "isDeleted", ignore = true)
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
     TaskResponse taskToResponse(Task task);
+
+    default String mapToFollows(Set<Task> tasks) {
+        return tasks.stream().map(task -> task.getNumber().toString())
+                .collect(Collectors.joining(","));
+    }
+
 }

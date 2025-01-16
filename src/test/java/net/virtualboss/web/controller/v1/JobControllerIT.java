@@ -152,6 +152,9 @@ class JobControllerIT extends TestDependenciesContainer {
     }
 
     private Job saveAndGetTestJobToDelete() {
-        return saveTaskInDbAndGet(generateTestTaskRequest(), generateTestTaskCustomFieldsRequest()).getJob();
+        return saveTaskInDbAndGet(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest()).getJob();
     }
 }

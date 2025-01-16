@@ -1,8 +1,5 @@
 package net.virtualboss.service;
 
-import com.fasterxml.jackson.databind.ser.FilterProvider;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -10,13 +7,14 @@ import lombok.extern.log4j.Log4j2;
 import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.mapper.v1.task.TaskMapperV1;
 import net.virtualboss.model.entity.Contact;
-import net.virtualboss.model.entity.Group;
 import net.virtualboss.model.entity.Job;
 import net.virtualboss.model.enums.DateCriteria;
 import net.virtualboss.model.enums.DateRange;
 import net.virtualboss.model.enums.DateType;
+import net.virtualboss.model.enums.TaskStatus;
 import net.virtualboss.util.BeanUtils;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
+import net.virtualboss.web.dto.task.TaskReferencesRequest;
 import net.virtualboss.web.dto.task.TaskResponse;
 import net.virtualboss.web.dto.task.TaskFilter;
 import net.virtualboss.repository.criteria.TaskFilterCriteria;
@@ -30,7 +28,6 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,13 +76,13 @@ public class TaskService {
             orders.add(new Sort.Order(Sort.Direction.valueOf(order[1].toUpperCase()), order[0]));
         }
 
-        String status = null;
+        TaskStatus status = null;
         boolean isActive = filter.getIsActive() != null && filter.getIsActive();
         boolean isDone = filter.getIsDone() != null && filter.getIsDone();
         if (!isActive && isDone) {
-            status = "Done";
+            status = TaskStatus.Done;
         } else if (isActive && !isDone) {
-            status = "Active";
+            status = TaskStatus.Active;
         }
 
         if (filter.getFindString() == null) filter.setFindString("");
@@ -115,8 +112,11 @@ public class TaskService {
                                                 filter.getContactIds().stream()
                                                         .map(UUID::fromString).toList()))
                                 .taskList(filter.getTaskIds() == null ? null :
-                                        filter.getTaskIds().stream()
-                                                .map(UUID::fromString).toList())
+                                        taskRepository.findAllByNumberIn(
+                                            filter.getTaskIds().stream()
+                                                    .map(Long::valueOf)
+                                                    .toList())
+                                                .stream().map(Task::getId).toList())
                                 .build().getSpecification(),
                         PageRequest.of(filter.getPage() - 1, filter.getSize(),
                                 Sort.by(orders)
@@ -163,15 +163,39 @@ public class TaskService {
 
     @Transactional
     @CachePut(value = "task", key = "#id")
-    public Map<String, Object> saveTask(String id, UpsertTaskRequest request, CustomFieldsAndLists customFieldsAndLists) {
-        Task task = taskMapper.requestToTask(id, request, customFieldsAndLists);
+    public Map<String, Object> saveTask(
+            String id,
+            UpsertTaskRequest request,
+            CustomFieldsAndLists customFieldsAndLists,
+            TaskReferencesRequest referenceRequest) {
+        Task task = taskMapper.requestToTask(id, request, customFieldsAndLists, referenceRequest);
         Task taskFromDb = getTaskById(id);
         task.getCustomFieldsAndListsValues().addAll(taskFromDb.getCustomFieldsAndListsValues());
         removeTasksFromJobAndContact(taskFromDb);
         BeanUtils.copyNonNullProperties(task, taskFromDb);
         taskFromDb.setJob(task.getJob());
         assignTasksToJobAndContact(taskFromDb);
+        calculateDates(taskFromDb);
         return TaskResponse.getFieldsMap(taskMapper.taskToResponse(taskRepository.save(taskFromDb)), null);
+    }
+
+    private void calculateDates(Task task) {
+        LocalDate finish = task.getTargetStart().minusDays(1);
+        int duration = task.getDuration();
+        if (duration == 0) {
+            return;
+        } else {
+            int days = 0;
+            do {
+                finish = duration < 0 ? finish.minusDays(1) : finish.plusDays(1);
+                int dow = finish.getDayOfWeek().getValue();
+                if (!(dow == 6 || dow == 7)) {
+                    days = duration < 0 ? --days : ++days;
+                }
+            } while (duration != days);
+        }
+        task.setTargetFinish(finish);
+        if (task.getStatus() == TaskStatus.Active) task.setActualFinish(null);
     }
 
     private void removeTasksFromJobAndContact(Task taskFromDb) {
@@ -195,8 +219,10 @@ public class TaskService {
     @CacheEvict(value = "task", allEntries = true)
     public Map<String, Object> createNewTask(
             UpsertTaskRequest request,
-            CustomFieldsAndLists customFieldsAndLists) {
-        Task task = taskMapper.requestToTask(request, customFieldsAndLists);
+            CustomFieldsAndLists customFieldsAndLists,
+            TaskReferencesRequest referenceRequest) {
+        Task task = taskMapper.requestToTask(request, customFieldsAndLists, referenceRequest);
+        calculateDates(task);
         task.setNumber(getNextNumberSequenceValue());
         Task savedTask = taskRepository.save(task);
         assignTasksToJobAndContact(savedTask);
@@ -211,19 +237,6 @@ public class TaskService {
         taskRepository.save(task);
     }
 
-    public static String mapGroupsToResponse(Task task) {
-        return task.getGroups() == null ? null :
-                task.getGroups().stream().map(Group::getName)
-                        .collect(Collectors.joining(","));
-    }
-
-    public MappingJacksonValue retrieveTaskValues(TaskResponse taskResponse, Set<String> fields) {
-        SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept(fields);
-        FilterProvider filters = new SimpleFilterProvider().addFilter("TaskResponseFilter", filter);
-        MappingJacksonValue mapping = new MappingJacksonValue(taskResponse);
-        mapping.setFilters(filters);
-        return mapping;
-    }
     public Long getNextNumberSequenceValue() {
         return (Long) entityManager.createNativeQuery("SELECT NEXTVAL('tasks_number_seq')")
                 .getSingleResult();

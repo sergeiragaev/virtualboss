@@ -3,6 +3,7 @@ package net.virtualboss.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import net.virtualboss.exception.EntityNotFoundException;
+import net.virtualboss.model.enums.TaskStatus;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -43,7 +44,7 @@ public class Task {
     private LocalDate targetStart;
 
     @Column(nullable = false)
-    private Short duration;
+    private Integer duration;
 
     @Column(nullable = false, name = "target_finish")
     private LocalDate targetFinish;
@@ -52,11 +53,20 @@ public class Task {
     private LocalDate actualFinish;
 
     @Column(nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private TaskStatus status;
 
-    @OneToMany
+    @Column(name = "is_pending")
     @Builder.Default
-    private List<Task> follows = new ArrayList<>();
+    private Boolean isPending = false;
+
+    @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
+    @JoinTable(
+            name = "tasks_follows",
+            joinColumns = @JoinColumn(name = "follows_id"),
+            inverseJoinColumns = @JoinColumn(name = "task_id"))
+    @Builder.Default
+    private Set<Task> follows = new HashSet<>();
 
     @Column(name = "\"order\"")
     private String order;

@@ -121,7 +121,9 @@ class JobServiceTestIT extends TestDependenciesContainer {
     @Transactional
     void deleteJob_CorrectDelete() {
         Map<String, Object> savedTask = taskService.createNewTask(
-                generateTestTaskRequest(), generateTestTaskCustomFieldsRequest());
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
         String taskId = savedTask.get("TaskId").toString();
         String jobId = savedTask.get("JobId").toString();
         Job taskJob = jobRepository.findById(UUID.fromString(jobId)).orElseThrow();

@@ -105,11 +105,6 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="addUniqueConstraintTaskFollows" author="Sergei Ragaev">
-        <addUniqueConstraint columnNames="follows_id" constraintName="tasks_follows_follows_id_key"
-                             tableName="tasks_follows"/>
-    </changeSet>
-
     <changeSet id="addFKTasksConstraint" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="tasks" constraintName="fk_job_id"
                                  deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"

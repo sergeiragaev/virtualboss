@@ -30,7 +30,7 @@ public class TaskResponse {
 
     @JsonProperty("TaskDuration")
     @Builder.Default
-    private Short duration = 0;
+    private Integer duration = 0;
 
     @JsonProperty("TaskTargetFinish")
     private LocalDate targetFinish;

@@ -40,6 +40,8 @@ public class TaskFilterCriteria {
 
     private Boolean isDeleted;
 
+    private UUID linkingTask;
+
     public Specification<Task> getSpecification() {
         return getSpecification(this);
     }
@@ -118,6 +120,13 @@ public class TaskFilterCriteria {
                             .map(TaskFilterCriteria::getSpecification)
                             .toList()
             );
+            case "linkingTask" -> (root, query, cb) ->
+                    cb.not(
+                            cb.or(
+                                    cb.equal(root.get("id"), fieldValue)
+//                                    , getChildrenSpecificationPredicate(root, query, cb)
+                                    )
+                    );
             case "findString" -> (root, query, cb) ->
                     cb.or(
                             cb.like(cb.lower(root.get("description")), "%" + fieldValue.toString().toLowerCase() + "%"),
@@ -129,6 +138,13 @@ public class TaskFilterCriteria {
                     );
             default -> (root, query, cb) -> cb.equal(root.get(fieldName), fieldValue);
         };
+    }
+
+    private static Expression<Boolean> getChildrenSpecificationPredicate(
+            Root<Task> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        Subquery<UUID> subquery = query.subquery(UUID.class);
+        subquery.where(root.join("children").get("id").in(new ArrayList<>()));
+        return cb.exists(subquery);
     }
 
     private static Predicate getContactSpecificationPredicate(Root<Task> root, CriteriaBuilder cb, Object fieldValue) {

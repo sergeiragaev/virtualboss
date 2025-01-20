@@ -532,7 +532,7 @@ function showEditScreen(data, names, view){
             body += "<ul style='margin-top:7px; padding-left:15px;'>";
             
             $.ajax({
-              url: '/api/v1/task?fields=TaskId,TaskDescription,JobNumber,TaskTargetFinish&TaskIds=' + data.TaskFollows,
+              url: '/api/v1/task?fields=TaskId,TaskNumber,TaskDescription,JobNumber,TaskTargetFinish&TaskIds=' + data.TaskFollows,
               dataType:'json',
               success: function(tasks){
                 if(tasks == 'InvalidLogin'){
@@ -543,7 +543,7 @@ function showEditScreen(data, names, view){
                 
                 $.each(tasks, function(){
                   body += "<li style='font-size:12px;'><a href='#' onclick=\"editTask('" + this.TaskId + "');return false;\">" + this.TaskDescription + "</a> - Finishes on " + moment(this.TaskTargetFinish, 'YYYY-MM-DD').format('MM/DD/YYYY (dddd)') + "</li>";
-                  currentlyLinkedArray.push(this.TaskId);  
+                  currentlyLinkedArray.push(this.TaskNumber);
                 });
             
                 body += "</ul>";
@@ -908,9 +908,9 @@ function editTaskCustomFieldOptions(){
 
 function editTaskLinks(taskId, jobId, linkedTasks){
   if(jobId != "undefined"){
-    var url = "/api/v1/task?fields=TaskDescription,TaskId,JobNumber&IsActive=on&JobIds=" + jobId;
+    var url = "/api/v1/task?fields=TaskDescription,TaskId,TaskNumber,JobNumber&IsActive=on&JobIds=" + jobId;
   }else{
-    var url = "/api/v1/task?fields=TaskDescription,TaskId,JobNumber&IsActive=on&MatchType=2&Field=Job %23";
+    var url = "/api/v1/task?fields=TaskDescription,TaskId,TaskNumber,JobNumber&IsActive=on&MatchType=2&Field=Job %23";
   }
   
   $.ajax({
@@ -982,16 +982,16 @@ function editTaskLinks(taskId, jobId, linkedTasks){
             msg += "</tr>";
           }else{
             $.each(taskData, function(){
-              if($.inArray(this.TaskId, currentlyLinkedArray) == -1){
+              if($.inArray(this.TaskNumber.toString(), currentlyLinkedArray) == -1){
                 msg += "<tr>";
                 msg += "  <td>";
                 msg += "    <label style='font-weight:normal; margin-bottom:0px; cursor:pointer;'>";
-                msg += "      <input type='checkbox' name='" + this.TaskId + "'> Select";
+                msg += "      <input type='checkbox' name='" + this.TaskNumber + "'> Select";
               }else{
                 msg += "<tr style='background-color:yellow;'>";
                 msg += "  <td>";
                 msg += "    <label style='font-weight:normal; margin-bottom:0px; cursor:pointer;'>";
-                msg += "      <input type='checkbox' name='" + this.TaskId + "' checked='checked'> Select";
+                msg += "      <input type='checkbox' name='" + this.TaskNumber + "' checked='checked'> Select";
               }
               
               msg += "    </label>";
@@ -1048,7 +1048,7 @@ function editTaskLinks(taskId, jobId, linkedTasks){
                 });
                                   
                 $.ajax({
-                  url: '/api/v1/task?fields=TaskId,TaskDescription,JobNumber,TaskTargetFinish&TaskIds=' + taskIdsToLink.join(","),
+                  url: '/api/v1/task?fields=TaskId,TaskNumber,TaskDescription,JobNumber,TaskTargetFinish&TaskIds=' + taskIdsToLink.join(","),
                   dataType:'json',
                   success: function(tasks){
                     if(tasks == 'InvalidLogin'){
@@ -1062,7 +1062,7 @@ function editTaskLinks(taskId, jobId, linkedTasks){
                     
                     $.each(tasks, function(){
                       output += "<li style='font-size:12px;'><a href='#'>" + this.TaskDescription + "</a> - Finishes on " + moment(this.TaskTargetFinish,'YYYY-MM-DD').format('MM/DD/YYYY (dddd)') + "</li>";
-                      pendingArray.push(this.TaskId);
+                      pendingArray.push(this.TaskNumber);
                     });
                     
                     output += "</ul>";

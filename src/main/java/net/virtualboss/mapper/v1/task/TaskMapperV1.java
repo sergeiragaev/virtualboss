@@ -3,7 +3,6 @@ package net.virtualboss.mapper.v1.task;
 import net.virtualboss.mapper.v1.contact.ContactMapperV1;
 import net.virtualboss.mapper.v1.GroupMapperV1;
 import net.virtualboss.mapper.v1.job.JobMapperV1;
-import net.virtualboss.model.entity.Group;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.task.TaskReferencesRequest;
 import net.virtualboss.web.dto.task.TaskResponse;
@@ -56,8 +55,8 @@ public interface TaskMapperV1 {
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
     TaskResponse taskToResponse(Task task);
 
-    default String mapToFollows(Set<Task> tasks) {
-        return tasks.stream().map(task -> task.getNumber().toString())
+    default String map(Set<Task> tasks) {
+        return tasks.stream().sorted().map(task -> task.getNumber().toString())
                 .collect(Collectors.joining(","));
     }
 

@@ -6,6 +6,7 @@ import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.model.enums.TaskStatus;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.lang.NonNull;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
@@ -21,7 +22,7 @@ import static jakarta.persistence.CascadeType.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tasks")
-public class Task {
+public class Task implements Comparable<Task> {
 
     @Id
     @GeneratedValue
@@ -63,8 +64,8 @@ public class Task {
     @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
     @JoinTable(
             name = "tasks_follows",
-            joinColumns = @JoinColumn(name = "follows_id"),
-            inverseJoinColumns = @JoinColumn(name = "task_id"))
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "follows_id"))
     @Builder.Default
     private Set<Task> follows = new HashSet<>();
 
@@ -117,6 +118,20 @@ public class Task {
     @Builder.Default
     private Set<Group> groups = new HashSet<>();
 
+    @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
+    @JoinTable(name = "tasks_children",
+            joinColumns = @JoinColumn(name = "task_id"),
+            inverseJoinColumns = @JoinColumn(name = "child_id")
+    )
+    private Set<Task> children;
+
+    @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
+    @JoinTable(name = "tasks_follows",
+            joinColumns = @JoinColumn(name = "follows_id"),
+            inverseJoinColumns = @JoinColumn(name = "task_id")
+    )
+    private Set<Task> pendingTasks;
+
     public String getCustomValueByName(String name) {
         return customFieldsAndListsValues.stream()
                 .filter(fieldValue -> fieldValue.getField().getName().equals(name))
@@ -136,5 +151,10 @@ public class Task {
     @Override
     public int hashCode() {
         return Objects.hashCode(id);
+    }
+
+    @Override
+    public int compareTo(@NonNull Task other) {
+        return number.compareTo(other.getNumber());
     }
 }

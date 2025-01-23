@@ -512,16 +512,16 @@
 											  
 												view = "<div class='tipDesc'>"+ data.TaskDescription +"</div>";
 												view += "<div class='ttWrap'>";
-												view += "<div class='smallerTooltipText'>Start: " + moment(data[0].TaskTargetStart).format("MM/DD/YYYY") + "</div>";
+												view += "<div class='smallerTooltipText'>Start: " + moment(data.TaskTargetStart).format("MM/DD/YYYY") + "</div>";
 
     										var days = data.TaskDuration == 1 ? "day" : "days";
 
 												view += "<div class='smallerTooltipText'>Duration: " + data.TaskDuration + " " + days + "</div>";
-												view += "<div class='smallerTooltipText'>End: " + moment(data[0].TaskTargetFinish).format("MM/DD/YYYY") + "</div>";
+												view += "<div class='smallerTooltipText'>End: " + moment(data.TaskTargetFinish).format("MM/DD/YYYY") + "</div>";
 
 												var notes = data.TaskNotes.replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g,'<br />');
 
-												if(data[0].TaskNotes != "" && data.TaskNotes != null && data.TaskNotes != " "){
+												if(data.TaskNotes != "" && data.TaskNotes != null && data.TaskNotes != " "){
 													view += "<div style='padding-top:5px; padding-bottom:0px; margin-bottom:0px; font-size:12px; font-family:inherit;'>";
 													view += "<span class='glyphicon glyphicon-comment'></span> Notes:</p><div class='tipNotes'>" + notes + "</div>";
 												}
@@ -812,8 +812,9 @@
 					  var id = $(this).attr("id");
 						
 						$.ajax({
+							method: 'PUT',
 							dataType: 'json',
-							url: '/api/v1/ganttupdate?taskId=' + id + '&Start=' + nStartDate + "&End=" + nEndDate,
+							url: '/api/v1/task?taskId=' + id + '&Start=' + nStartDate + "&End=" + nEndDate,
 							success: function(e){
 							  if(e == 'InvalidLogin'){
 							    logout();
@@ -825,9 +826,9 @@
 								duration = "";
 								
 								for(var i in e){
-									start = e[i].start;
-									end = e[i].end;
-									duration = e[i].duration;
+									start = e[i].TaskTargetStart;
+									end = e[i].TaskTargetFinish;
+									duration = e[i].TaskDuration;
 									tid = e[i].TaskId;
 
 									if(g.showTstart){
@@ -855,7 +856,7 @@
     						  var leftPos = Math.round((start - (Date.parse(g.dateRange.start)/1000)) / 86400);							    	
  						    	    leftPos = ((leftPos) * g.dayWidth) + (leftPos + 1);
 									
-									var width = getBarLength(e[i].start, e[i].end);
+									var width = getBarLength(e[i].TaskTargetStart, e[i].TaskTargetFinish);
 									    width = getBarWidth(width, g.dayWidth);
 									
 									$("#"+tid).css("left", leftPos+"px").css("width",width+"px");
@@ -909,7 +910,7 @@
 					var nEndDate = moment(getNewEndDate(g, st, duration)).format('YYYY-MM-DD'); // returns the new end date
 					var direction = $(this).data('ui-resizable').axis; // 'e' or 'w'
 					var id = $(this).attr("id");
-					var updateURL = "/api/v1/ganttupdate?taskId=" + id + "&";
+					var updateURL = "/api/v1/task?taskId=" + id + "&";
 					var save = false;
 
 					if(direction == "w"){
@@ -922,6 +923,7 @@
 
 					if(!save){
 						$.ajax({
+							method: 'PUT',
 							url: updateURL,
 							dataType: 'json',
 							success: function(e){
@@ -935,9 +937,9 @@
 								var duration = "";
 								
 								for(var i in e){
-									start = e[i].start;
-									end = e[i].end;
-									duration = e[i].duration;
+									start = e[i].TaskTargetStart;
+									end = e[i].TaskTargetFinish;
+									duration = e[i].TaskDuration;
 									tid = e[i].TaskId;
 									
 									if(g.showBarText){
@@ -959,7 +961,7 @@
     						  var leftPos = Math.round((start - (Date.parse(g.dateRange.start)/1000)) / 86400);							    	
     						    	leftPos = ((leftPos) * g.dayWidth) + (leftPos + 1);
 									
-									var width = getBarLength(e[i].start, e[i].end);
+									var width = getBarLength(e[i].TaskTargetStart, e[i].TaskTargetFinish);
 									    width = getBarWidth(width, g.dayWidth);
 									
 									$("#"+tid).css("left", leftPos+"px").css("width",width+"px");

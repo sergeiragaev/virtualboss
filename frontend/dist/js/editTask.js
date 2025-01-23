@@ -552,7 +552,7 @@ function showEditScreen(data, names, view){
                 body += "<div class='row'>";
                 body += " <div class='col-xs-12'>";
                 body += "   Offset Start Date By";
-                body += "   <input type='number' name='Finish_plus_days' style='width:50px;' value='" + data.FinishPlus + "'> Days";
+                body += "   <input type='number' name='FinishPlus' style='width:50px;' value='" + data.FinishPlus + "'> Days";
                 body += " </div>";
                 body += "</div>";
                 body += "</form>";
@@ -908,9 +908,10 @@ function editTaskCustomFieldOptions(){
 
 function editTaskLinks(taskId, jobId, linkedTasks){
   if(jobId != "undefined"){
-    var url = "/api/v1/task?fields=TaskDescription,TaskId,TaskNumber,JobNumber&IsActive=on&JobIds=" + jobId;
+    var url = "/api/v1/task?fields=TaskDescription,TaskNumber,TaskId,JobNumber&IsActive=on&JobIds=" + jobId +
+        "&LinkingTask=" + taskId;
   }else{
-    var url = "/api/v1/task?fields=TaskDescription,TaskId,TaskNumber,JobNumber&IsActive=on&MatchType=2&Field=Job %23";
+    var url = "/api/v1/task?fields=TaskDescription,TaskNumber,JobNumber&IsActive=on&MatchType=2&Field=Job %23";
   }
   
   $.ajax({
@@ -1115,7 +1116,7 @@ function showTaskEditScreen(data, body, view){
     //draggable: true,
     onshown: function(){
       if(data.TaskFollows != ""){
-        var controllingTaskEndDate = moment($("input[name=TargetStart]").val(), "MM/DD/YYYY").businessAdd(-$("input[name=Finish_plus_days]").val()).format("MM/DD/YYYY");
+        var controllingTaskEndDate = moment($("input[name=TargetStart]").val(), "MM/DD/YYYY").businessAdd(-$("input[name=FinishPlus]").val()).format("MM/DD/YYYY");
       }
       
       $("input[name=TargetStart]").datepicker({
@@ -1132,7 +1133,7 @@ function showTaskEditScreen(data, body, view){
           newFinishPlus = 0;
         }
         
-        $("input[name=Finish_plus_days]").val(newFinishPlus);
+        $("input[name=FinishPlus]").val(newFinishPlus);
         
         updateTargetFinish();
       });
@@ -1151,12 +1152,12 @@ function showTaskEditScreen(data, body, view){
         //  newFinishPlus = 0;
         //}
         
-        //$("input[name=Finish_plus_days]").val(newFinishPlus);
+        //$("input[name=FinishPlus]").val(newFinishPlus);
         
         //updateTargetFinish();
       });
       
-      $("input[name=Finish_plus_days]").change(function(){
+      $("input[name=FinishPlus]").change(function(){
         //$("input[name=TargetStart]").val(moment($("input[name=TargetStart]").val(), "MM/DD/YYYY").add($(this).val(), "days").format("MM/DD/YYYY"));
         var newStartDate = moment(controllingTaskEndDate, 'MM/DD/YYYY').businessAdd($(this).val()).format('MM/DD/YYYY');
         
@@ -1276,7 +1277,18 @@ function showTaskEditScreen(data, body, view){
               logout();
             }
             
-            alert(errorThrown);
+            // alert(errorThrown);
+            BootstrapDialog.show({
+                title: "Error Updating Task",
+                message: jqXHR.responseJSON ? jqXHR.responseJSON.message : jqXHR.responseText, //errorThrown,
+                type: BootstrapDialog.TYPE_DANGER,
+                buttons: [{
+                    label: "Ok",
+                    action: function(dialogRef){
+                        dialogRef.close();
+                    }
+                }]
+            });
           }
         });
       }

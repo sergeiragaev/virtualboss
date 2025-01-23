@@ -3,6 +3,7 @@ package net.virtualboss.web.controller;
 import lombok.extern.slf4j.Slf4j;
 import net.virtualboss.exception.AccessDeniedException;
 import net.virtualboss.exception.AlreadyExistsException;
+import net.virtualboss.exception.CircularLinkingException;
 import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.web.dto.error.ErrorDetails;
 import net.virtualboss.web.dto.error.ErrorResponse;
@@ -14,7 +15,6 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.View;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +24,11 @@ import java.util.Objects;
 @Slf4j
 public class ExceptionHandlerController {
 
-    private final View error;
-
-    public ExceptionHandlerController(View error) {
-        this.error = error;
+    @ExceptionHandler(CircularLinkingException.class)
+    public ResponseEntity<ErrorResponse> notFound(CircularLinkingException ex) {
+        log.error("There is error occurred while trying link tasks", ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(ex.getLocalizedMessage(), new ArrayList<>()));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)

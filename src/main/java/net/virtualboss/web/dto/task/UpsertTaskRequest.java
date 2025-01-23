@@ -14,10 +14,11 @@ public class UpsertTaskRequest {
     private String description;
     private LocalDate targetStart;
     private Integer duration;
-    private LocalDate targetFinish;
+//    private LocalDate targetFinish;
     private LocalDate actualFinish;
     private TaskStatus status;
     private String order;
     private String notes;
     private Boolean marked;
+    private Integer finishPlus;
 }

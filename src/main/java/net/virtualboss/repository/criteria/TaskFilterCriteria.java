@@ -143,7 +143,7 @@ public class TaskFilterCriteria {
     private static Expression<Boolean> getChildrenSpecificationPredicate(
             Root<Task> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         Subquery<UUID> subquery = query.subquery(UUID.class);
-        subquery.where(root.join("children").get("id").in(new ArrayList<>()));
+        subquery.where(root.join("children").get("id").in());
         return cb.exists(subquery);
     }
 

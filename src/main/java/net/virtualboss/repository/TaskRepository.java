@@ -17,5 +17,5 @@ public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificat
     List<Task> findAllByJob(Job job);
     List<Task> findAllByContact(Contact contact);
     List<Task> findAllByNumberIn(Collection<Long> numbers);
-    Optional<Task> findByNumber(int number);
+    Optional<Task> findByNumber(long number);
 }

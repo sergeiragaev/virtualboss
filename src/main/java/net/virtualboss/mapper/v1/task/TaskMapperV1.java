@@ -51,7 +51,6 @@ public interface TaskMapperV1 {
     @Mapping(source = "contact.id", target = "contactId")
     @Mapping(source = "contact", target = "contactResponse")
     @Mapping(source = "requested.name", target = "requested")
-    @Mapping(target = "isDeleted", ignore = true)
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
     TaskResponse taskToResponse(Task task);
 

@@ -199,7 +199,6 @@ class TaskControllerIT extends TestDependenciesContainer {
         return saveTaskInDbAndGet(UpsertTaskRequest.builder()
                         .targetStart(LocalDate.now())
                         .duration(2)
-                        .targetFinish(LocalDate.now().plusDays(2))
                         .notes("Some task notes")
                         .description("Test Task to update")
                         .actualFinish(LocalDate.now())

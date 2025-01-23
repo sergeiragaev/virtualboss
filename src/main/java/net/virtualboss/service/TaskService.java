@@ -34,7 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 @Service
@@ -173,123 +172,65 @@ public class TaskService {
             TaskReferencesRequest referenceRequest) {
         Task task = taskMapper.requestToTask(id, request, customFieldsAndLists, referenceRequest);
         Task taskFromDb = getTaskById(id);
+        Task.checkIfFollowsAlreadyPending(task, taskFromDb);
         task.getCustomFieldsAndListsValues().addAll(taskFromDb.getCustomFieldsAndListsValues());
         removeTasksFromJobAndContact(taskFromDb);
+        Set<Task> changed = new HashSet<>();
+        taskRepository.saveAll(
+                taskFromDb.removeChildrenFromParents(taskFromDb, changed, new HashSet<>()));
         BeanUtils.copyNonNullProperties(task, taskFromDb);
         taskFromDb.setJob(task.getJob());
-        assignTasksToJobAndContact(taskFromDb);
-        Set<Task> recalculatedTasks = new HashSet<>();
-        calculateDates(taskFromDb, recalculatedTasks);
-        taskRepository.saveAll(recalculatedTasks);
-        Set<Task> childrenTasks = new HashSet<>();
-        Set<Task> parentTasks = new HashSet<>();
-        addChildren(taskFromDb, parentTasks, childrenTasks);
-        taskRepository.saveAll(parentTasks);
-        taskRepository.saveAll(childrenTasks);
-        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(taskRepository.save(taskFromDb)), null);
+        taskFromDb.assignTasksToJobAndContact();
+        Task.recalculate(taskFromDb);
+        changed.forEach(Task::addChildren);
+        taskRepository.saveAll(changed);
+        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(taskFromDb), null);
     }
 
-    private void addChildren(Task task, Set<Task> parentTasks, Set<Task> childrenTasks) {
-        for (Task parentTask : task.getFollows()) {
-            parentTasks.add(parentTask);
-            childrenTasks.add(task);
-            parentTask.getChildren().addAll(childrenTasks);
-            addChildren(parentTask, parentTasks, childrenTasks);
-        }
-    }
-
-    private void calculateDates(Task task, Set<Task> recalculatedTasks) {
-        if (!task.getFollows().isEmpty()) calculateStart(task);
-        calculateFinish(task);
-        if (task.getStatus() == TaskStatus.Active) task.setActualFinish(null);
-
-        if (task.getPendingTasks() != null) {
-            for (Task current : task.getPendingTasks()) {
-                if (recalculatedTasks.add(current)) {
-                    calculateDates(current, recalculatedTasks);
-//                    addChildren(current, recalculatedTasks);
-                }
+    @Transactional
+    @CacheEvict(value = "task", allEntries = true)
+    public List<Map<String, Object>> updateTaskByStartAndFinish(
+            String id,
+            LocalDate targetStart,
+            LocalDate targetFinish) {
+        Task taskFromDb = getTaskById(id);
+        if (targetStart != null) {
+            int workingDays = getWorkingDays(taskFromDb.getTargetStart(), targetStart);
+            if (!taskFromDb.getFollows().isEmpty()) {
+                taskFromDb.setFinishPlus(taskFromDb.getFinishPlus() + workingDays);
             }
-        }
-    }
-
-    private Set<Task> setChildrenForParent(Task task, Set<Task> childrenTasks) {
-
-        for (Task parentTask : task.getFollows()) {
-            childrenTasks.add(task);
-            parentTask.getChildren().addAll(childrenTasks);
-            parentTask.getPendingTasks().add(task);
-            Set<Task> childrenTasksNew = new CopyOnWriteArraySet<>(childrenTasks);
-            setChildrenForParent(parentTask, childrenTasksNew);
-        }
-
-        return childrenTasks;
-    }
-
-    private Set<Task> setChildren(Task task, Set<Task> childrenTasks) {
-
-        if (task.getPendingTasks() != null) {
-            for (Task current : task.getPendingTasks()) {
-                Set<Task> childrenTasksNew = setChildren(current, new CopyOnWriteArraySet<>());
-                childrenTasks.addAll(childrenTasksNew);
-                childrenTasks.add(task);
+            if (targetFinish == null) {
+                taskFromDb.setDuration(taskFromDb.getDuration() - workingDays);
             }
-            task.setChildren(childrenTasks);
-        }
-
-        childrenTasks.add(task);
-
-        return childrenTasks;
-    }
-
-    private void calculateStart(Task task) {
-        LocalDate start = LocalDate.ofEpochDay(0);
-        for (Task parentTask : task.getFollows()) {
-            LocalDate parentTaskFinish = parentTask.getStatus() == TaskStatus.Active ?
-                    parentTask.getTargetFinish() : parentTask.getActualFinish();
-            start = start.isBefore(parentTaskFinish) ? parentTaskFinish : start;
-        }
-        start = getValidDate(1, start.plusDays(1));
-        task.setTargetStart(start);
-    }
-
-    private void calculateFinish(Task task) {
-        LocalDate finish = getValidDate(task.getDuration(), task.getTargetStart());
-        task.setTargetFinish(finish);
-    }
-
-    private LocalDate getValidDate(int shift, LocalDate date) {
-        date = date.minusDays(1);
-        if (shift == 0) {
-            return date;
+            taskFromDb.setTargetStart(targetStart);
         } else {
-            int days = 0;
-            do {
-                date = shift < 0 ? date.minusDays(1) : date.plusDays(1);
+            int workingDays = getWorkingDays(taskFromDb.getTargetFinish(), targetFinish);
+            taskFromDb.setDuration(taskFromDb.getDuration() + workingDays);
+        }
+        Task.recalculate(taskFromDb);
+        TaskFilter filter = new TaskFilter();
+        List<String> taskNumbers =
+                new ArrayList<>(taskFromDb.getChildren().stream().map(Task::getNumber).map(String::valueOf).toList());
+        taskNumbers.add(taskFromDb.getNumber().toString());
+//        Set<Task> changed = new HashSet<>(taskFromDb.getChildren());
+//        changed.add(taskFromDb);
+//        taskRepository.saveAll(changed);
+        filter.setTaskIds(taskNumbers);
+        return this.findAll("TaskId,TaskTargetStart,TaskTargetFinish,TaskDuration", filter);
+    }
+
+    private int getWorkingDays(LocalDate oldDate, LocalDate newDate) {
+        if (oldDate.isAfter(newDate)) {
+            return -(int) newDate.datesUntil(oldDate).filter(date -> {
                 int dow = date.getDayOfWeek().getValue();
-                if (!(dow == 6 || dow == 7)) {
-                    days = shift < 0 ? --days : ++days;
-                }
-            } while (shift != days);
+                return !(dow == 6 || dow == 7);
+            }).count();
+        } else {
+            return (int) oldDate.datesUntil(newDate).filter(date -> {
+                int dow = date.getDayOfWeek().getValue();
+                return !(dow == 6 || dow == 7);
+            }).count();
         }
-        return date;
-    }
-
-    private void removeTasksFromJobAndContact(Task taskFromDb) {
-        Job job = taskFromDb.getJob();
-        if (job != null) {
-            job.getTasks().remove(taskFromDb);
-            jobRepository.save(job);
-        }
-        Contact contact = taskFromDb.getContact();
-        contact.getTasks().remove(taskFromDb);
-        contactRepository.save(contact);
-    }
-
-    private void assignTasksToJobAndContact(Task savedTask) {
-        Job job = savedTask.getJob();
-        if (job != null) job.getTasks().add(savedTask);
-        savedTask.getContact().getTasks().add(savedTask);
     }
 
     @Transactional
@@ -300,16 +241,12 @@ public class TaskService {
             TaskReferencesRequest referenceRequest) {
         Task task = taskMapper.requestToTask(request, customFieldsAndLists, referenceRequest);
         task.setNumber(getNextNumberSequenceValue());
+        task.setTargetStart(request.getTargetStart());
         Task savedTask = taskRepository.save(task);
-//        Set<Task> recalculatedTasks = new HashSet<>();
-//        Set<Task> parentTasks = new HashSet<>();
-//        calculateDates(task, recalculatedTasks);
-        assignTasksToJobAndContact(savedTask);
-//        savedTask.setCreatedTime(LocalDateTime.now());
-//        taskRepository.saveAll(recalculatedTasks);
-//        taskRepository.saveAll(parentTasks);
-        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(
-                taskRepository.save(savedTask)), null);
+//        assignTasksToJobAndContact(savedTask);
+//        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(
+//                taskRepository.save(savedTask)), null);
+        return saveTask(String.valueOf(savedTask.getId()), request, customFieldsAndLists, referenceRequest);
     }
 
     @Transactional
@@ -323,5 +260,16 @@ public class TaskService {
     public Long getNextNumberSequenceValue() {
         return (Long) entityManager.createNativeQuery("SELECT NEXTVAL('tasks_number_seq')")
                 .getSingleResult();
+    }
+
+    private void removeTasksFromJobAndContact(Task taskFromDb) {
+        Job job = taskFromDb.getJob();
+        if (job != null) {
+            job.getTasks().remove(taskFromDb);
+            jobRepository.save(job);
+        }
+        Contact contact = taskFromDb.getContact();
+        contact.getTasks().remove(taskFromDb);
+        contactRepository.save(contact);
     }
 }

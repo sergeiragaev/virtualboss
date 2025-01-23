@@ -47,6 +47,8 @@
             <column name="requested_id" type="UUID"/>
             <column name="is_pending" type="boolean"/>
             <column name="is_deleted" type="boolean"/>
+            <column name="finish_plus" type="INT"/>
+
         </createTable>
     </changeSet>
     <changeSet id="createSequenceOfTasksTable" author="Sergei Ragaev">

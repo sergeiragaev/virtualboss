@@ -1,6 +1,7 @@
 package net.virtualboss.service;
 
 import net.virtualboss.TestDependenciesContainer;
+import net.virtualboss.exception.CircularLinkingException;
 import net.virtualboss.model.entity.Task;
 import net.virtualboss.repository.ContactRepository;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
@@ -17,10 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -122,14 +120,14 @@ class TaskServiceTestIT extends TestDependenciesContainer {
                 generateTestTaskReferenceRequest());
         TaskFilter filter = new TaskFilter();
         String savedTaskId = savedTaskMap.get("TaskId").toString();
-        filter.setTaskIds(Collections.singletonList(savedTaskId));
+        filter.setTaskIds(Collections.singletonList(savedTaskMap.get("TaskNumber").toString()));
         filter.setJobIds(Collections.singletonList(savedTaskMap.get("JobId").toString()));
         filter.setContactIds(Collections.singletonList(savedTaskMap.get("ContactId").toString()));
         filter.setIsActive(true);
         filter.setIsDateRange(true);
         filter.setIsDeleted(false);
         filter.setThisDate(LocalDate.now());
-        List<Map<String, Object>> result = taskService.findAll("TaskId", filter);
+        List<Map<String, Object>> result = taskService.findAll(null, filter);
         assertNotNull(result);
         assertFalse(result.get(0).isEmpty());
         assertEquals(1, result.size());
@@ -145,7 +143,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
                 generateTestTaskCustomFieldsRequest(),
                 generateTestTaskReferenceRequest());
         TaskFilter filter = new TaskFilter();
-        String savedTaskId = savedTaskMap.get("TaskId").toString();
+        String savedTaskId = savedTaskMap.get("TaskNumber").toString();
         filter.setTaskIds(Collections.singletonList(savedTaskId));
         filter.setJobIds(Collections.singletonList(savedTaskMap.get("JobId").toString()));
         filter.setContactIds(Collections.singletonList(savedTaskMap.get("ContactId").toString()));
@@ -169,27 +167,69 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     }
 
     @Test
-    @DisplayName("Create 2 pending tasks")
+    @DisplayName("Create 10 pending tasks and compare follows")
     @Transactional
-    void create2PendingTasks() {
-        Map<String, Object> savedTask = taskService.createNewTask(
-                generateTestTaskRequest(),
-                generateTestTaskCustomFieldsRequest(),
-                generateTestTaskReferenceRequest());
-        assertEquals(1, taskRepository.count());
-        String parentTaskNumber = savedTask.get("TaskNumber").toString();
-        Map<String, Object> pendingTask1 = taskService.createNewTask(
-                generateTestTaskRequest(),
-                generateTestTaskCustomFieldsRequest(),
-                TaskReferencesRequest.builder().pending(parentTaskNumber).build());
-        assertEquals(2, taskRepository.count());
-        assertEquals(pendingTask1.get("TaskFollows"), parentTaskNumber);
-        String parentTasks = parentTaskNumber + "," + pendingTask1.get("TaskNumber").toString();
-        Map<String, Object> pendingTask2 = taskService.createNewTask(
-                generateTestTaskRequest(),
-                generateTestTaskCustomFieldsRequest(),
-                TaskReferencesRequest.builder().pending(parentTasks).build());
-        assertEquals(3, taskRepository.count());
-        assertEquals(pendingTask2.get("TaskFollows"), parentTasks);
+    void create10PendingTasksAndCompareFollows() {
+        Map<Long, Map<String, Object>> tasks = create10PendingTasks();
+        long parentTaskNumber = taskRepository.findAll().stream().map(Task::getNumber).min(Long::compareTo).orElseThrow();
+        String parentTasks = "";
+        for (long i = parentTaskNumber + 1; i <= parentTaskNumber + 10; i++) {
+            parentTasks = parentTasks.isBlank() ? String.valueOf(i - 1) : parentTasks + "," + (i - 1);
+            Map<String, Object> currentTask = tasks.get(i);
+            Task task = taskService.getTaskById(currentTask.get("TaskId").toString());
+            assertEquals(task.getTargetStart(),
+                    currentTask.get("TaskTargetStart")
+            );
+            assertEquals(task.getTargetFinish(),
+                    currentTask.get("TaskTargetFinish")
+            );
+            assertEquals(parentTasks, currentTask.get("TaskFollows"));
+        }
+    }
+
+
+    @Test
+    @DisplayName("Create 2 pending sequential tasks and trying to link first with last one")
+    @Transactional
+    void create2PendingSequentialTasksAndTryingToLinkFirstWithLastOne() {
+        create2PendingSequentialTasks();
+        long firstTaskNumber = taskRepository.findAll().stream().map(Task::getNumber).min(Long::compareTo).orElseThrow();
+        String firstTaskId = taskRepository.findByNumber(firstTaskNumber).orElseThrow().getId().toString();
+//        assertEquals(pendingTask1.get("TaskFollows"), firstTaskNumber);
+//        assertEquals(pendingTask2.get("TaskFollows"), parentTasks);
+        assertThrows(CircularLinkingException.class,
+                () -> taskService.saveTask(firstTaskId,
+                        UpsertTaskRequest.builder().build(),
+                        CustomFieldsAndLists.builder().build(),
+                        TaskReferencesRequest.builder().pending(String.valueOf((firstTaskNumber + 2))).build())
+        );
+    }
+
+    @Test
+    @DisplayName("Create 2 pending sequential tasks and changing first task dates")
+    @Transactional
+    void create2PendingSequentialTasksAndChangingFirstTaskDates() {
+        create2PendingSequentialTasks();
+
+        long firstTaskNumber = taskRepository.findAll().stream().map(Task::getNumber).min(Long::compareTo).orElseThrow();
+        Task firstTask = taskRepository.findByNumber(firstTaskNumber).orElseThrow();
+        int oldFirstTaskDuration = firstTask.getDuration();
+        LocalDate oldFirstTaskStart = firstTask.getTargetStart();
+
+        Task lastTask = taskRepository.findByNumber(firstTaskNumber + 2).orElseThrow();
+        LocalDate oldLastTaskFinish = lastTask.getTargetFinish();
+        int oldLastTaskDuration = lastTask.getDuration();
+
+        taskService.updateTaskByStartAndFinish(firstTask.getId().toString(),
+                firstTask.getTargetStart().plusDays(5), null);
+        assertEquals(oldLastTaskFinish, lastTask.getTargetFinish());
+        assertNotEquals(oldFirstTaskStart, firstTask.getTargetStart());
+        assertNotEquals(oldFirstTaskDuration, firstTask.getDuration());
+
+        taskService.updateTaskByStartAndFinish(firstTask.getId().toString(),
+                null, firstTask.getTargetFinish().plusDays(5));
+        assertNotEquals(oldLastTaskFinish, taskRepository.findByNumber(firstTaskNumber + 2).orElseThrow().getTargetFinish());
+        assertEquals(oldLastTaskDuration, lastTask.getDuration());
+//        assertEquals(pendingTask2.get("TaskFollows"), parentTasks);
     }
 }

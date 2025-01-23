@@ -105,7 +105,7 @@ public class MainService {
         if (follows == null || follows.isBlank()) return new HashSet<>();
         Set<Task> set = new HashSet<>();
         for (String id : follows.split(",")) {
-            Task task = taskRepository.findByNumber(Integer.parseInt(id)).orElseThrow(
+            Task task = taskRepository.findByNumber(Long.parseLong(id)).orElseThrow(
                     () -> new EntityNotFoundException(
                             MessageFormat.format("Task with number {0} not found!", id)
                     )

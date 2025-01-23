@@ -81,7 +81,7 @@ public class ContactResponse {
     @Builder.Default
     private String phones = "";
 
-    @JsonProperty("isDeleted")
+    @JsonProperty("ContactDeleted")
     @Builder.Default
     private Boolean isDeleted = false;
 

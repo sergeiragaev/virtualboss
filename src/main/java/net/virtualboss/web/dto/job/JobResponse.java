@@ -97,6 +97,10 @@ public class JobResponse {
     @Builder.Default
     private String groups = "";
 
+    @JsonProperty("JobDeleted")
+    @Builder.Default
+    private Boolean isDeleted = false;
+
 
     public static Map<String, Object> getFieldsMap(JobResponse jobResponse, Set<String> fieldList) {
 

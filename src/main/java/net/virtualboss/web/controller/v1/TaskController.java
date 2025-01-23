@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -45,6 +46,14 @@ public class TaskController {
             CustomFieldsAndLists customFieldsAndLists,
             TaskReferencesRequest referenceRequest) {
         return ResponseEntity.ok(service.saveTask(id, request, customFieldsAndLists, referenceRequest));
+    }
+
+    @PutMapping("/task")
+    public ResponseEntity<Object> updateTask(
+            @RequestParam(value = "taskId") String id,
+            @RequestParam(value = "Start", required = false) LocalDate targetStart,
+            @RequestParam(value = "End", required = false) LocalDate targetFinish) {
+        return ResponseEntity.ok(service.updateTaskByStartAndFinish(id, targetStart, targetFinish));
     }
 
     @PostMapping("/task")

@@ -34,6 +34,8 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.time.LocalDate;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -98,6 +100,7 @@ public class TestDependenciesContainer {
             CustomFieldsAndLists customFieldsAndLists,
             TaskReferencesRequest referenceRequest) {
         Task task = taskMapper.requestToTask(request, customFieldsAndLists, referenceRequest);
+        task.setTargetStart(request.getTargetStart());
         task.setNumber(taskService.getNextNumberSequenceValue());
         return taskRepository.save(task);
     }
@@ -142,15 +145,17 @@ public class TestDependenciesContainer {
     }
 
     protected UpsertTaskRequest generateTestTaskRequest() {
+        int duration = (int) (Math.random() * 10) * (Math.random() > 0.5 ? -1 : 1);
+        int finishPlus = (int) (Math.random() * 10) * (Math.random() > 0.5 ? -1 : 1);
         return UpsertTaskRequest.builder()
                 .order("100")
                 .notes("Task notes")
-                .duration(1)
+                .duration(duration)
                 .description("Test task")
                 .marked(true)
                 .status(TaskStatus.Active)
                 .targetStart(LocalDate.now())
-                .targetFinish(LocalDate.now().plusDays(1))
+                .finishPlus(finishPlus)
                 .build();
     }
 
@@ -239,6 +244,44 @@ public class TestDependenciesContainer {
                 .workPhone("Work phone number")
                 .groups(String.valueOf(group.getId()))
                 .build();
+    }
+
+    protected Map<Long, Map<String, Object>> create10PendingTasks() {
+        Map<Long, Map<String, Object>> tasks = new TreeMap<>();
+        Map<String, Object> firstTask = taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
+        String parentTasks = firstTask.get("TaskNumber").toString();
+        long parentTaskNumber = Long.parseLong(parentTasks);
+        tasks.put(parentTaskNumber, firstTask);
+
+        for (long i = parentTaskNumber; i < parentTaskNumber + 10; i++) {
+            parentTasks = parentTasks + "," + i;
+            Map<String, Object> pendingTask = taskService.createNewTask(
+                    generateTestTaskRequest(),
+                    generateTestTaskCustomFieldsRequest(),
+                    TaskReferencesRequest.builder().pending(parentTasks).build());
+            tasks.put((Long) pendingTask.get("TaskNumber"), pendingTask);
+        }
+        return tasks;
+    }
+
+    protected void create2PendingSequentialTasks() {
+        Map<String, Object> firstTask = taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
+        String parentTaskNumber = firstTask.get("TaskNumber").toString();
+        Map<String, Object> pendingTask1 = taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                TaskReferencesRequest.builder().pending(parentTaskNumber).build());
+        String parentTasks = pendingTask1.get("TaskNumber").toString();
+        taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                TaskReferencesRequest.builder().pending(parentTasks).build());
     }
 
     protected void clearAllRepositories() {

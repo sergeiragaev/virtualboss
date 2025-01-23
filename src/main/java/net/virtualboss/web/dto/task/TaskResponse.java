@@ -84,9 +84,12 @@ public class TaskResponse {
     @Builder.Default
     private String follows = "";
 
-    @JsonProperty("isDeleted")
+    @JsonProperty("FinishPlus")
     @Builder.Default
-    private Boolean isDeleted = false;
+    private Integer finishPlus = 1;
+
+    @JsonProperty("TaskDeleted")
+    private Boolean isDeleted;
 
     @JsonProperty("Job")
     @Builder.Default

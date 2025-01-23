@@ -476,28 +476,28 @@
 											async    : false,
 											success  : function(data){
 												
-												view = "<div class='tipDesc'>"+ data[0].TaskDescription +"</div>";
+												view = "<div class='tipDesc'>"+ data.TaskDescription +"</div>";
 												view += "<div class='ttWrap'>";
-												var td = data[0].start.split("-");
+												var td = data.start.split("-");
 												var sd = new Date(td[0]+"/"+td[1]+"/"+td[2]++); // need to add +1 to the day (td[2]) value or else it reads one day behind when converting to a new Date object.
 												
 												var n = sd.toDateString();
 												
 												view += "<div class='smallerTooltipText'>Start: "+ n +"</div>";
 												
-												var dur = data[0].duration;
+												var dur = data.duration;
 												var days = dur == 1 ? "day" : "days";
 												
-												view += "<div class='smallerTooltipText'>Duration: " + data[0].duration + " " + days + "</div>";
+												view += "<div class='smallerTooltipText'>Duration: " + data.duration + " " + days + "</div>";
 												
-												td = data[0].end.split("-");
+												td = data.end.split("-");
 												sd = new Date(td[0]+"/"+td[1]+"/"+td[2]++);
 												n = sd.toDateString();
 												
 												view += "<div class='smallerTooltipText'>End: "+ n +"</div>";
-												var notes = data[0].taskNotes.replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g,'<br />');
+												var notes = data.taskNotes.replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g,'<br />');
 																								
-												if(data[0].taskNotes != "" && data[0].taskNotes != null && data[0].taskNotes != " "){
+												if(data.taskNotes != "" && data.taskNotes != null && data.taskNotes != " "){
 													view += "<div style='padding-top:5px; padding-bottom:0px; margin-bottom:0px; font-size:12px; font-family:inherit;'>";
 													view += "<span class='glyphicon glyphicon-comment'></span> Notes:</p><div class='tipNotes'>"+ notes +"</div>";
 												}
@@ -763,9 +763,10 @@
 					if(posL != Math.round(ui.originalPosition.left)){		// save task
 						var id = $(this).attr("id");
 						$.ajax({
+							method: 'PUT',
 							async   : true,
 							dataType: 'json',
-							url     : '/api/v1/ganttupdate?taskId='+id+'&Start='+Format(nStartDate, 'yyyy-mm-dd')+"&End="+Format(nEndDate, 'yyyy-mm-dd'),
+							url     : '/api/v1/task?taskId='+id+'&Start='+Format(nStartDate, 'yyyy-mm-dd')+"&End="+Format(nEndDate, 'yyyy-mm-dd'),
 							success : function(e){
 								var start = "",
 								end = "",
@@ -834,7 +835,7 @@
 					var direction = $(this).data('ui-resizable').axis; // 'e' or 'w'
 
 					var id = $(this).attr("id");
-					var updateURL = "/api/v1/ganttupdate?taskId="+id+"&";
+					var updateURL = "/api/v1/task?taskId="+id+"&"
 					var save = false;
 
 					if(direction == "w"){
@@ -848,6 +849,7 @@
 							async   : true,
 							url     : updateURL,
 							dataType: 'json',
+							method: 'PUT',
 							success : function(e){
 								
 								var start = "",

@@ -98,7 +98,8 @@ function loadCalendarView(searchPhrase){
     			setDateAndView(CurrentDate, view.name);
     			
     			$.ajax({							
-    				url: "/api/v1/CalendarUpdate?taskId=" + event.TaskId + "&Start=" + newStartDate,
+    				url: "/api/v1/task?taskId=" + event.TaskId + "&Start=" + newStartDate,
+					method: 'PUT',
     				success: function(response){
               if(response == 'InvalidLogin'){
                 logout();
@@ -133,7 +134,8 @@ function loadCalendarView(searchPhrase){
     		  setDateAndView(CurrentDate, view.name);
     			
       		$.ajax({							
-      			url: "/api/v1/CalendarUpdate?taskId=" + event.TaskId + "&End=" + newEndDate,
+      			url: "/api/v1/task?taskId=" + event.TaskId + "&End=" + newEndDate,
+				method: 'PUT',
       			success: function(response){						
               if(response == 'InvalidLogin'){
                 logout();

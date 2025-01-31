@@ -1,5 +1,5 @@
 package net.virtualboss.model.enums;
 
 public enum EntityType {
-    TASK, JOB, CONTACT
+    TASK, JOB, CONTACT, EMPLOYEE
 }

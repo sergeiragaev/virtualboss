@@ -34,7 +34,6 @@ public class Employee {
     @Column(name = "is_deleted")
     private boolean isDeleted;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoleType role;
 

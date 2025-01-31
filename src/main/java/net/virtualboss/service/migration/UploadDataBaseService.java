@@ -1,4 +1,4 @@
-package net.virtualboss.service;
+package net.virtualboss.service.migration;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

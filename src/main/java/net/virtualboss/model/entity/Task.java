@@ -2,7 +2,6 @@ package net.virtualboss.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import net.virtualboss.exception.CircularLinkingException;
 import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.model.enums.TaskStatus;
 import org.hibernate.annotations.CreationTimestamp;
@@ -119,19 +118,11 @@ public class Task implements Comparable<Task> {
     private Set<Group> groups = new HashSet<>();
 
     @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
-    @JoinTable(name = "tasks_children",
-            joinColumns = @JoinColumn(name = "task_id"),
-            inverseJoinColumns = @JoinColumn(name = "child_id")
-    )
-    @Builder.Default
-    private Set<Task> children = new HashSet<>();
-
-    @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
     @JoinTable(name = "tasks_follows",
             joinColumns = @JoinColumn(name = "follows_id"),
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
-    private Set<Task> pendingTasks;
+    private Set<Task> pendingTasks = new HashSet<>();
 
     @Column(name = "finish_plus")
     @Builder.Default
@@ -178,16 +169,11 @@ public class Task implements Comparable<Task> {
     public void calculateDates(Task task) {
         if (!task.getFollows().isEmpty()) calculateStart(task);
         calculateFinish(task);
-        if (task.getStatus() == TaskStatus.Active) task.setActualFinish(null);
+        if (task.getStatus() == TaskStatus.ACTIVE) task.setActualFinish(null);
 
-        addChildren(task);
 
         if (task.getPendingTasks() != null) {
             for (Task current : task.getPendingTasks()) {
-                calculateDates(current);
-            }
-        } else {
-            for (Task current : task.getChildren()) {
                 calculateDates(current);
             }
         }
@@ -197,7 +183,7 @@ public class Task implements Comparable<Task> {
         LocalDate start = LocalDate.ofEpochDay(0);
         int shift = 1;
         for (Task parentTask : task.getFollows()) {
-            LocalDate parentTaskFinish = parentTask.getStatus() == TaskStatus.Active ?
+            LocalDate parentTaskFinish = parentTask.getStatus() == TaskStatus.ACTIVE ?
                     parentTask.getTargetFinish() : parentTask.getActualFinish();
             start = start.isBefore(parentTaskFinish) ? parentTaskFinish : start;
             shift = task.getFinishPlus();
@@ -209,14 +195,6 @@ public class Task implements Comparable<Task> {
     private void calculateFinish(Task task) {
         LocalDate finish = getValidDate(task.getDuration(), task.getTargetStart());
         task.setTargetFinish(finish);
-    }
-
-    public static void addChildren(Task task) {
-        for (Task parentTask : task.getFollows()) {
-            parentTask.getChildren().add(task);
-            parentTask.getChildren().addAll(task.getChildren());
-            addChildren(parentTask);
-        }
     }
 
     private LocalDate getValidDate(int shift, LocalDate date) {
@@ -234,31 +212,6 @@ public class Task implements Comparable<Task> {
             } while (shift != days);
         }
         return date;
-    }
-
-    public Set<Task> removeChildrenFromParents(Task task, Set<Task> recalculatedTasks, Set<Task> childrenTasks) {
-        for (Task parentTask : task.getFollows()) {
-            childrenTasks.add(task);
-            childrenTasks.addAll(task.getChildren());
-            recalculatedTasks.add(parentTask);
-            parentTask.getChildren().removeAll(childrenTasks);
-        }
-        for (Task parentTask : task.getFollows()) {
-            return removeChildrenFromParents(parentTask, recalculatedTasks, childrenTasks);
-        }
-
-        return recalculatedTasks;
-    }
-
-    public static void checkIfFollowsAlreadyPending(Task task, Task taskFromDb) {
-        task.getFollows().forEach(parent -> {
-            if (taskFromDb.getChildren().contains(parent)) throw new CircularLinkingException(
-                    MessageFormat.format(
-                            "Cannot make {0} pending {1}, " +
-                                    "because {1} follows {0}",
-                            taskFromDb, parent)
-            );
-        });
     }
 
     public void assignTasksToJobAndContact() {

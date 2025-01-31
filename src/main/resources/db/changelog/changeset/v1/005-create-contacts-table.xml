@@ -36,19 +36,6 @@
             <column name="web_site" type="VARCHAR(255)"/>
             <column name="is_deleted" type="boolean"/>
 
-            <column name="custom_field1" type="VARCHAR(255)"/>
-            <column name="custom_field2" type="VARCHAR(255)"/>
-            <column name="custom_field3" type="VARCHAR(255)"/>
-            <column name="custom_field4" type="VARCHAR(255)"/>
-            <column name="custom_field5" type="VARCHAR(255)"/>
-            <column name="custom_field6" type="VARCHAR(255)"/>
-            <column name="custom_list1" type="VARCHAR(255)"/>
-            <column name="custom_list2" type="VARCHAR(255)"/>
-            <column name="custom_list3" type="VARCHAR(255)"/>
-            <column name="custom_list4" type="VARCHAR(255)"/>
-            <column name="custom_list5" type="VARCHAR(255)"/>
-            <column name="custom_list6" type="VARCHAR(255)"/>
-
         </createTable>
     </changeSet>
 

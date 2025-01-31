@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import net.virtualboss.exception.CircularLinkingException;
 import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.mapper.v1.task.TaskMapperV1;
 import net.virtualboss.model.entity.Contact;
@@ -65,7 +66,7 @@ public class TaskService {
         if (fields == null) fields = "TaskId,TaskDescription";
         Set<String> fieldSet = Arrays.stream(fields.split(",")).collect(Collectors.toSet());
 
-        if (filter.getSize() == null) filter.setSize(Integer.MAX_VALUE);
+        if (filter.getSize() == null) filter.setSize(100);
         if (filter.getPage() == null) filter.setPage(1);
         if (filter.getSort() == null) filter.setSort("description asc");
 
@@ -80,14 +81,21 @@ public class TaskService {
         boolean isActive = filter.getIsActive() != null && filter.getIsActive();
         boolean isDone = filter.getIsDone() != null && filter.getIsDone();
         if (!isActive && isDone) {
-            status = TaskStatus.Done;
+            status = TaskStatus.DONE;
         } else if (isActive && !isDone) {
-            status = TaskStatus.Active;
+            status = TaskStatus.ACTIVE;
         }
 
         if (filter.getFindString() == null) filter.setFindString("");
 
         Map<String, LocalDate> filterDates = setFilterDates(filter);
+
+        List<UUID> excludeTaskIds = new ArrayList<>();
+        if (filter.getLinkingTask() != null) {
+            excludeTaskIds =
+                    taskRepository.findAllPendingIdsRecursive(UUID.fromString(filter.getLinkingTask()));
+            excludeTaskIds.add(UUID.fromString(filter.getLinkingTask()));
+        }
 
         return taskRepository.findAll(
                         TaskFilterCriteria.builder()
@@ -117,8 +125,7 @@ public class TaskService {
                                                                 .map(Long::valueOf)
                                                                 .toList())
                                                 .stream().map(Task::getId).toList())
-                                .linkingTask(filter.getLinkingTask() == null ? null :
-                                        UUID.fromString(filter.getLinkingTask()))
+                                .excludeTaskIds(excludeTaskIds)
                                 .build().getSpecification(),
                         PageRequest.of(filter.getPage() - 1, filter.getSize(),
                                 Sort.by(orders)
@@ -172,18 +179,13 @@ public class TaskService {
             TaskReferencesRequest referenceRequest) {
         Task task = taskMapper.requestToTask(id, request, customFieldsAndLists, referenceRequest);
         Task taskFromDb = getTaskById(id);
-        Task.checkIfFollowsAlreadyPending(task, taskFromDb);
+        checkIfFollowsAlreadyPending(task, taskFromDb);
         task.getCustomFieldsAndListsValues().addAll(taskFromDb.getCustomFieldsAndListsValues());
         removeTasksFromJobAndContact(taskFromDb);
-        Set<Task> changed = new HashSet<>();
-        taskRepository.saveAll(
-                taskFromDb.removeChildrenFromParents(taskFromDb, changed, new HashSet<>()));
         BeanUtils.copyNonNullProperties(task, taskFromDb);
         taskFromDb.setJob(task.getJob());
         taskFromDb.assignTasksToJobAndContact();
         Task.recalculate(taskFromDb);
-        changed.forEach(Task::addChildren);
-        taskRepository.saveAll(changed);
         return TaskResponse.getFieldsMap(taskMapper.taskToResponse(taskFromDb), null);
     }
 
@@ -209,12 +211,10 @@ public class TaskService {
         }
         Task.recalculate(taskFromDb);
         TaskFilter filter = new TaskFilter();
-        List<String> taskNumbers =
-                new ArrayList<>(taskFromDb.getChildren().stream().map(Task::getNumber).map(String::valueOf).toList());
+        List<String> taskNumbers = new ArrayList<>(taskRepository.findAllById(
+                        taskRepository.findAllPendingIdsRecursive(taskFromDb.getId()))
+                .stream().map(Task::getNumber).map(String::valueOf).toList());
         taskNumbers.add(taskFromDb.getNumber().toString());
-//        Set<Task> changed = new HashSet<>(taskFromDb.getChildren());
-//        changed.add(taskFromDb);
-//        taskRepository.saveAll(changed);
         filter.setTaskIds(taskNumbers);
         return this.findAll("TaskId,TaskTargetStart,TaskTargetFinish,TaskDuration", filter);
     }
@@ -242,11 +242,9 @@ public class TaskService {
         Task task = taskMapper.requestToTask(request, customFieldsAndLists, referenceRequest);
         task.setNumber(getNextNumberSequenceValue());
         task.setTargetStart(request.getTargetStart());
-        Task savedTask = taskRepository.save(task);
-//        assignTasksToJobAndContact(savedTask);
-//        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(
-//                taskRepository.save(savedTask)), null);
-        return saveTask(String.valueOf(savedTask.getId()), request, customFieldsAndLists, referenceRequest);
+        entityManager.persist(task);
+        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(
+                taskRepository.save(task)), null);
     }
 
     @Transactional
@@ -271,5 +269,17 @@ public class TaskService {
         Contact contact = taskFromDb.getContact();
         contact.getTasks().remove(taskFromDb);
         contactRepository.save(contact);
+    }
+
+    private void checkIfFollowsAlreadyPending(Task task, Task taskFromDb) {
+        List<UUID> taskIds = taskRepository.findAllPendingIdsRecursive(task.getId());
+        task.getFollows().forEach(parent -> {
+            if (taskIds.contains(parent.getId())) throw new CircularLinkingException(
+                    MessageFormat.format(
+                            "Cannot make {0} pending {1}, " +
+                                    "because {1} follows {0}",
+                            taskFromDb, parent)
+            );
+        });
     }
 }

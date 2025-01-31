@@ -1,6 +1,8 @@
 package net.virtualboss;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import net.virtualboss.mapper.v1.contact.ContactMapperV1;
 import net.virtualboss.mapper.v1.job.JobMapperV1;
 import net.virtualboss.mapper.v1.task.TaskMapperV1;
@@ -19,7 +21,6 @@ import net.virtualboss.web.dto.task.TaskReferencesRequest;
 import net.virtualboss.web.dto.task.UpsertTaskRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,11 +36,14 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class TestDependenciesContainer {
+    @PersistenceContext
+    protected EntityManager entityManager;
     @Autowired
     protected TaskRepository taskRepository;
     @Autowired
@@ -81,11 +85,6 @@ public class TestDependenciesContainer {
         redis.start();
         System.setProperty("spring.data.redis.host", redis.getHost());
         System.setProperty("spring.data.redis.port", redis.getMappedPort(6379).toString());
-    }
-
-    @AfterAll
-    static void afterAll() {
-//        postgres.stop();
     }
 
     @DynamicPropertySource
@@ -145,15 +144,16 @@ public class TestDependenciesContainer {
     }
 
     protected UpsertTaskRequest generateTestTaskRequest() {
-        int duration = (int) (Math.random() * 10) * (Math.random() > 0.5 ? -1 : 1);
-        int finishPlus = (int) (Math.random() * 10) * (Math.random() > 0.5 ? -1 : 1);
+        Random random = new Random();
+        int duration = random.nextInt(10) * (random.nextInt(10) > 5 ? -1 : 1);
+        int finishPlus = random.nextInt(10) * (random.nextInt(10) > 5 ? -1 : 1);
         return UpsertTaskRequest.builder()
                 .order("100")
                 .notes("Task notes")
                 .duration(duration)
                 .description("Test task")
                 .marked(true)
-                .status(TaskStatus.Active)
+                .status(TaskStatus.ACTIVE)
                 .targetStart(LocalDate.now())
                 .finishPlus(finishPlus)
                 .build();

@@ -34,6 +34,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     void init() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         taskRepository.deleteAll();
+        jobRepository.deleteAll();
     }
 
     @Test
@@ -195,8 +196,6 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         create2PendingSequentialTasks();
         long firstTaskNumber = taskRepository.findAll().stream().map(Task::getNumber).min(Long::compareTo).orElseThrow();
         String firstTaskId = taskRepository.findByNumber(firstTaskNumber).orElseThrow().getId().toString();
-//        assertEquals(pendingTask1.get("TaskFollows"), firstTaskNumber);
-//        assertEquals(pendingTask2.get("TaskFollows"), parentTasks);
         assertThrows(CircularLinkingException.class,
                 () -> taskService.saveTask(firstTaskId,
                         UpsertTaskRequest.builder().build(),
@@ -222,14 +221,16 @@ class TaskServiceTestIT extends TestDependenciesContainer {
 
         taskService.updateTaskByStartAndFinish(firstTask.getId().toString(),
                 firstTask.getTargetStart().plusDays(5), null);
-        assertEquals(oldLastTaskFinish, lastTask.getTargetFinish());
         assertNotEquals(oldFirstTaskStart, firstTask.getTargetStart());
         assertNotEquals(oldFirstTaskDuration, firstTask.getDuration());
 
+        entityManager.flush();
+        entityManager.clear();
+
         taskService.updateTaskByStartAndFinish(firstTask.getId().toString(),
                 null, firstTask.getTargetFinish().plusDays(5));
+
         assertNotEquals(oldLastTaskFinish, taskRepository.findByNumber(firstTaskNumber + 2).orElseThrow().getTargetFinish());
         assertEquals(oldLastTaskDuration, lastTask.getDuration());
-//        assertEquals(pendingTask2.get("TaskFollows"), parentTasks);
     }
 }

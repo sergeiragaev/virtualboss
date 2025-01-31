@@ -73,8 +73,8 @@ class JobServiceTestIT extends TestDependenciesContainer {
         Map<String, Object> secondJob = jobService.createJob(request, customFL);
         assertEquals(2, jobRepository.count());
         request.setNumber(firstJob.get("JobNumber").toString());
-        assertThrows(AlreadyExistsException.class,
-                () -> jobService.saveJob(secondJob.get("JobId").toString(), request, null));
+        String jobId = secondJob.get("JobId").toString();
+        assertThrows(AlreadyExistsException.class, () -> jobService.saveJob(jobId, request, null));
         assertEquals(2, jobRepository.count());
     }
 

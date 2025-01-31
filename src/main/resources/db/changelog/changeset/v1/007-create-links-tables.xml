@@ -60,16 +60,16 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="createTasksChildrenTable" author="Sergei Ragaev">
-        <createTable tableName="tasks_children">
-            <column name="task_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-            <column name="child_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
+<!--    <changeSet id="createTasksChildrenTable" author="Sergei Ragaev">-->
+<!--        <createTable tableName="tasks_children">-->
+<!--            <column name="task_id" type="UUID">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="child_id" type="UUID">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
 
     <changeSet id="createTasksPendingTable" author="Sergei Ragaev">
         <createTable tableName="tasks_pending">
@@ -155,17 +155,17 @@
                                  referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
     </changeSet>
 
-    <changeSet id="addFKTasksChildrenConstraintPendingId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="child_id" baseTableName="tasks_children"
-                                 constraintName="fk_child_id" deferrable="false" initiallyDeferred="false"
-                                 onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id"
-                                 referencedTableName="tasks" validate="true"/>
-    </changeSet>
-    <changeSet id="addFKTasksChildrenConstraintTaskId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="task_id" baseTableName="tasks_children" constraintName="fk_task_id"
-                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
-                                 referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
-    </changeSet>
+<!--    <changeSet id="addFKTasksChildrenConstraintPendingId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="child_id" baseTableName="tasks_children"-->
+<!--                                 constraintName="fk_child_id" deferrable="false" initiallyDeferred="false"-->
+<!--                                 onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id"-->
+<!--                                 referencedTableName="tasks" validate="true"/>-->
+<!--    </changeSet>-->
+<!--    <changeSet id="addFKTasksChildrenConstraintTaskId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="task_id" baseTableName="tasks_children" constraintName="fk_task_id"-->
+<!--                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"-->
+<!--                                 referencedColumnNames="id" referencedTableName="tasks" validate="true"/>-->
+<!--    </changeSet>-->
 
     <changeSet id="addFKTasksPendingConstraintPendingId" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="pending_id" baseTableName="tasks_pending"

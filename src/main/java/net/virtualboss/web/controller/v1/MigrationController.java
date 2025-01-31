@@ -1,7 +1,7 @@
 package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
-import net.virtualboss.service.MigrationService;
+import net.virtualboss.service.migration.MigrationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;

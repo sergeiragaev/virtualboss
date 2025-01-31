@@ -8,14 +8,28 @@ import net.virtualboss.service.MainService;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.task.TaskReferencesRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public abstract class TaskMapperDelegate implements TaskMapperV1 {
-    @Autowired
     private EmployeeService employeeService;
-    @Autowired
     private MainService mainService;
-    @Autowired
     private GroupService groupService;
+
+    @Autowired
+    public void setEmployeeService(EmployeeService employeeService) {
+        this.employeeService = employeeService;
+    }
+
+    @Autowired
+    public void setGroupService(GroupService groupService) {
+        this.groupService = groupService;
+    }
+
+    @Autowired
+    public void setMainService(MainService mainService) {
+        this.mainService = mainService;
+    }
 
     @Override
     public Task setCFLAndReferencesToTask(Task task, CustomFieldsAndLists customFieldsAndLists, TaskReferencesRequest request) {

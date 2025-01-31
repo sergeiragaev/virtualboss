@@ -202,7 +202,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .notes("Some task notes")
                         .description("Test Task to update")
                         .actualFinish(LocalDate.now())
-                        .status(TaskStatus.Done)
+                        .status(TaskStatus.DONE)
                         .build(),
                 generateTestTaskCustomFieldsRequest(),
                 generateTestTaskReferenceRequest());

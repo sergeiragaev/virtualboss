@@ -17,6 +17,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @Builder
 public class ContactFilterCriteria {
+    private static final String COMPANY = "company";
 
     private String findString;
     private Boolean showUnassigned;
@@ -62,19 +63,20 @@ public class ContactFilterCriteria {
                             cb.like(cb.lower(root.get("comments")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("supervisor")), "%" + fieldValue.toString().toLowerCase() + "%"),
                             cb.like(cb.lower(root.get("spouse")), "%" + fieldValue.toString().toLowerCase() + "%"),
-                            cb.like(cb.lower(root.get("company")), "%" + fieldValue.toString().toLowerCase() + "%"),
+                            cb.like(cb.lower(root.get(COMPANY)), "%" + fieldValue.toString().toLowerCase() + "%"),
                             getCustomFieldsAndListsPredicate(root, cb, fieldValue)
                     );
             case "showUnassigned" -> (root, query, cb) -> getUnassignedContact(root, cb, fieldValue);
+            case "VALUE", "CUSTOM_FIELDS_AND_LISTS_VALUES", "COMPANY", "NOTES" ->  null;
             default -> (root, query, cb) -> cb.equal(root.get(fieldName), fieldValue);
         };
     }
 
 private static Predicate getUnassignedContact(Root<Contact> root, CriteriaBuilder cb, Object fieldValue) {
         if ((boolean) fieldValue) {
-            return cb.or(cb.equal(cb.lower(root.get("company")), "unassigned"));
+            return cb.or(cb.equal(cb.lower(root.get(COMPANY)), "unassigned"));
         } else {
-            return cb.or(cb.equal(cb.lower(root.get("company")), "unassigned").not());
+            return cb.or(cb.equal(cb.lower(root.get(COMPANY)), "unassigned").not());
         }
 }
 

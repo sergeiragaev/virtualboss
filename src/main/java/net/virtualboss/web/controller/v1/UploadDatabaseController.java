@@ -1,7 +1,7 @@
 package net.virtualboss.web.controller.v1;
 
 import lombok.RequiredArgsConstructor;
-import net.virtualboss.service.UploadDataBaseService;
+import net.virtualboss.service.migration.UploadDataBaseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

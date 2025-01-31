@@ -1,8 +1,8 @@
 spring:
   application:
     name: virtualBoss
-  profiles:
-    active: test
+#  profiles:
+#    active: test
   datasource:
 #    url: jdbc:tc:postgresql:16-alpine:///virtualboss
     username: postgres

@@ -3,6 +3,8 @@ package net.virtualboss.model.enums;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
+
 @Getter
 @RequiredArgsConstructor
 public enum DateCriteria {
@@ -11,4 +13,11 @@ public enum DateCriteria {
     EXACT(3);
 
     private final int value;
+
+    public static DateCriteria fromValue(int value) {
+        return Arrays.stream(values())
+                .filter(dc -> dc.value == value)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid DateCriteria value: " + value));
+    }
 }

@@ -1,9 +1,11 @@
 package net.virtualboss.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import net.virtualboss.exception.EntityNotFoundException;
 import net.virtualboss.model.enums.TaskStatus;
+import net.virtualboss.util.TaskStatusConverter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.lang.NonNull;
@@ -54,7 +56,8 @@ public class Task implements Comparable<Task> {
     private LocalDate actualFinish;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
+    @JsonProperty("status")
+    @Convert(converter = TaskStatusConverter.class)
     private TaskStatus status;
 
     @Column(name = "is_pending")

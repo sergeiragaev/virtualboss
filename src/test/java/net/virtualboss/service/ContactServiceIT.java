@@ -78,8 +78,9 @@ class ContactServiceIT extends TestDependenciesContainer {
         CustomFieldsAndLists customFL = generateTestContactCustomFieldsRequest();
         Contact unassignedContact = mainService.getContactById(null);
         assertEquals(1, contactRepository.count());
+        String contactId = unassignedContact.getId().toString();
         assertThrows(AccessDeniedException.class,
-                () -> contactService.saveContact(unassignedContact.getId().toString(), request, customFL));
+                () -> contactService.saveContact(contactId, request, customFL));
     }
 
     @Test
@@ -111,6 +112,7 @@ class ContactServiceIT extends TestDependenciesContainer {
         assertNotNull(result);
         assertEquals(1, result.size());
     }
+
     @Test
     @DisplayName("Search specific contact by filters")
     @Transactional

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 import net.virtualboss.model.entity.FieldValue;
+import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -93,8 +94,9 @@ public class CustomFieldsAndLists {
             for (FieldValue value : values) {
                 if (value.getField().getName().equalsIgnoreCase(captionValue)) {
                     try {
-                        field.set(customFieldsAndLists, value.getValue());
-                    } catch (IllegalAccessException e) {
+                        ReflectionUtils.makeAccessible(field);
+                        ReflectionUtils.setField(field, customFieldsAndLists, value.getValue());
+                    } catch (Exception e) {
                         throw new IllegalStateException("Failed to access field: " + field.getName(), e);
                     }
                     break;

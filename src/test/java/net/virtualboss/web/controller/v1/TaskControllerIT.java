@@ -48,19 +48,6 @@ class TaskControllerIT extends TestDependenciesContainer {
                 .andReturn();
     }
 
-    //    @Test
-//    @DisplayName("update post is forbidden of fake author test")
-//    void updatePostById_NotAccess() throws Exception {
-//        Post newPost = saveAndGetTestPostToUpdate();
-//        PostDto updatedPostDto = getUpdatedPostDtoByPost(newPost);
-//        String updatedPostJson = objectMapper.writeValueAsString(updatedPostDto);
-//        mockMvc.perform(put(apiPrefix + "/post")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(updatedPostJson)
-//                        .header("id", 2L))
-//                .andExpect(status().isForbidden());
-//    }
-//
     @Test
     @DisplayName("task successfully deleted test")
     void deleteTaskById_CorrectDelete() throws Exception {
@@ -94,8 +81,8 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("dateType", String.valueOf(DateType.TARGET_START.getValue()))
                         .param("isDateRange", String.valueOf(true))
                         .param("dateRange", String.valueOf(DateRange.DATE_PERIOD.getValue()))
-                        .param("dateFrom", LocalDate.now().toString())
-                        .param("dateTo", LocalDate.now().plusDays(1).toString())
+                        .param("dateFrom", LocalDate.now().minusDays(10).toString())
+                        .param("dateTo", LocalDate.now().plusDays(10).toString())
                         .param("dateCriteria", String.valueOf(DateCriteria.EXACT.getValue()))
                         .param("jobIds", String.valueOf(
                                 jobRepository.findByNumberIgnoreCaseAndIsDeleted(testTaskReference.getJobNumber(), false).orElseThrow().getId()))
@@ -125,7 +112,6 @@ class TaskControllerIT extends TestDependenciesContainer {
                                 taskQueryString +
                                 taskCustomQueryString +
                                 taskReferenceQueryString)
-//                        .header("id", 1L)
                 )
                 .andExpect(jsonPath("$.TaskGroups").value("Test task group"))
                 .andExpect(jsonPath("$.TaskCustomField1").value(customFieldsAndLists.getCustomField1()))
@@ -146,7 +132,6 @@ class TaskControllerIT extends TestDependenciesContainer {
         mockMvc.perform(put("/task/" + taskRepository.findAll().get(0).getId() +
                                 updatedTaskQueryString +
                                 updatedCustomFL)
-//                        .header("id", 1L)
                 )
                 .andExpect(jsonPath("$.TaskCustomField1").value(
                         customFL.getCustomField1()))
@@ -177,7 +162,6 @@ class TaskControllerIT extends TestDependenciesContainer {
                                 updatedTaskQueryString +
                                 updatedCustomFL +
                                 updatedReference)
-//                        .header("id", 1L)
                 )
                 .andExpect(jsonPath("$.TaskCustomField1").value(
                         customFL.getCustomField1()))

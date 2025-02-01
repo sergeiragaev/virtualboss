@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
+import net.virtualboss.model.enums.TaskStatus;
 import net.virtualboss.web.dto.CustomFieldsAndLists;
 import net.virtualboss.web.dto.contact.ContactResponse;
 import net.virtualboss.web.dto.job.JobResponse;
@@ -39,8 +40,7 @@ public class TaskResponse {
     private LocalDate actualFinish;
 
     @JsonProperty("TaskStatus")
-    @Builder.Default
-    private String status = "";
+    private TaskStatus status;
 
     @JsonProperty("TaskOrder")
     private String order;
@@ -104,44 +104,91 @@ public class TaskResponse {
     private CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
 
     public static Map<String, Object> getFieldsMap(TaskResponse taskResponse, Set<String> fieldList) {
-
         Map<String, Object> responseMap = new HashMap<>();
 
         for (Field field : taskResponse.getClass().getDeclaredFields()) {
-            String captionValue;
-            if (field.isAnnotationPresent(JsonProperty.class)) {
-                captionValue = field.getAnnotation(JsonProperty.class).value();
-            } else {
-                captionValue = field.getName();
+            String fieldCaption = getFieldCaption(field);
+
+            if (processSpecialField(fieldCaption, taskResponse, responseMap, fieldList)) {
+                continue;
             }
 
-            switch (captionValue) {
-                case "Contact" -> {
-                    if (taskResponse.contactResponse == null) continue;
-                    responseMap.putAll(ContactResponse.getFieldsMap(taskResponse.contactResponse, fieldList));
-                    continue;
-                }
-                case "Job" -> {
-                    if (taskResponse.jobResponse == null) continue;
-                    responseMap.putAll(JobResponse.getFieldsMap(taskResponse.jobResponse, fieldList));
-                    continue;
-                }
-                case "CustomFieldsAndLists" -> {
-                    if (taskResponse.customFieldsAndLists == null) continue;
-                    responseMap.putAll(CustomFieldsAndLists.getFieldsMap(taskResponse.customFieldsAndLists, "Task", fieldList));
-                    continue;
-                }
-            }
-
-            if (fieldList == null || fieldList.contains(captionValue)) {
-                try {
-                    Object value = field.get(taskResponse);
-                    if (value != null) responseMap.put(captionValue, value);
-                } catch (IllegalAccessException e) {
-                    throw new IllegalStateException("Failed to access field: " + field.getName(), e);
-                }
+            if (shouldIncludeField(fieldCaption, fieldList)) {
+                addFieldToMap(taskResponse, responseMap, field, fieldCaption);
             }
         }
         return responseMap;
+    }
+
+    private static String getFieldCaption(Field field) {
+        return field.isAnnotationPresent(JsonProperty.class)
+                ? field.getAnnotation(JsonProperty.class).value()
+                : field.getName();
+    }
+
+    private static boolean processSpecialField(String fieldCaption,
+                                               TaskResponse taskResponse,
+                                               Map<String, Object> responseMap,
+                                               Set<String> fieldList) {
+        switch (fieldCaption) {
+            case "Contact" -> {
+                processContact(taskResponse, responseMap, fieldList);
+                return true;
+            }
+            case "Job" -> {
+                processJob(taskResponse, responseMap, fieldList);
+                return true;
+            }
+            case "CustomFieldsAndLists" -> {
+                processCustomFields(taskResponse, responseMap, fieldList);
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    private static void processContact(TaskResponse taskResponse,
+                                       Map<String, Object> responseMap,
+                                       Set<String> fieldList) {
+        Optional.ofNullable(taskResponse.contactResponse)
+                .ifPresent(contact -> responseMap.putAll(
+                        ContactResponse.getFieldsMap(contact, fieldList)
+                ));
+    }
+
+    private static void processJob(TaskResponse taskResponse,
+                                   Map<String, Object> responseMap,
+                                   Set<String> fieldList) {
+        Optional.ofNullable(taskResponse.jobResponse)
+                .ifPresent(job -> responseMap.putAll(
+                        JobResponse.getFieldsMap(job, fieldList)
+                ));
+    }
+
+    private static void processCustomFields(TaskResponse taskResponse,
+                                            Map<String, Object> responseMap,
+                                            Set<String> fieldList) {
+        Optional.ofNullable(taskResponse.customFieldsAndLists)
+                .ifPresent(customFields -> responseMap.putAll(
+                        CustomFieldsAndLists.getFieldsMap(customFields, "Task", fieldList)
+                ));
+    }
+
+    private static boolean shouldIncludeField(String fieldCaption, Set<String> fieldList) {
+        return fieldList == null || fieldList.contains(fieldCaption);
+    }
+
+    private static void addFieldToMap(TaskResponse taskResponse,
+                                      Map<String, Object> responseMap,
+                                      Field field,
+                                      String fieldCaption) {
+        try {
+            Optional.ofNullable(field.get(taskResponse))
+                    .ifPresent(value -> responseMap.put(fieldCaption, value));
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Failed to access field: " + field.getName(), e);
+        }
     }
 }

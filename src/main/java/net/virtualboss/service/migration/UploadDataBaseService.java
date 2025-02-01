@@ -24,12 +24,16 @@ public class UploadDataBaseService {
 
     public String convertData(MultipartFile file) throws IOException {
 
-        File zip = File.createTempFile(UUID.randomUUID().toString(), "temp");
+        String destination = "src/main/resources/temp/db";
+        Path dir = Path.of(destination);
+        Path tempDir = Files.createDirectory(dir);
+
+        File zip = File.createTempFile(UUID.randomUUID().toString(), "temp", tempDir.toFile());
+
         FileOutputStream o = new FileOutputStream(zip);
         IOUtils.copy(file.getInputStream(), o);
         o.close();
 
-        String destination = "src/main/resources/db/temp";
         try (ZipFile zipFile = new ZipFile(zip)) {
             zipFile.extractAll(destination);
         } catch (ZipException e) {
@@ -40,7 +44,7 @@ public class UploadDataBaseService {
 
         service.migrate(destination);
 
-        try (Stream<Path> paths = Files.walk(Path.of(destination))) {
+        try (Stream<Path> paths = Files.walk(dir)) {
             paths.sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);

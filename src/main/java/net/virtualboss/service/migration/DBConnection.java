@@ -3,7 +3,9 @@ package net.virtualboss.service.migration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.config.DbConfig;
+import net.virtualboss.repository.TaskRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.*;
 import java.util.List;
@@ -14,6 +16,7 @@ import java.util.Properties;
 @RequiredArgsConstructor
 public class DBConnection {
     private final DbConfig dbConfig;
+    private final TaskRepository taskRepository;
 
     private StringBuilder multiInsert = new StringBuilder();
 
@@ -54,12 +57,9 @@ public class DBConnection {
         multiInsert = new StringBuilder();
     }
 
-    public void updateTasksNumberSequence(int i) {
-        try (Statement statement = getConnection().createStatement()) {
-            statement.execute("ALTER SEQUENCE tasks_number_seq restart with " + i + " ;");
-        } catch (Exception e) {
-            log.info("Error occurred while updating sequence of tasks table: {}", e.getLocalizedMessage());
-        }
+    @Transactional
+    public void updateTasksNumberSequence() {
+        taskRepository.resetTasksNumberSequenceToMaxNumber();
     }
 
     public void addRow(List<Object> values) {

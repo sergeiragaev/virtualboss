@@ -24,15 +24,11 @@ public class TaskController {
 
     @GetMapping("/task")
     public ResponseEntity<List<Map<String, Object>>> getTasks(
-            TaskFilter filter,
+            @ModelAttribute TaskFilter filter,
             @RequestParam String fields) {
         return ResponseEntity.ok(service.findAll(fields, filter));
     }
 
-    @GetMapping("/taskdata")
-    @ResponseStatus(HttpStatus.OK)
-    public void taskData(@RequestParam boolean logincheck) {
-    }
 
     @GetMapping("/task/{id}")
     public ResponseEntity<Map<String, Object>> taskDetails(@PathVariable String id) {
@@ -42,9 +38,9 @@ public class TaskController {
     @PutMapping("/task/{id}")
     public ResponseEntity<Map<String, Object>> saveTask(
             @PathVariable String id,
-            UpsertTaskRequest request,
-            CustomFieldsAndLists customFieldsAndLists,
-            TaskReferencesRequest referenceRequest) {
+            @ModelAttribute UpsertTaskRequest request,
+            @ModelAttribute CustomFieldsAndLists customFieldsAndLists,
+            @ModelAttribute TaskReferencesRequest referenceRequest) {
         return ResponseEntity.ok(service.saveTask(id, request, customFieldsAndLists, referenceRequest));
     }
 
@@ -58,9 +54,9 @@ public class TaskController {
 
     @PostMapping("/task")
     public ResponseEntity<Map<String, Object>> createTask(
-            UpsertTaskRequest request,
-            CustomFieldsAndLists customFieldsAndLists,
-            TaskReferencesRequest referenceRequest) {
+            @ModelAttribute UpsertTaskRequest request,
+            @ModelAttribute CustomFieldsAndLists customFieldsAndLists,
+            @ModelAttribute TaskReferencesRequest referenceRequest) {
         return new ResponseEntity<>(
                 service.createNewTask(request, customFieldsAndLists, referenceRequest), HttpStatus.CREATED);
     }

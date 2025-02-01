@@ -127,7 +127,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         filter.setIsActive(true);
         filter.setIsDateRange(true);
         filter.setIsDeleted(false);
-        filter.setThisDate(LocalDate.now());
+        filter.setThisDate(LocalDate.now().plusDays(5));
         List<Map<String, Object>> result = taskService.findAll(null, filter);
         assertNotNull(result);
         assertFalse(result.get(0).isEmpty());
@@ -196,11 +196,12 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         create2PendingSequentialTasks();
         long firstTaskNumber = taskRepository.findAll().stream().map(Task::getNumber).min(Long::compareTo).orElseThrow();
         String firstTaskId = taskRepository.findByNumber(firstTaskNumber).orElseThrow().getId().toString();
+        UpsertTaskRequest upsertRequest = UpsertTaskRequest.builder().build();
+        CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
+        String pendingRef = String.valueOf(firstTaskNumber + 2);
+        TaskReferencesRequest taskRefRequest = TaskReferencesRequest.builder().pending(pendingRef).build();
         assertThrows(CircularLinkingException.class,
-                () -> taskService.saveTask(firstTaskId,
-                        UpsertTaskRequest.builder().build(),
-                        CustomFieldsAndLists.builder().build(),
-                        TaskReferencesRequest.builder().pending(String.valueOf((firstTaskNumber + 2))).build())
+                () -> taskService.saveTask(firstTaskId, upsertRequest, customFieldsAndLists, taskRefRequest)
         );
     }
 

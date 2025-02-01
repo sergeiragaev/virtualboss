@@ -389,7 +389,7 @@ public class MigrationService {
                     row.getDate("TA_FTARGET") == null ? null :
                             row.getDate("TA_FTARGET").toString());
             values.add(row.getString("TA_ORDER").replace("'", "''"));
-            values.add(row.getString("TA_STATUS").toUpperCase());
+            values.add(row.getString("TA_STATUS"));
             values.add(row.getString("TA_DAYS"));
             values.add(row.getString("TA_ISACT"));
             values.add(employeeCodes.get(row.getString("TA_REQUEST")));
@@ -521,8 +521,7 @@ public class MigrationService {
             log.error("Error occurred while parsing tmtask.dbf: {}", e.getLocalizedMessage());
         } finally {
             closeResources(reader, "tasks", columns);
-            dbConnection.updateTasksNumberSequence(taskCodes.keySet().stream()
-                    .max(Integer::compareTo).orElseThrow() + 1);
+            dbConnection.updateTasksNumberSequence();
         }
     }
 

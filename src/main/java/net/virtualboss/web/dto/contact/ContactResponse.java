@@ -94,38 +94,73 @@ public class ContactResponse {
     private String groups = "";
 
     public static Map<String, Object> getFieldsMap(ContactResponse contactResponse, Set<String> fieldList) {
-
         Map<String, Object> responseMap = new HashMap<>();
 
         for (Field field : contactResponse.getClass().getDeclaredFields()) {
-            String captionValue;
-            if (field.isAnnotationPresent(JsonProperty.class)) {
-                captionValue = field.getAnnotation(JsonProperty.class).value();
-            } else {
-                captionValue = field.getName();
-            }
+            String fieldCaption = getFieldCaption(field);
 
-            if (captionValue.equals("ContactPerson")) {
-                Object value = contactResponse.getPerson();
-                if (value != null) responseMap.put(captionValue, value);
+            if (processSpecialField(fieldCaption, contactResponse, responseMap, fieldList)) {
                 continue;
             }
 
-            if (captionValue.equals("CustomFieldsAndLists")) {
-                if (contactResponse.customFieldsAndLists == null) continue;
-                responseMap.putAll(CustomFieldsAndLists.getFieldsMap(contactResponse.customFieldsAndLists, "Contact", fieldList));
-                continue;
-            }
-
-            if (fieldList == null || fieldList.contains(captionValue)) {
-                try {
-                    Object value = field.get(contactResponse);
-                    if (value != null) responseMap.put(captionValue, value);
-                } catch (IllegalAccessException e) {
-                    throw new IllegalStateException("Failed to access field: " + field.getName(), e);
-                }
+            if (shouldIncludeField(fieldCaption, fieldList)) {
+                addFieldToMap(contactResponse, responseMap, field, fieldCaption);
             }
         }
+
         return responseMap;
+    }
+
+    private static String getFieldCaption(Field field) {
+        return field.isAnnotationPresent(JsonProperty.class)
+                ? field.getAnnotation(JsonProperty.class).value()
+                : field.getName();
+    }
+
+    private static boolean processSpecialField(String fieldCaption,
+                                               ContactResponse contactResponse,
+                                               Map<String, Object> responseMap,
+                                               Set<String> fieldList) {
+        if ("ContactPerson".equals(fieldCaption)) {
+            processContactPerson(contactResponse, responseMap);
+            return true;
+        }
+
+        if ("CustomFieldsAndLists".equals(fieldCaption)) {
+            processCustomFields(contactResponse, responseMap, fieldList);
+            return true;
+        }
+
+        return false;
+    }
+
+    private static void processContactPerson(ContactResponse contactResponse, Map<String, Object> responseMap) {
+        Optional.ofNullable(contactResponse.getPerson())
+                .ifPresent(person -> responseMap.put("ContactPerson", person));
+    }
+
+    private static void processCustomFields(ContactResponse contactResponse,
+                                            Map<String, Object> responseMap,
+                                            Set<String> fieldList) {
+        Optional.ofNullable(contactResponse.customFieldsAndLists)
+                .ifPresent(customFields -> responseMap.putAll(
+                        CustomFieldsAndLists.getFieldsMap(customFields, "Contact", fieldList)
+                ));
+    }
+
+    private static boolean shouldIncludeField(String fieldCaption, Set<String> fieldList) {
+        return fieldList == null || fieldList.contains(fieldCaption);
+    }
+
+    private static void addFieldToMap(ContactResponse contactResponse,
+                                      Map<String, Object> responseMap,
+                                      Field field,
+                                      String fieldCaption) {
+        try {
+            Optional.ofNullable(field.get(contactResponse))
+                    .ifPresent(value -> responseMap.put(fieldCaption, value));
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Failed to access field: " + field.getName(), e);
+        }
     }
 }

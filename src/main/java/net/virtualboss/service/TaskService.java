@@ -24,11 +24,13 @@ import net.virtualboss.repository.ContactRepository;
 import net.virtualboss.repository.JobRepository;
 import net.virtualboss.repository.TaskRepository;
 import net.virtualboss.web.dto.task.UpsertTaskRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,112 +64,186 @@ public class TaskService {
     }
 
     public List<Map<String, Object>> findAll(String fields, TaskFilter filter) {
+        Set<String> fieldSet = parseFields(fields);
+        initializeFilterDefaults(filter);
+        PageRequest pageRequest = createPageRequest(filter);
 
-        if (fields == null) fields = "TaskId,TaskDescription";
-        Set<String> fieldSet = Arrays.stream(fields.split(",")).collect(Collectors.toSet());
+        return taskRepository.findAll(
+                        buildTaskFilterCriteria(filter),
+                        pageRequest
+                ).getContent()
+                .stream()
+                .map(taskMapper::taskToResponse)
+                .map(response -> TaskResponse.getFieldsMap(response, fieldSet))
+                .toList();
+    }
 
+    private Set<String> parseFields(String fields) {
+        String defaultFields = "TaskId,TaskDescription";
+        return Arrays.stream((fields != null ? fields : defaultFields).split(","))
+                .collect(Collectors.toSet());
+    }
+
+    private void initializeFilterDefaults(TaskFilter filter) {
         if (filter.getSize() == null) filter.setSize(100);
         if (filter.getPage() == null) filter.setPage(1);
         if (filter.getSort() == null) filter.setSort("description asc");
+    }
 
-        String[] sorts = filter.getSort().split(",");
-        List<Sort.Order> orders = new ArrayList<>();
-        for (String sort : sorts) {
-            String[] order = sort.split(" ");
-            orders.add(new Sort.Order(Sort.Direction.valueOf(order[1].toUpperCase()), order[0]));
-        }
+    private PageRequest createPageRequest(TaskFilter filter) {
+        return PageRequest.of(
+                filter.getPage() - 1,
+                filter.getSize(),
+                Sort.by(parseSortOrders(filter.getSort()))
+        );
+    }
 
-        TaskStatus status = null;
-        boolean isActive = filter.getIsActive() != null && filter.getIsActive();
-        boolean isDone = filter.getIsDone() != null && filter.getIsDone();
-        if (!isActive && isDone) {
-            status = TaskStatus.DONE;
-        } else if (isActive && !isDone) {
-            status = TaskStatus.ACTIVE;
-        }
-
-        if (filter.getFindString() == null) filter.setFindString("");
-
-        Map<String, LocalDate> filterDates = setFilterDates(filter);
-
-        List<UUID> excludeTaskIds = new ArrayList<>();
-        if (filter.getLinkingTask() != null) {
-            excludeTaskIds =
-                    taskRepository.findAllPendingIdsRecursive(UUID.fromString(filter.getLinkingTask()));
-            excludeTaskIds.add(UUID.fromString(filter.getLinkingTask()));
-        }
-
-        return taskRepository.findAll(
-                        TaskFilterCriteria.builder()
-                                .findString(filter.getFindString().isBlank() ? null : filter.getFindString())
-                                .status(status)
-                                .marked(filter.getIsMarked())
-                                .isDeleted(filter.getIsDeleted())
-                                .targetStartFrom(filterDates.get("targetStartFrom"))
-                                .targetStartTo(filterDates.get("targetStartTo"))
-                                .targetFinishFrom(filterDates.get("targetFinishFrom"))
-                                .targetFinishTo(filterDates.get("targetFinishTo"))
-                                .actualFinishFrom(filterDates.get("actualFinishFrom"))
-                                .actualFinishTo(filterDates.get("actualFinishTo"))
-                                .anyDateFieldFrom(filterDates.get("anyDateFieldFrom"))
-                                .anyDateFieldTo(filterDates.get("anyDateFieldTo"))
-                                .jobList(filter.getJobIds() == null ? null :
-                                        jobRepository.findAllById(
-                                                filter.getJobIds().stream()
-                                                        .map(UUID::fromString).toList()))
-                                .contactList(filter.getContactIds() == null ? null :
-                                        contactRepository.findAllById(
-                                                filter.getContactIds().stream()
-                                                        .map(UUID::fromString).toList()))
-                                .taskList(filter.getTaskIds() == null ? null :
-                                        taskRepository.findAllByNumberIn(
-                                                        filter.getTaskIds().stream()
-                                                                .map(Long::valueOf)
-                                                                .toList())
-                                                .stream().map(Task::getId).toList())
-                                .excludeTaskIds(excludeTaskIds)
-                                .build().getSpecification(),
-                        PageRequest.of(filter.getPage() - 1, filter.getSize(),
-                                Sort.by(orders)
-                        ))
-                .getContent().stream()
-                .map(taskMapper::taskToResponse)
-                .map(taskResponse -> TaskResponse.getFieldsMap(taskResponse, fieldSet))
+    private List<Sort.Order> parseSortOrders(String sortString) {
+        return Arrays.stream(sortString.split(","))
+                .map(this::createSortOrder)
                 .toList();
+    }
+
+    private Sort.Order createSortOrder(String sort) {
+        String[] parts = sort.trim().split(" ");
+        Sort.Direction direction = Sort.Direction.valueOf(parts[1].toUpperCase());
+        return new Sort.Order(direction, parts[0]);
+    }
+
+    private TaskStatus determineTaskStatus(TaskFilter filter) {
+        boolean isActive = Boolean.TRUE.equals(filter.getIsActive());
+        boolean isDone = Boolean.TRUE.equals(filter.getIsDone());
+
+        if (isDone && !isActive) return TaskStatus.DONE;
+        if (isActive && !isDone) return TaskStatus.ACTIVE;
+        return null;
+    }
+
+    private Specification<Task> buildTaskFilterCriteria(TaskFilter filter) {
+        return TaskFilterCriteria.builder()
+                .findString(StringUtils.isBlank(filter.getFindString()) ? null : filter.getFindString())
+                .status(determineTaskStatus(filter))
+                .marked(filter.getIsMarked())
+                .isDeleted(filter.getIsDeleted())
+                .targetStartFrom(getFilterDate(filter, "targetStartFrom"))
+                .targetStartTo(getFilterDate(filter, "targetStartTo"))
+                .targetFinishFrom(getFilterDate(filter, "targetFinishFrom"))
+                .targetFinishTo(getFilterDate(filter, "targetFinishTo"))
+                .actualFinishFrom(getFilterDate(filter, "actualFinishFrom"))
+                .actualFinishTo(getFilterDate(filter, "actualFinishTo"))
+                .anyDateFieldFrom(getFilterDate(filter, "anyDateFieldFrom"))
+                .anyDateFieldTo(getFilterDate(filter, "anyDateFieldTo"))
+                .jobList(getJobsByIds(filter.getJobIds()))
+                .contactList(getContactsByIds(filter.getContactIds()))
+                .taskList(getTaskIdsByNumbers(filter.getTaskIds()))
+                .excludeTaskIds(getExcludedTaskIds(filter))
+                .build()
+                .getSpecification();
+    }
+
+    private List<UUID> getExcludedTaskIds(TaskFilter filter) {
+        if (filter.getLinkingTask() == null) return List.of();
+
+        UUID linkingTaskId = UUID.fromString(filter.getLinkingTask());
+        List<UUID> excludedIds = new ArrayList<>(taskRepository.findAllPendingIdsRecursive(linkingTaskId));
+        excludedIds.add(linkingTaskId);
+        return excludedIds;
+    }
+
+    private List<Job> getJobsByIds(List<String> jobIds) {
+        return jobIds != null ?
+                jobRepository.findAllById(convertToUUIDList(jobIds)) :
+                null;
+    }
+
+    private List<Contact> getContactsByIds(List<String> contactIds) {
+        return contactIds != null ?
+                contactRepository.findAllById(convertToUUIDList(contactIds)) :
+                null;
+    }
+
+    private List<UUID> getTaskIdsByNumbers(List<String> taskNumbers) {
+        if (taskNumbers == null) return List.of();
+        return taskRepository.findAllByNumberIn(
+                        taskNumbers.stream()
+                                .map(Long::valueOf)
+                                .toList()
+                ).stream()
+                .map(Task::getId)
+                .toList();
+    }
+
+    private List<UUID> convertToUUIDList(List<String> ids) {
+        return ids.stream()
+                .map(UUID::fromString)
+                .toList();
+    }
+
+    private LocalDate getFilterDate(TaskFilter filter, String dateField) {
+        Map<String, LocalDate> dates = setFilterDates(filter);
+        return dates.get(dateField);
     }
 
     private Map<String, LocalDate> setFilterDates(TaskFilter filter) {
         Map<String, LocalDate> filterDates = new HashMap<>();
 
-        if (filter.getIsDateRange() != null) {
-            Map<Integer, String> dateFields = new HashMap<>();
-            dateFields.put(DateType.TARGET_START.getValue(), "targetStart");
-            dateFields.put(DateType.TARGET_FINISH.getValue(), "targetFinish");
-            dateFields.put(DateType.ACTUAL_FINISH.getValue(), "actualFinish");
-            dateFields.put(DateType.ANY_DATE_FIELD.getValue(), "anyDateField");
-
-            if (filter.getDateRange() == DateRange.TODAY.getValue()
-                    || filter.getDateRange() == DateRange.EXACT_DATE.getValue()) {
-                if (filter.getDateCriteria() == DateCriteria.ON_OR_BEFORE.getValue()) {
-                    filter.setDateTo(filter.getThisDate());
-                } else if (filter.getDateCriteria() == DateCriteria.ON_OR_AFTER.getValue()) {
-                    filter.setDateFrom(filter.getThisDate());
-                } else {
-                    filter.setDateTo(filter.getThisDate());
-                    filter.setDateFrom(filter.getThisDate());
-                }
-            }
-
-            if (filter.getDateCriteria() == DateCriteria.ON_OR_BEFORE.getValue()) { //on or before
-                filterDates.put(dateFields.get(filter.getDateType()) + "To", LocalDate.from(filter.getDateTo()));
-            } else if (filter.getDateCriteria() == DateCriteria.ON_OR_AFTER.getValue()) { //on or after
-                filterDates.put(dateFields.get(filter.getDateType()) + "From", LocalDate.from(filter.getDateFrom()));
-            } else if (filter.getDateCriteria() == DateCriteria.EXACT.getValue()) {    //Exact
-                filterDates.put(dateFields.get(filter.getDateType()) + "From", LocalDate.from(filter.getDateFrom()));
-                filterDates.put(dateFields.get(filter.getDateType()) + "To", LocalDate.from(filter.getDateTo()));
-            }
+        if (filter.getIsDateRange() == null) {
+            return filterDates;
         }
+
+        DateType dateType = DateType.fromValue(filter.getDateType());
+        DateRange dateRange = DateRange.fromValue(filter.getDateRange());
+        DateCriteria dateCriteria = DateCriteria.fromValue(filter.getDateCriteria());
+
+        if (dateRange == DateRange.TODAY || dateRange == DateRange.EXACT_DATE) {
+            adjustDateRangeForSpecialCases(filter);
+        }
+
+        String dateFieldPrefix = getDateFieldPrefix(dateType);
+        applyDateCriteria(filter, dateCriteria, dateFieldPrefix, filterDates);
+
         return filterDates;
+    }
+
+    private String getDateFieldPrefix(DateType dateType) {
+        return switch (dateType) {
+            case TARGET_START -> "targetStart";
+            case TARGET_FINISH -> "targetFinish";
+            case ACTUAL_FINISH -> "actualFinish";
+            case ANY_DATE_FIELD -> "anyDateField";
+        };
+    }
+
+    private void adjustDateRangeForSpecialCases(TaskFilter filter) {
+        LocalDate referenceDate = filter.getThisDate() == null ? LocalDate.now() : filter.getThisDate();
+
+        Integer dateCriteriaValue = filter.getDateCriteria();
+        DateCriteria dateCriteria = dateCriteriaValue != null
+                ? DateCriteria.fromValue(dateCriteriaValue)
+                : DateCriteria.EXACT; // default value
+
+        if (dateCriteria == DateCriteria.ON_OR_BEFORE) {
+            filter.setDateTo(referenceDate);
+        } else if (dateCriteria == DateCriteria.ON_OR_AFTER) {
+            filter.setDateFrom(referenceDate);
+        } else {
+            filter.setDateFrom(referenceDate);
+            filter.setDateTo(referenceDate);
+        }
+    }
+
+    private void applyDateCriteria(TaskFilter filter,
+                                   DateCriteria criteria,
+                                   String fieldPrefix,
+                                   Map<String, LocalDate> result) {
+        if (criteria == DateCriteria.ON_OR_BEFORE) {
+            result.put(fieldPrefix + "To", filter.getDateTo());
+        } else if (criteria == DateCriteria.ON_OR_AFTER) {
+            result.put(fieldPrefix + "From", filter.getDateFrom());
+        } else if (criteria == DateCriteria.EXACT) {
+            result.put(fieldPrefix + "From", filter.getDateFrom());
+            result.put(fieldPrefix + "To", filter.getDateTo());
+        }
     }
 
     @Transactional

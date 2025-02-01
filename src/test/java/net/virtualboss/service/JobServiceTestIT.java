@@ -107,7 +107,6 @@ class JobServiceTestIT extends TestDependenciesContainer {
                 .id(UUID.fromString(id))
                 .number("Updated job number")
                 .build();
-//        customFieldsAndLists.setCustomField2("Updated Job custom field 2");
         customFieldsAndLists.setCustomList1("Updated Job custom list1");
         jobService.saveJob(id, updatedRequest, customFieldsAndLists);
         Job updatedJob = jobRepository.findById(UUID.fromString(id)).orElseThrow();

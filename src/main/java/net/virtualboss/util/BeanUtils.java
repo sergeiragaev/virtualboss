@@ -2,6 +2,7 @@ package net.virtualboss.util;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 
@@ -14,11 +15,10 @@ public class BeanUtils {
         Field[] fields = clazz.getDeclaredFields();
 
         for (Field f : fields) {
-            f.setAccessible(true);
-            Object value = f.get(from);
-
+            ReflectionUtils.makeAccessible(f);
+            Object value = ReflectionUtils.getField(f, from);
             if (value != null) {
-                f.set(to, value);
+                ReflectionUtils.setField(f, to, value);
             }
         }
     }

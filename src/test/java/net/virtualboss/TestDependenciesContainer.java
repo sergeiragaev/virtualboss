@@ -256,12 +256,13 @@ public class TestDependenciesContainer {
         long parentTaskNumber = Long.parseLong(parentTasks);
         tasks.put(parentTaskNumber, firstTask);
 
+        StringBuilder pending = new StringBuilder(parentTasks);
         for (long i = parentTaskNumber; i < parentTaskNumber + 10; i++) {
-            parentTasks = parentTasks + "," + i;
+            pending.append(",").append(i);
             Map<String, Object> pendingTask = taskService.createNewTask(
                     generateTestTaskRequest(),
                     generateTestTaskCustomFieldsRequest(),
-                    TaskReferencesRequest.builder().pending(parentTasks).build());
+                    TaskReferencesRequest.builder().pending(pending.toString()).build());
             tasks.put((Long) pendingTask.get("TaskNumber"), pendingTask);
         }
         return tasks;

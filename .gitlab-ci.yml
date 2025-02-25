@@ -34,18 +34,18 @@ sonarqube-check-job:
 #deploy_docker-job:
 #  stage: deploy_docker
 #  script:
-#    - echo "Pushing service images to docker hub..."
+#    - echo "Pushing net.virtualboss.application.service images to docker hub..."
 #    - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin
 #    - docker push "ragaev/discovery" --all-tags
 #    - docker push "ragaev/authentication" --all-tags
-#    - docker push "ragaev/user-service" --all-tags
-#    - docker push "ragaev/post-service" --all-tags
-#    - docker push "ragaev/dialog-service" --all-tags
-#    - docker push "ragaev/notification-service" --all-tags
+#    - docker push "ragaev/user-net.virtualboss.application.service" --all-tags
+#    - docker push "ragaev/post-net.virtualboss.application.service" --all-tags
+#    - docker push "ragaev/dialog-net.virtualboss.application.service" --all-tags
+#    - docker push "ragaev/notification-net.virtualboss.application.service" --all-tags
 #    - docker push "ragaev/gateway" --all-tags
-#    - docker push "ragaev/admin-service" --all-tags
-#    - docker push "ragaev/geo-service" --all-tags
-#    - docker push "ragaev/audit-service" --all-tags
+#    - docker push "ragaev/admin-net.virtualboss.application.service" --all-tags
+#    - docker push "ragaev/geo-net.virtualboss.application.service" --all-tags
+#    - docker push "ragaev/audit-net.virtualboss.application.service" --all-tags
 #  rules:
 #    - if: $CI_COMMIT_BRANCH == 'develop'
 #
@@ -65,13 +65,13 @@ sonarqube-check-job:
 #    - ssh $PROD_USER@$PROD_HOST "docker compose -f ./docker/docker-compose.yml down"
 #    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/discovery:0.0.1-SNAPSHOT"
 #    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/authentication:0.0.1-SNAPSHOT"
-#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/user-service:0.0.1-SNAPSHOT"
-#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/post-service:0.0.1-SNAPSHOT"
-#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/dialog-service:0.0.1-SNAPSHOT"
-#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/notification-service:0.0.1-SNAPSHOT"
-#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/admin-service:0.0.1-SNAPSHOT"
-#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/geo-service:0.0.1-SNAPSHOT"
-#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/audit-service:0.0.1-SNAPSHOT"
+#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/user-net.virtualboss.application.service:0.0.1-SNAPSHOT"
+#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/post-net.virtualboss.application.service:0.0.1-SNAPSHOT"
+#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/dialog-net.virtualboss.application.service:0.0.1-SNAPSHOT"
+#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/notification-net.virtualboss.application.service:0.0.1-SNAPSHOT"
+#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/admin-net.virtualboss.application.service:0.0.1-SNAPSHOT"
+#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/geo-net.virtualboss.application.service:0.0.1-SNAPSHOT"
+#    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/audit-net.virtualboss.application.service:0.0.1-SNAPSHOT"
 #    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/gateway:0.0.1-SNAPSHOT"
 #    - ssh $PROD_USER@$PROD_HOST "docker image rm ragaev/frontend:latest --force"
 #    - ssh $PROD_USER@$PROD_HOST "docker compose -f ./docker/docker-compose.yml up -d --force-recreate --remove-orphans"

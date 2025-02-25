@@ -1,0 +1,270 @@
+migration:
+  batch-size: 1000
+  entities:
+    employee:
+      name: employee
+      table: employees
+      dbf-file: ctemp.dbf
+      memo-file: ctemp.fpt
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: name
+          source: EM_NAME
+          type: STRING
+        - name: password
+          source: EM_PWORD
+          type: STRING
+          processor: hashPassword
+        - name: notes
+          source: EM_NOTES
+          type: STRING
+          processor: sanitizeMemo
+        - name: color
+          source: EM_COLOR
+          type: INTEGER
+        - name: role
+          source: EM_RIGHTS
+          type: INTEGER
+        - name: is_deleted
+          type: BOOLEAN
+
+    contact:
+      name: contact
+      table: contacts
+      dbf-file: ctcust.dbf
+      memo-file: ctcust.fpt
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: created_time
+          source: CU_ENTERED
+          type: TIMESTAMP
+        - name: modified_time
+          source: CU_LASTMOD
+          type: TIMESTAMP
+        - name: company
+          source: CU_NAME
+          type: STRING
+        - name: profession
+          source: CU_PROFESS
+          type: STRING
+        - name: last_name
+          source: CU_LAST
+          type: STRING
+        - name: first_name
+          source: CU_FIRST
+          type: STRING
+        - name: comments
+          source: CU_COMMENT
+          type: STRING
+          processor: sanitizeMemo
+        - name: notes
+          source: CU_NOTES
+          type: STRING
+          processor: sanitizeMemo
+        - name: notes_rtf
+          source: CU_NOTERTF
+          type: STRING
+          processor: sanitizeMemo
+        - name: email
+          source: CU_EMAIL
+          type: STRING
+        - name: web_site
+          source: CU_WWW
+          type: STRING
+        - name: spouse
+          source: CU_SPOUSE
+          type: STRING
+        - name: supervisor
+          source: CU_BOSS
+          type: STRING
+        - name: tax_id
+          source: CU_TAXID
+          type: STRING
+        - name: fax
+          source: CU_FAXNO
+          type: STRING
+        - name: workers_comp_date
+          source: CU_COMPDAT
+          type: DATE
+        - name: insurance_date
+          source: CU_INSDAT
+          type: DATE
+        - name: legacy_id
+          source: CU_CUSTID
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+#        - name: employee_id
+#          source: CU_ENTERED
+#          type: UUID
+
+
+    job:
+      name: job
+      table: jobs
+      dbf-file: tmjob.dbf
+      memo-file: tmjob.fpt
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: number
+          type: STRING
+          source: JO_JOBNO
+          unique: true
+        - name: created_time
+          source: JO_CREATED
+          type: TIMESTAMP
+        - name: modified_time
+          source: JO_LASTMOD
+          type: TIMESTAMP
+        - name: lot
+          source: JO_LOTNO
+          type: STRING
+        - name: subdivision
+          source: JO_SITE
+          type: STRING
+        - name: address1
+          source: JO_ADDR
+          type: STRING
+        - name: address2
+          source: JO_ADDR2
+          type: STRING
+        - name: city
+          source: JO_CITY
+          type: STRING
+        - name: state
+          source: JO_STATE
+          type: STRING
+        - name: postal
+          source: JO_ZIP
+          type: STRING
+        - name: lock_box
+          source: JO_LOCKBOX
+          type: STRING
+        - name: directions
+          source: JO_DIRECTI
+          type: STRING
+          processor: sanitizeMemo
+        - name: notes
+          source: JO_DESC
+          type: STRING
+          processor: sanitizeMemo
+        - name: notes_rtf
+          source: JO_DESCRTF
+          type: STRING
+          processor: sanitizeMemo
+        - name: owner_name
+          source: JO_OWNER
+          type: STRING
+        - name: email
+          source: JO_EMAIL
+          type: STRING
+        - name: country
+          source: JO_COUNTRY
+          type: STRING
+        - name: home_phone
+          source: JO_OWNERPH
+          type: STRING
+        - name: work_phone
+          source: JO_WORK1
+          type: STRING
+        - name: cell_phone
+          source: JO_CELL1
+          type: STRING
+        - name: fax
+          source: JO_FAX1
+          type: STRING
+        - name: company
+          source: JO_COMPANY
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+
+    task:
+      name: task
+      table: tasks
+      dbf-file: tmtask.dbf
+      memo-file: tmtask.fpt
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: created_time
+          source: TA_CREATED
+          type: TIMESTAMP
+        - name: modified_time
+          source: TA_LASTMOD
+          type: TIMESTAMP
+        - name: target_start
+          source: TA_DTARGET
+          type: DATE
+        - name: target_finish
+          source: TA_FTARGET
+          type: DATE
+        - name: actual_finish
+          source: TA_DDONE
+          type: DATE
+        - name: number
+          source: TA_TASKNO
+          type: INTEGER
+        - name: duration
+          source: TA_DAYS
+          type: INTEGER
+        - name: status
+          source: TA_STATUS
+          type: STRING
+        - name: description
+          source: TA_TASK
+          type: STRING
+        - name: job_id
+          source: TA_JOBNO
+          type: UUID
+          reference: job
+        - name: contact_id
+          source: TA_CUSTID
+          type: UUID
+          reference: contact
+        - name: requested_id
+          source: TA_REQUEST
+          type: UUID
+          reference: employee
+        - name: notes
+          source: TA_DESC
+          type: STRING
+          processor: sanitizeMemo
+        - name: notes_rtf
+          source: TA_DESCRTF
+          type: STRING
+          processor: sanitizeMemo
+        - name: marked
+          source: TA_ISACT
+          type: BOOLEAN
+        - name: task_order
+          source: TA_ORDER
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+
+      custom-fields:
+        - source: TA_CUSTF1
+          target: TaskCustomField1
+          type: STRING
+        - source: TA_CUSTL1
+          target: TaskCustomList1
+          type: STRING
+
+
+#    contact:
+#      name: contact
+#      table: contacts
+#      dbf-file: tmjob.dbf
+#      memo-file: tmjob.fpt
+#      columns:
+#        - name: lock_box
+#          source: JO_LOCKBOX
+#          type: STRING

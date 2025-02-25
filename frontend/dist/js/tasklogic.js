@@ -371,7 +371,7 @@ function createTaskList(customUrl){
       
       BootstrapDialog.closeAll();
       BootstrapDialog.alert({
-        message: "There was a problem loading your data.  <br /><br />If your database is accessed over a network, you may need to <i>disable</i> the option to run Remote VirtualBoss as a system service.<hr />Server Response: <br /><br /><div>" + tmp + "</div>",
+        message: "There was a problem loading your data.  <br /><br />If your database is accessed over a network, you may need to <i>disable</i> the option to run Remote VirtualBoss as a system net.virtualboss.application.service.<hr />Server Response: <br /><br /><div>" + tmp + "</div>",
         type: BootstrapDialog.TYPE_WARNING
       });
     }   

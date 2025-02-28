@@ -3,6 +3,7 @@ package net.virtualboss.migration.service;
 import com.linuxense.javadbf.DBFRow;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import net.virtualboss.common.exception.DataMigrationException;
 import net.virtualboss.migration.config.MigrationConfig;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -32,13 +33,22 @@ public abstract class BaseEntityProcessor implements EntityProcessor {
                 try {
                     value = processColumn(row, column);
                 } catch (ParseException e) {
-                    throw new RuntimeException(e);
+                    throw new DataMigrationException(
+                            "Error parsing column: " + column, e);
                 }
                 values.put(column.getName(), value);
             }
         }
 
         values.put("is_deleted", false);
+
+        if (config.getCustomFields() != null) {
+            for (MigrationConfig.CustomFieldMapping customField : config.getCustomFields()) {
+                String sourceValue = row.getString(customField.getSource());
+                databaseSaver.addCustomField(
+                        values.get("id").toString(), customField.getTarget(), sourceValue);
+            }
+        }
 
         return values;
     }
@@ -58,7 +68,6 @@ public abstract class BaseEntityProcessor implements EntityProcessor {
         return switch (column.getType().toUpperCase()) {
             case "STRING" -> processString(rawValue, column.getProcessor());
             case "INTEGER" -> Integer.parseInt(rawValue.toString());
-//            case "DATE" -> LocalDate.parse(rawValue.toString());
             default -> rawValue;
         };
     }

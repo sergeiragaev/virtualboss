@@ -14,7 +14,11 @@ import java.util.UUID;
 @Service
 public class ContactProcessor extends BaseEntityProcessor {
 
-    public ContactProcessor(PasswordEncoder encoder, MigrationConfig migrationConfig, DatabaseSaver databaseSaver, Map<String, EntityCache> cashes) {
+    public ContactProcessor(
+            PasswordEncoder encoder,
+            MigrationConfig migrationConfig,
+            DatabaseSaver databaseSaver,
+            Map<String, EntityCache> cashes) {
         super(encoder, migrationConfig, databaseSaver, cashes);
     }
 
@@ -28,18 +32,6 @@ public class ContactProcessor extends BaseEntityProcessor {
         values.remove("legacy_id");
 
         databaseSaver.saveToDatabase(config.getName(), values);
-
-//        // Обработка кастомных полей
-//        for (MigrationConfig.CustomFieldMapping customField : config.getCustomFields()) {
-//            String sourceValue = row.getString(customField.getSource());
-//            if (StringUtils.isNotBlank(sourceValue)) {
-//                fieldValueService.saveCustomFieldValue(
-//                        values.get("id"),
-//                        customField.getTarget(),
-//                        sourceValue
-//                );
-//            }
-//        }
 
     }
 }

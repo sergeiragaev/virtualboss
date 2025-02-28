@@ -25,13 +25,6 @@ public class MigrationConfig {
         private String memoFile;
         private List<ColumnMapping> columns;
         private List<CustomFieldMapping> customFields;
-//        private List<TableConfig> tables;
-    }
-
-    @Getter
-    @Setter
-    public static class TableConfig {
-        private String table;
     }
 
     @Getter
@@ -51,6 +44,5 @@ public class MigrationConfig {
     public static class CustomFieldMapping {
         private String source;
         private String target;
-        private String type;
     }
 }

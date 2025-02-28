@@ -1,7 +1,7 @@
 package net.virtualboss.task.mapper.v1;
 
 import net.virtualboss.common.model.enums.EntityType;
-import net.virtualboss.common.service.MainService;
+import net.virtualboss.common.service.CustomFieldService;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,15 +9,15 @@ import org.springframework.stereotype.Component;
 @Component
 public abstract class TaskCustomFLMapperDelegate implements TaskCustomFLMapperV1 {
 
-    private MainService mainService;
+    private CustomFieldService customFieldService;
 
     @Autowired
-    public void setMainService(MainService mainService) {
-        this.mainService = mainService;
+    public void setCustomFieldService(CustomFieldService customFieldService) {
+        this.customFieldService = customFieldService;
     }
 
     @Override
     public CustomFieldsAndLists map(FieldsWrapper wrapper) {
-        return mainService.setCustomFieldsAndLists(wrapper.values(), EntityType.TASK);
+        return customFieldService.setCustomFieldsAndLists(wrapper.values(), EntityType.TASK);
     }
 }

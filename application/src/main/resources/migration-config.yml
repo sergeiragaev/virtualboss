@@ -102,6 +102,32 @@ migration:
 #          source: CU_ENTERED
 #          type: UUID
 
+      custom-fields:
+        - source: CU_CUSTF1
+          target: ContactCustomField1
+        - source: CU_CUSTF2
+          target: ContactCustomField2
+        - source: CU_CUSTF3
+          target: ContactCustomField3
+        - source: CU_CUSTF4
+          target: ContactCustomField4
+        - source: CU_CUSTF5
+          target: ContactCustomField5
+        - source: CU_CUSTF6
+          target: ContactCustomField6
+        - source: CU_CUSTL1
+          target: ContactCustomList1
+        - source: CU_CUSTL2
+          target: ContactCustomList2
+        - source: CU_CUSTL3
+          target: ContactCustomList3
+        - source: CU_CUSTL4
+          target: ContactCustomList4
+        - source: CU_CUSTL5
+          target: ContactCustomList5
+        - source: CU_CUSTL6
+          target: ContactCustomList6
+
 
     job:
       name: job
@@ -185,6 +211,32 @@ migration:
         - name: is_deleted
           type: BOOLEAN
 
+      custom-fields:
+        - source: JO_CUSTF1
+          target: JobCustomField1
+        - source: JO_CUSTF2
+          target: JobCustomField2
+        - source: JO_CUSTF3
+          target: JobCustomField3
+        - source: JO_CUSTF4
+          target: JobCustomField4
+        - source: JO_CUSTF5
+          target: JobCustomField5
+        - source: JO_CUSTF6
+          target: JobCustomField6
+        - source: JO_CUSTL1
+          target: JobCustomList1
+        - source: JO_CUSTL2
+          target: JobCustomList2
+        - source: JO_CUSTL3
+          target: JobCustomList3
+        - source: JO_CUSTL4
+          target: JobCustomList4
+        - source: JO_CUSTL5
+          target: JobCustomList5
+        - source: JO_CUSTL6
+          target: JobCustomList6
+
     task:
       name: task
       table: tasks
@@ -253,10 +305,28 @@ migration:
       custom-fields:
         - source: TA_CUSTF1
           target: TaskCustomField1
-          type: STRING
+        - source: TA_CUSTF2
+          target: TaskCustomField2
+        - source: TA_CUSTF3
+          target: TaskCustomField3
+        - source: TA_CUSTF4
+          target: TaskCustomField4
+        - source: TA_CUSTF5
+          target: TaskCustomField5
+        - source: TA_CUSTF6
+          target: TaskCustomField6
         - source: TA_CUSTL1
           target: TaskCustomList1
-          type: STRING
+        - source: TA_CUSTL2
+          target: TaskCustomList2
+        - source: TA_CUSTL3
+          target: TaskCustomList3
+        - source: TA_CUSTL4
+          target: TaskCustomList4
+        - source: TA_CUSTL5
+          target: TaskCustomList5
+        - source: TA_CUSTL6
+          target: TaskCustomList6
 
 
 #    contact:

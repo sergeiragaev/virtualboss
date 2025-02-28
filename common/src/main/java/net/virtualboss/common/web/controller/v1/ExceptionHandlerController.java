@@ -1,10 +1,7 @@
 package net.virtualboss.common.web.controller.v1;
 
 import lombok.extern.slf4j.Slf4j;
-import net.virtualboss.common.exception.AccessDeniedException;
-import net.virtualboss.common.exception.AlreadyExistsException;
-import net.virtualboss.common.exception.CircularLinkingException;
-import net.virtualboss.common.exception.EntityNotFoundException;
+import net.virtualboss.common.exception.*;
 import net.virtualboss.common.web.dto.error.ErrorDetails;
 import net.virtualboss.common.web.dto.error.ErrorResponse;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -85,5 +82,13 @@ public class ExceptionHandlerController {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse(errorMessage, new ArrayList<>()));
+    }
+
+    @ExceptionHandler(DataMigrationException.class)
+    public ResponseEntity<String> handleMigrationError(DataMigrationException ex) {
+        log.error("There is error occurred while parsing data", ex);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ex.getMessage());
     }
 }

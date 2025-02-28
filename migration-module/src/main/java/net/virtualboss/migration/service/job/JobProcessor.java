@@ -14,7 +14,11 @@ import java.util.UUID;
 @Service
 public class JobProcessor extends BaseEntityProcessor {
 
-    public JobProcessor(PasswordEncoder encoder, MigrationConfig migrationConfig, DatabaseSaver databaseSaver, Map<String, EntityCache> cashes) {
+    public JobProcessor(
+            PasswordEncoder encoder,
+            MigrationConfig migrationConfig,
+            DatabaseSaver databaseSaver,
+            Map<String, EntityCache> cashes) {
         super(encoder, migrationConfig, databaseSaver, cashes);
     }
 
@@ -27,18 +31,6 @@ public class JobProcessor extends BaseEntityProcessor {
         cashes.get("jobCache").add(values.get("number").toString(), UUID.fromString(values.get("id").toString()));
 
         databaseSaver.saveToDatabase(config.getName(), values);
-
-//        // Обработка кастомных полей
-//        for (MigrationConfig.CustomFieldMapping customField : config.getCustomFields()) {
-//            String sourceValue = row.getString(customField.getSource());
-//            if (StringUtils.isNotBlank(sourceValue)) {
-//                fieldValueService.saveCustomFieldValue(
-//                        values.get("id"),
-//                        customField.getTarget(),
-//                        sourceValue
-//                );
-//            }
-//        }
 
     }
 }

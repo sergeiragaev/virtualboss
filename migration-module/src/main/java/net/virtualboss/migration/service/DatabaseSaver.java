@@ -1,6 +1,7 @@
 package net.virtualboss.migration.service;
 
 import lombok.extern.log4j.Log4j2;
+import net.virtualboss.common.exception.MigrationException;
 import net.virtualboss.common.model.entity.Field;
 import net.virtualboss.common.web.dto.CustomValueDto;
 import net.virtualboss.migration.config.MigrationConfig;
@@ -81,7 +82,7 @@ public class DatabaseSaver {
                     setValue(ps, index++, entry.getValue(), config.getColumns()
                             .stream().filter(columnMapping ->
                                     columnMapping.getName().equals(entry.getKey())
-                            ).findFirst().orElseThrow()
+                            ).findFirst().orElseThrow(() -> new MigrationException(entry.getKey()))
                             .getType());
                 }
             }

@@ -7,6 +7,8 @@ import lombok.extern.log4j.Log4j2;
 import net.virtualboss.migration.config.MigrationConfig;
 import net.virtualboss.field.service.FieldService;
 import net.virtualboss.field.web.dto.FieldDto;
+import net.virtualboss.migration.processor.EntityProcessor;
+import net.virtualboss.migration.processor.relation.RelationProcessor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -22,10 +24,12 @@ public class MigrationService {
     private final Map<String, EntityProcessor> processors;
     private final MigrationConfig migrationConfig;
 
+    private final RelationProcessor relationProcessor;
+
     public void migrate(String dataPath) {
 
         if (dataPath == null) {
-            dataPath = "db/sampleJobs/SampleCompanyInc";
+            dataPath = "application/src/test/resources/testdata";
         }
 
         migrateFields(dataPath);
@@ -38,19 +42,27 @@ public class MigrationService {
             processDBF(finalDataPath, config, processor);
         });
 
+        migrationConfig.getRelations().forEach(relation -> {
+            if (relation.getFrom().hasSourceFile()) {
+                relationProcessor.processExternalFile(finalDataPath, relation);
+            } else {
+                relationProcessor.processEmbeddedField(finalDataPath, relation);
+            }
+        });
+
     }
 
     private void processDBF(String path, MigrationConfig.EntityConfig config, EntityProcessor processor) {
         try (DBFReader reader = dbfReaderFactory.createReader(
                 path + "/" + config.getDbfFile(),
-                path + "/" + config.getMemoFile())) {
+                config.getMemoFile() == null ? null : path + "/" + config.getMemoFile())) {
             DBFRow row;
             while ((row = reader.nextRow()) != null) {
                 processor.process(row);
             }
             databaseSaver.flushAll();
         } catch (Exception e) {
-            log.error("There is error occurred while migrate data: {}", e.getLocalizedMessage());
+            log.error("There is error occurred while migrate data: " + e.getLocalizedMessage(), e);
         }
     }
 

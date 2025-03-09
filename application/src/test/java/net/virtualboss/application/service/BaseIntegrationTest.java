@@ -1,9 +1,6 @@
 package net.virtualboss.application.service;
 
-import net.virtualboss.migration.config.DbConfig;
 import net.virtualboss.migration.service.MigrationService;
-import net.virtualboss.common.repository.FieldRepository;
-import net.virtualboss.common.repository.FieldValueRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,16 +20,7 @@ public abstract class BaseIntegrationTest {
     protected MigrationService migrationService;
 
     @Autowired
-    protected FieldRepository fieldRepository;
-
-    @Autowired
-    protected FieldValueRepository fieldValueRepository;
-
-    @Autowired
     protected JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    protected DbConfig dbConfig;
 
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
             "postgres:16-alpine");

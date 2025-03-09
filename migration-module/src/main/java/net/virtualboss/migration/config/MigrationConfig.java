@@ -15,6 +15,7 @@ import java.util.Map;
 public class MigrationConfig {
     private Map<String, EntityConfig> entities;
     private Integer batchSize;
+    private List<RelationConfig> relations;
 
     @Getter
     @Setter
@@ -23,6 +24,8 @@ public class MigrationConfig {
         private String table;
         private String dbfFile;
         private String memoFile;
+        private String idField;
+        private String idFieldSource;
         private List<ColumnMapping> columns;
         private List<CustomFieldMapping> customFields;
     }
@@ -36,6 +39,7 @@ public class MigrationConfig {
         private String processor;
         private boolean generated;
         private String reference;
+        private boolean assigned;
         private boolean unique;
     }
 
@@ -44,5 +48,30 @@ public class MigrationConfig {
     public static class CustomFieldMapping {
         private String source;
         private String target;
+    }
+
+    @Getter
+    @Setter
+    public static class RelationConfig {
+        private String name;
+        private String type;
+        private String joinTable;
+        private RelationMapping from;
+        private RelationMapping to;
+    }
+
+    @Getter
+    @Setter
+    public static class RelationMapping {
+        private String entity;
+        private String column;
+        private String sourceFile;
+        private String sourceField;
+        private String separator;
+        private String type;
+
+        public boolean hasSourceFile() {
+            return sourceFile != null && !sourceFile.isBlank();
+        }
     }
 }

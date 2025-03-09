@@ -9,10 +9,11 @@ import org.springframework.stereotype.Repository;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Repository
-public interface GroupRepository extends JpaRepository<Group, Short> {
+public interface GroupRepository extends JpaRepository<Group, UUID> {
     Optional<Group> findByNameIgnoreCaseAndType(String name, EntityType type);
     Set<Group> findAllByType(EntityType type, Sort sort);
-    Set<Group> findGroupsByIdInAndType(Collection<Short> id, EntityType type, Sort sort);
+    Set<Group> findGroupsByIdInAndType(Collection<UUID> id, EntityType type, Sort sort);
 }

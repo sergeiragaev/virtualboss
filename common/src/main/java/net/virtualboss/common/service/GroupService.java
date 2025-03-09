@@ -25,7 +25,7 @@ public class GroupService {
     private final GroupMapperV1 mapper;
 
     @Cacheable(value = "group", key = "#id")
-    public List<GroupDto> findById(Short id) {
+    public List<GroupDto> findById(UUID id) {
         Group group = groupRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         MessageFormat.format("Group with id: {0} not found", id)));
@@ -40,7 +40,7 @@ public class GroupService {
     public Set<Group> findGroups(EntityType entityType, String groupIds) {
         Sort sort = Sort.by(Sort.Direction.ASC, "name");
         if (groupIds != null) {
-            List<Short> ids = Arrays.stream(groupIds.split(",")).map(Short::parseShort).toList();
+            List<UUID> ids = Arrays.stream(groupIds.split(",")).map(UUID::fromString).toList();
             return groupRepository.findGroupsByIdInAndType(
                     ids, entityType, sort);
         } else {

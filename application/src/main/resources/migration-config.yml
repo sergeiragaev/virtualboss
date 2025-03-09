@@ -35,6 +35,7 @@ migration:
       table: contacts
       dbf-file: ctcust.dbf
       memo-file: ctcust.fpt
+      id-field: legacy_id
       columns:
         - name: id
           type: UUID
@@ -134,6 +135,7 @@ migration:
       table: jobs
       dbf-file: tmjob.dbf
       memo-file: tmjob.fpt
+      id-field: legacy_id
       columns:
         - name: id
           type: UUID
@@ -208,6 +210,9 @@ migration:
         - name: company
           source: JO_COMPANY
           type: STRING
+        - name: legacy_id
+          source: JO_CODE
+          type: STRING
         - name: is_deleted
           type: BOOLEAN
 
@@ -242,6 +247,8 @@ migration:
       table: tasks
       dbf-file: tmtask.dbf
       memo-file: tmtask.fpt
+      id-field: legacy_id
+      id-field-source: TA_CODE
       columns:
         - name: id
           type: UUID
@@ -299,6 +306,15 @@ migration:
         - name: task_order
           source: TA_ORDER
           type: STRING
+        - name: legacy_id
+          source: TA_CODE
+          type: STRING
+        - name: task_order
+          source: TA_ORDER
+          type: STRING
+        - name: finish_plus
+          source: TA_DELAY
+          type: INTEGER
         - name: is_deleted
           type: BOOLEAN
 
@@ -328,13 +344,143 @@ migration:
         - source: TA_CUSTL6
           target: TaskCustomList6
 
+    taskJobGroup:
+      name: taskJobGroup
+      table: groups
+      dbf-file: ctgroup.dbf
+      id-field: legacy_id
+      id-field-source: GR_CODE
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: created_time
+          source: GR_CREATE
+          type: TIMESTAMP
+        - name: modified_time
+          source: GR_LASTMOD
+          type: TIMESTAMP
+        - name: name
+          source: GR_NAME
+          type: STRING
+        - name: description
+          source: GR_DESC
+          type: STRING
+        - name: legacy_id
+          source: GR_CODE
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+        - name: type
+          source: GR_TYPE
+          type: STRING
+          processor: assignGroupType
 
-#    contact:
-#      name: contact
-#      table: contacts
-#      dbf-file: tmjob.dbf
-#      memo-file: tmjob.fpt
-#      columns:
-#        - name: lock_box
-#          source: JO_LOCKBOX
-#          type: STRING
+    contactGroup:
+      name: contactGroup
+      table: groups
+      dbf-file: ctghead.dbf
+      id-field: legacy_id
+      id-field-source: GH_GROUPID
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: name
+          source: GH_GROUPDE
+          type: STRING
+        - name: description
+          source: GH_GROUPDE
+          type: STRING
+        - name: legacy_id
+          source: GH_GROUPID
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+        - name: type
+          source: "C"
+          type: STRING
+          assigned: true
+          processor: assignGroupType
+
+  relations:
+    - name: contact_group_members
+      type: many-to-many
+      joinTable: group_members
+      from:
+        entity: contact
+        sourceFile: ctgtail.dbf
+        sourceField: GT_CUSTID
+        type: STRING
+        column: member_id
+      to:
+        entity: contactGroup
+        sourceField: GT_GROUPID
+        type: STRING
+        column: group_id
+    - name: job_group_members
+      type: many-to-many
+      joinTable: group_members
+      from:
+        entity: job
+        sourceFile: ctgmem.dbf
+        sourceField: ME_JOBNO
+        type: STRING
+        column: member_id
+      to:
+        entity: taskJobGroup
+        sourceField: ME_NAME
+        type: STRING
+        column: group_id
+    - name: task_group_members
+      type: many-to-many
+      joinTable: group_members
+      from:
+        entity: task
+        sourceFile: ctgmem.dbf
+        sourceField: ME_TASKNO
+        type: INTEGER
+        column: member_id
+      to:
+        entity: taskJobGroup
+        sourceField: ME_NAME
+        type: STRING
+        column: group_id
+    - name: task_contacts
+      type: many-to-many
+      joinTable: contacts_tasks
+      from:
+        entity: task
+        sourceField: TA_CUSTIDS
+        separator: \r
+        column: tasks_id
+        type: STRING
+      to:
+        entity: contact
+        column: contact_id
+    - name: task_follows_embedding
+      type: many-to-many
+      joinTable: tasks_follows
+      from:
+        entity: task
+        sourceField: TA_PENDING
+        type: INTEGER
+        separator: \r
+        column: task_id
+      to:
+        entity: task
+        column: follows_id
+    - name: task_follows
+      type: many-to-many
+      joinTable: tasks_follows
+      from:
+        entity: task
+        sourceFile: ctpend.dbf
+        sourceField: PE_TASKNO
+        type: INTEGER
+        column: task_id
+      to:
+        entity: task
+        sourceField: PE_PENDING
+        type: INTEGER
+        column: follows_id

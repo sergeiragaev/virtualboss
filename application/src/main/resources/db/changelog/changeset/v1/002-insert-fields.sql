@@ -1,3 +1,21 @@
+DO $$
+
+DECLARE
+field_1 CONSTANT VARCHAR(8) := 'Field #1';
+field_2 CONSTANT VARCHAR(8) := 'Field #2';
+field_3 CONSTANT VARCHAR(8) := 'Field #3';
+field_4 CONSTANT VARCHAR(8) := 'Field #4';
+field_5 CONSTANT VARCHAR(8) := 'Field #5';
+field_6 CONSTANT VARCHAR(8) := 'Field #6';
+list_1 CONSTANT VARCHAR(7) := 'List #1';
+list_2 CONSTANT VARCHAR(7) := 'List #2';
+list_3 CONSTANT VARCHAR(7) := 'List #3';
+list_4 CONSTANT VARCHAR(7) := 'List #4';
+list_5 CONSTANT VARCHAR(7) := 'List #5';
+list_6 CONSTANT VARCHAR(7) := 'List #6';
+
+BEGIN
+
 insert into fields (id, name, default_value, alias, enabled, "order") values (1, 'TaskNumber', 'Task ID', 'Task ID', true, 1);
 insert into fields (id, name, default_value, alias, enabled, "order") values (2, 'TaskDescription', 'Task Description', 'Task Description', true, 2);
 insert into fields (id, name, default_value, alias, enabled, "order") values (3, 'TaskTargetStart', 'Target Start', 'Target Start', true, 3);
@@ -48,43 +66,44 @@ insert into fields (id, name, default_value, alias, enabled, "order") values (45
 insert into fields (id, name, default_value, alias, enabled, "order") values (46, 'ContactEmail', 'EMail Address', 'EMail Address', true, 15);
 insert into fields (id, name, default_value, alias, enabled, "order") values (47, 'ContactPhones', 'Contact phone #s', 'Contact phone #s', true, 16);
 
-insert into fields (id, name, default_value, alias, enabled, "order") values (48, 'TaskCustomField1', 'Field #1', 'Field #1', false, 13);
-insert into fields (id, name, default_value, alias, enabled, "order") values (49, 'TaskCustomField2', 'Field #2', 'Field #2', false, 14);
-insert into fields (id, name, default_value, alias, enabled, "order") values (50, 'TaskCustomField3', 'Field #3', 'Field #3', false, 15);
-insert into fields (id, name, default_value, alias, enabled, "order") values (51, 'TaskCustomField4', 'Field #4', 'Field #4', false, 16);
-insert into fields (id, name, default_value, alias, enabled, "order") values (52, 'TaskCustomField5', 'Field #5', 'Field #5', false, 17);
-insert into fields (id, name, default_value, alias, enabled, "order") values (53, 'TaskCustomField6', 'Field #6', 'Field #6', false, 18);
-insert into fields (id, name, default_value, alias, enabled, "order") values (54, 'TaskCustomList1', 'List #1', 'List #1', false, 19);
-insert into fields (id, name, default_value, alias, enabled, "order") values (55, 'TaskCustomList2', 'List #2', 'List #2', false, 20);
-insert into fields (id, name, default_value, alias, enabled, "order") values (56, 'TaskCustomList3', 'List #3', 'List #3', false, 21);
-insert into fields (id, name, default_value, alias, enabled, "order") values (57, 'TaskCustomList4', 'List #4', 'List #4', false, 22);
-insert into fields (id, name, default_value, alias, enabled, "order") values (58, 'TaskCustomList5', 'List #5', 'List #5', false, 23);
-insert into fields (id, name, default_value, alias, enabled, "order") values (59, 'TaskCustomList6', 'List #6', 'List #6', false, 24);
+insert into fields (id, name, default_value, alias, enabled, "order") values (48, 'TaskCustomField1', field_1, field_1, false, 13);
+insert into fields (id, name, default_value, alias, enabled, "order") values (49, 'TaskCustomField2', field_2, field_2, false, 14);
+insert into fields (id, name, default_value, alias, enabled, "order") values (50, 'TaskCustomField3', field_3, field_3, false, 15);
+insert into fields (id, name, default_value, alias, enabled, "order") values (51, 'TaskCustomField4', field_4, field_4, false, 16);
+insert into fields (id, name, default_value, alias, enabled, "order") values (52, 'TaskCustomField5', field_5, field_5, false, 17);
+insert into fields (id, name, default_value, alias, enabled, "order") values (53, 'TaskCustomField6', field_6, field_6, false, 18);
+insert into fields (id, name, default_value, alias, enabled, "order") values (54, 'TaskCustomList1', list_1, list_1, false, 19);
+insert into fields (id, name, default_value, alias, enabled, "order") values (55, 'TaskCustomList2', list_2, list_2, false, 20);
+insert into fields (id, name, default_value, alias, enabled, "order") values (56, 'TaskCustomList3', list_3, list_3, false, 21);
+insert into fields (id, name, default_value, alias, enabled, "order") values (57, 'TaskCustomList4', list_4, list_4, false, 22);
+insert into fields (id, name, default_value, alias, enabled, "order") values (58, 'TaskCustomList5', list_5, list_5, false, 23);
+insert into fields (id, name, default_value, alias, enabled, "order") values (59, 'TaskCustomList6', list_6, list_6, false, 24);
 
-insert into fields (id, name, default_value, alias, enabled, "order") values (60, 'JobCustomField1', 'Field #1', 'Field #1', false, 20);
-insert into fields (id, name, default_value, alias, enabled, "order") values (61, 'JobCustomField2', 'Field #2', 'Field #2', false, 21);
-insert into fields (id, name, default_value, alias, enabled, "order") values (62, 'JobCustomField3', 'Field #3', 'Field #3', false, 22);
-insert into fields (id, name, default_value, alias, enabled, "order") values (63, 'JobCustomField4', 'Field #4', 'Field #4', false, 23);
-insert into fields (id, name, default_value, alias, enabled, "order") values (64, 'JobCustomField5', 'Field #5', 'Field #5', false, 24);
-insert into fields (id, name, default_value, alias, enabled, "order") values (65, 'JobCustomField6', 'Field #6', 'Field #6', false, 25);
-insert into fields (id, name, default_value, alias, enabled, "order") values (66, 'JobCustomList1', 'List #1', 'List #1', false, 26);
-insert into fields (id, name, default_value, alias, enabled, "order") values (67, 'JobCustomList2', 'List #2', 'List #2', false, 27);
-insert into fields (id, name, default_value, alias, enabled, "order") values (68, 'JobCustomList3', 'List #3', 'List #3', false, 28);
-insert into fields (id, name, default_value, alias, enabled, "order") values (69, 'JobCustomList4', 'List #4', 'List #4', false, 29);
-insert into fields (id, name, default_value, alias, enabled, "order") values (70, 'JobCustomList5', 'List #5', 'List #5', false, 30);
-insert into fields (id, name, default_value, alias, enabled, "order") values (71, 'JobCustomList6', 'List #6', 'List #6', false, 31);
+insert into fields (id, name, default_value, alias, enabled, "order") values (60, 'JobCustomField1', field_1, field_1, false, 20);
+insert into fields (id, name, default_value, alias, enabled, "order") values (61, 'JobCustomField2', field_2, field_2, false, 21);
+insert into fields (id, name, default_value, alias, enabled, "order") values (62, 'JobCustomField3', field_3, field_3, false, 22);
+insert into fields (id, name, default_value, alias, enabled, "order") values (63, 'JobCustomField4', field_4, field_4, false, 23);
+insert into fields (id, name, default_value, alias, enabled, "order") values (64, 'JobCustomField5', field_5, field_5, false, 24);
+insert into fields (id, name, default_value, alias, enabled, "order") values (65, 'JobCustomField6', field_6, field_6, false, 25);
+insert into fields (id, name, default_value, alias, enabled, "order") values (66, 'JobCustomList1', list_1, list_1, false, 26);
+insert into fields (id, name, default_value, alias, enabled, "order") values (67, 'JobCustomList2', list_2, list_2, false, 27);
+insert into fields (id, name, default_value, alias, enabled, "order") values (68, 'JobCustomList3', list_3, list_3, false, 28);
+insert into fields (id, name, default_value, alias, enabled, "order") values (69, 'JobCustomList4', list_4, list_4, false, 29);
+insert into fields (id, name, default_value, alias, enabled, "order") values (70, 'JobCustomList5', list_5, list_5, false, 30);
+insert into fields (id, name, default_value, alias, enabled, "order") values (71, 'JobCustomList6', list_6, list_6, false, 31);
 
-insert into fields (id, name, default_value, alias, enabled, "order") values (72, 'ContactCustomField1', 'Field #1', 'Field #1', false, 17);
-insert into fields (id, name, default_value, alias, enabled, "order") values (73, 'ContactCustomField2', 'Field #2', 'Field #2', false, 18);
-insert into fields (id, name, default_value, alias, enabled, "order") values (74, 'ContactCustomField3', 'Field #3', 'Field #3', false, 19);
-insert into fields (id, name, default_value, alias, enabled, "order") values (75, 'ContactCustomField4', 'Field #4', 'Field #4', false, 20);
-insert into fields (id, name, default_value, alias, enabled, "order") values (76, 'ContactCustomField5', 'Field #5', 'Field #5', false, 21);
-insert into fields (id, name, default_value, alias, enabled, "order") values (77, 'ContactCustomField6', 'Field #6', 'Field #6', false, 22);
-insert into fields (id, name, default_value, alias, enabled, "order") values (78, 'ContactCustomList1', 'List #1', 'List #1', false, 23);
-insert into fields (id, name, default_value, alias, enabled, "order") values (79, 'ContactCustomList2', 'List #2', 'List #2', false, 24);
-insert into fields (id, name, default_value, alias, enabled, "order") values (80, 'ContactCustomList3', 'List #3', 'List #3', false, 25);
-insert into fields (id, name, default_value, alias, enabled, "order") values (81, 'ContactCustomList4', 'List #4', 'List #4', false, 26);
-insert into fields (id, name, default_value, alias, enabled, "order") values (82, 'ContactCustomList5', 'List #5', 'List #5', false, 27);
-insert into fields (id, name, default_value, alias, enabled, "order") values (83, 'ContactCustomList6', 'List #6', 'List #6', false, 28);
+insert into fields (id, name, default_value, alias, enabled, "order") values (72, 'ContactCustomField1', field_1, field_1, false, 17);
+insert into fields (id, name, default_value, alias, enabled, "order") values (73, 'ContactCustomField2', field_2, field_2, false, 18);
+insert into fields (id, name, default_value, alias, enabled, "order") values (74, 'ContactCustomField3', field_3, field_3, false, 19);
+insert into fields (id, name, default_value, alias, enabled, "order") values (75, 'ContactCustomField4', field_4, field_4, false, 20);
+insert into fields (id, name, default_value, alias, enabled, "order") values (76, 'ContactCustomField5', field_5, field_5, false, 21);
+insert into fields (id, name, default_value, alias, enabled, "order") values (77, 'ContactCustomField6', field_6, field_6, false, 22);
+insert into fields (id, name, default_value, alias, enabled, "order") values (78, 'ContactCustomList1', list_1, list_1, false, 23);
+insert into fields (id, name, default_value, alias, enabled, "order") values (79, 'ContactCustomList2', list_2, list_2, false, 24);
+insert into fields (id, name, default_value, alias, enabled, "order") values (80, 'ContactCustomList3', list_3, list_3, false, 25);
+insert into fields (id, name, default_value, alias, enabled, "order") values (81, 'ContactCustomList4', list_4, list_4, false, 26);
+insert into fields (id, name, default_value, alias, enabled, "order") values (82, 'ContactCustomList5', list_5, list_5, false, 27);
+insert into fields (id, name, default_value, alias, enabled, "order") values (83, 'ContactCustomList6', list_6, list_6, false, 28);
 
 ALTER SEQUENCE fields_id_seq restart with 84 ;
+END $$;

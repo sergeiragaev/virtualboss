@@ -1,0 +1,486 @@
+migration:
+  batch-size: 1000
+  entities:
+    employee:
+      name: employee
+      table: employees
+      dbf-file: ctemp.dbf
+      memo-file: ctemp.fpt
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: name
+          source: EM_NAME
+          type: STRING
+        - name: password
+          source: EM_PWORD
+          type: STRING
+          processor: hashPassword
+        - name: notes
+          source: EM_NOTES
+          type: STRING
+          processor: sanitizeMemo
+        - name: color
+          source: EM_COLOR
+          type: INTEGER
+        - name: role
+          source: EM_RIGHTS
+          type: INTEGER
+        - name: is_deleted
+          type: BOOLEAN
+
+    contact:
+      name: contact
+      table: contacts
+      dbf-file: ctcust.dbf
+      memo-file: ctcust.fpt
+      id-field: legacy_id
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: created_time
+          source: CU_ENTERED
+          type: TIMESTAMP
+        - name: modified_time
+          source: CU_LASTMOD
+          type: TIMESTAMP
+        - name: company
+          source: CU_NAME
+          type: STRING
+        - name: profession
+          source: CU_PROFESS
+          type: STRING
+        - name: last_name
+          source: CU_LAST
+          type: STRING
+        - name: first_name
+          source: CU_FIRST
+          type: STRING
+        - name: comments
+          source: CU_COMMENT
+          type: STRING
+          processor: sanitizeMemo
+        - name: notes
+          source: CU_NOTES
+          type: STRING
+          processor: sanitizeMemo
+        - name: notes_rtf
+          source: CU_NOTERTF
+          type: STRING
+          processor: sanitizeMemo
+        - name: email
+          source: CU_EMAIL
+          type: STRING
+        - name: web_site
+          source: CU_WWW
+          type: STRING
+        - name: spouse
+          source: CU_SPOUSE
+          type: STRING
+        - name: supervisor
+          source: CU_BOSS
+          type: STRING
+        - name: tax_id
+          source: CU_TAXID
+          type: STRING
+        - name: fax
+          source: CU_FAXNO
+          type: STRING
+        - name: workers_comp_date
+          source: CU_COMPDAT
+          type: DATE
+        - name: insurance_date
+          source: CU_INSDAT
+          type: DATE
+        - name: legacy_id
+          source: CU_CUSTID
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+#        - name: employee_id
+#          source: CU_ENTERED
+#          type: UUID
+
+      custom-fields:
+        - source: CU_CUSTF1
+          target: ContactCustomField1
+        - source: CU_CUSTF2
+          target: ContactCustomField2
+        - source: CU_CUSTF3
+          target: ContactCustomField3
+        - source: CU_CUSTF4
+          target: ContactCustomField4
+        - source: CU_CUSTF5
+          target: ContactCustomField5
+        - source: CU_CUSTF6
+          target: ContactCustomField6
+        - source: CU_CUSTL1
+          target: ContactCustomList1
+        - source: CU_CUSTL2
+          target: ContactCustomList2
+        - source: CU_CUSTL3
+          target: ContactCustomList3
+        - source: CU_CUSTL4
+          target: ContactCustomList4
+        - source: CU_CUSTL5
+          target: ContactCustomList5
+        - source: CU_CUSTL6
+          target: ContactCustomList6
+
+
+    job:
+      name: job
+      table: jobs
+      dbf-file: tmjob.dbf
+      memo-file: tmjob.fpt
+      id-field: legacy_id
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: number
+          type: STRING
+          source: JO_JOBNO
+          unique: true
+        - name: created_time
+          source: JO_CREATED
+          type: TIMESTAMP
+        - name: modified_time
+          source: JO_LASTMOD
+          type: TIMESTAMP
+        - name: lot
+          source: JO_LOTNO
+          type: STRING
+        - name: subdivision
+          source: JO_SITE
+          type: STRING
+        - name: address1
+          source: JO_ADDR
+          type: STRING
+        - name: address2
+          source: JO_ADDR2
+          type: STRING
+        - name: city
+          source: JO_CITY
+          type: STRING
+        - name: state
+          source: JO_STATE
+          type: STRING
+        - name: postal
+          source: JO_ZIP
+          type: STRING
+        - name: lock_box
+          source: JO_LOCKBOX
+          type: STRING
+        - name: directions
+          source: JO_DIRECTI
+          type: STRING
+          processor: sanitizeMemo
+        - name: notes
+          source: JO_DESC
+          type: STRING
+          processor: sanitizeMemo
+        - name: notes_rtf
+          source: JO_DESCRTF
+          type: STRING
+          processor: sanitizeMemo
+        - name: owner_name
+          source: JO_OWNER
+          type: STRING
+        - name: email
+          source: JO_EMAIL
+          type: STRING
+        - name: country
+          source: JO_COUNTRY
+          type: STRING
+        - name: home_phone
+          source: JO_OWNERPH
+          type: STRING
+        - name: work_phone
+          source: JO_WORK1
+          type: STRING
+        - name: cell_phone
+          source: JO_CELL1
+          type: STRING
+        - name: fax
+          source: JO_FAX1
+          type: STRING
+        - name: company
+          source: JO_COMPANY
+          type: STRING
+        - name: legacy_id
+          source: JO_CODE
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+
+      custom-fields:
+        - source: JO_CUSTF1
+          target: JobCustomField1
+        - source: JO_CUSTF2
+          target: JobCustomField2
+        - source: JO_CUSTF3
+          target: JobCustomField3
+        - source: JO_CUSTF4
+          target: JobCustomField4
+        - source: JO_CUSTF5
+          target: JobCustomField5
+        - source: JO_CUSTF6
+          target: JobCustomField6
+        - source: JO_CUSTL1
+          target: JobCustomList1
+        - source: JO_CUSTL2
+          target: JobCustomList2
+        - source: JO_CUSTL3
+          target: JobCustomList3
+        - source: JO_CUSTL4
+          target: JobCustomList4
+        - source: JO_CUSTL5
+          target: JobCustomList5
+        - source: JO_CUSTL6
+          target: JobCustomList6
+
+    task:
+      name: task
+      table: tasks
+      dbf-file: tmtask.dbf
+      memo-file: tmtask.fpt
+      id-field: legacy_id
+      id-field-source: TA_CODE
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: created_time
+          source: TA_CREATED
+          type: TIMESTAMP
+        - name: modified_time
+          source: TA_LASTMOD
+          type: TIMESTAMP
+        - name: target_start
+          source: TA_DTARGET
+          type: DATE
+        - name: target_finish
+          source: TA_FTARGET
+          type: DATE
+        - name: actual_finish
+          source: TA_DDONE
+          type: DATE
+        - name: number
+          source: TA_TASKNO
+          type: INTEGER
+        - name: duration
+          source: TA_DAYS
+          type: INTEGER
+        - name: status
+          source: TA_STATUS
+          type: STRING
+        - name: description
+          source: TA_TASK
+          type: STRING
+        - name: job_id
+          source: TA_JOBNO
+          type: UUID
+          reference: job
+        - name: contact_id
+          source: TA_CUSTID
+          type: UUID
+          reference: contact
+        - name: requested_id
+          source: TA_REQUEST
+          type: UUID
+          reference: employee
+        - name: notes
+          source: TA_DESC
+          type: STRING
+          processor: sanitizeMemo
+        - name: notes_rtf
+          source: TA_DESCRTF
+          type: STRING
+          processor: sanitizeMemo
+        - name: marked
+          source: TA_ISACT
+          type: BOOLEAN
+        - name: task_order
+          source: TA_ORDER
+          type: STRING
+        - name: legacy_id
+          source: TA_CODE
+          type: STRING
+        - name: task_order
+          source: TA_ORDER
+          type: STRING
+        - name: finish_plus
+          source: TA_DELAY
+          type: INTEGER
+        - name: is_deleted
+          type: BOOLEAN
+
+      custom-fields:
+        - source: TA_CUSTF1
+          target: TaskCustomField1
+        - source: TA_CUSTF2
+          target: TaskCustomField2
+        - source: TA_CUSTF3
+          target: TaskCustomField3
+        - source: TA_CUSTF4
+          target: TaskCustomField4
+        - source: TA_CUSTF5
+          target: TaskCustomField5
+        - source: TA_CUSTF6
+          target: TaskCustomField6
+        - source: TA_CUSTL1
+          target: TaskCustomList1
+        - source: TA_CUSTL2
+          target: TaskCustomList2
+        - source: TA_CUSTL3
+          target: TaskCustomList3
+        - source: TA_CUSTL4
+          target: TaskCustomList4
+        - source: TA_CUSTL5
+          target: TaskCustomList5
+        - source: TA_CUSTL6
+          target: TaskCustomList6
+
+    taskJobGroup:
+      name: taskJobGroup
+      table: groups
+      dbf-file: ctgroup.dbf
+      id-field: legacy_id
+      id-field-source: GR_CODE
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: created_time
+          source: GR_CREATE
+          type: TIMESTAMP
+        - name: modified_time
+          source: GR_LASTMOD
+          type: TIMESTAMP
+        - name: name
+          source: GR_NAME
+          type: STRING
+        - name: description
+          source: GR_DESC
+          type: STRING
+        - name: legacy_id
+          source: GR_CODE
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+        - name: type
+          source: GR_TYPE
+          type: STRING
+          processor: assignGroupType
+
+    contactGroup:
+      name: contactGroup
+      table: groups
+      dbf-file: ctghead.dbf
+      id-field: legacy_id
+      id-field-source: GH_GROUPID
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: name
+          source: GH_GROUPDE
+          type: STRING
+        - name: description
+          source: GH_GROUPDE
+          type: STRING
+        - name: legacy_id
+          source: GH_GROUPID
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+        - name: type
+          source: "C"
+          type: STRING
+          assigned: true
+          processor: assignGroupType
+
+  relations:
+    - name: contact_group_members
+      type: many-to-many
+      joinTable: group_members
+      from:
+        entity: contact
+        sourceFile: ctgtail.dbf
+        sourceField: GT_CUSTID
+        type: STRING
+        column: member_id
+      to:
+        entity: contactGroup
+        sourceField: GT_GROUPID
+        type: STRING
+        column: group_id
+    - name: job_group_members
+      type: many-to-many
+      joinTable: group_members
+      from:
+        entity: job
+        sourceFile: ctgmem.dbf
+        sourceField: ME_JOBNO
+        type: STRING
+        column: member_id
+      to:
+        entity: taskJobGroup
+        sourceField: ME_NAME
+        type: STRING
+        column: group_id
+    - name: task_group_members
+      type: many-to-many
+      joinTable: group_members
+      from:
+        entity: task
+        sourceFile: ctgmem.dbf
+        sourceField: ME_TASKNO
+        type: INTEGER
+        column: member_id
+      to:
+        entity: taskJobGroup
+        sourceField: ME_NAME
+        type: STRING
+        column: group_id
+    - name: task_contacts
+      type: many-to-many
+      joinTable: contacts_tasks
+      from:
+        entity: task
+        sourceField: TA_CUSTIDS
+        separator: \r
+        column: tasks_id
+        type: STRING
+      to:
+        entity: contact
+        column: contact_id
+    - name: task_follows_embedding
+      type: many-to-many
+      joinTable: tasks_follows
+      from:
+        entity: task
+        sourceField: TA_PENDING
+        type: INTEGER
+        separator: \r
+        column: task_id
+      to:
+        entity: task
+        column: follows_id
+    - name: task_follows
+      type: many-to-many
+      joinTable: tasks_follows
+      from:
+        entity: task
+        sourceFile: ctpend.dbf
+        sourceField: PE_TASKNO
+        type: INTEGER
+        column: task_id
+      to:
+        entity: task
+        sourceField: PE_PENDING
+        type: INTEGER
+        column: follows_id

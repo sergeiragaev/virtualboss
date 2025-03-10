@@ -1,0 +1,170 @@
+﻿<!-- saved from url=(0022)http://internet.e-mail -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+  <!-- view port -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="" />
+  <!-- JQuery JS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script>
+    // check for login cookies.  If they don't exist, redirect to login screen.
+    $.ajax({
+      url: '/api/v1/taskdata?logincheck=true',
+      async: false,
+      success: function(response){
+        if(response == 'InvalidLogin'){
+          var parameters = location.href.split("/").slice(-1);
+          location.href='login.htm?URL=' + parameters;
+        }
+      },
+      error: function(jqXhr, status, error){
+        console.log(error);
+      }
+    });
+  </script> 
+
+  <!-- Bootstrap CSS -->
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome CSS -->
+  <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <!-- BootstrapDialog -->
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.35.3/css/bootstrap-dialog.min.css">
+
+  <link rel="stylesheet" href="css/mainstyles.css">
+  <link rel="stylesheet" href="css/contactstyles.css">
+  <title>Remote VirtualBoss - Contact Manager</title>
+</head>
+
+<body>
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">Remote VirtualBoss</a>
+      </div>
+      <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+          <li><a href="index.html">Task Manager</a></li>
+          <li class="active"><a href="contactlist.htm">Contact Manager</a></li>
+          <li><a href="joblist.htm">Job Manager</a></li>
+          <li class="hidden-sm hidden-md hidden-lg"><a href="ganttview.htm">Gantt Chart View</a></li>
+          <li class="hidden-sm hidden-md hidden-lg"><a href="calendarview.htm">Calendar View</a></li>
+          <li class="hidden-sm hidden-md hidden-lg"><a href="#" onclick="editContactListColumns(); return false;"><i class="fa fa-list" style="margin-right:5px; color:#0099FF;"></i> Contact List Fields</a></li>
+          <li class="hidden-sm hidden-md hidden-lg"><a href="#" onclick="editContactFieldOrder(); return false;"><i class="fa fa-list-ol" style="margin-right:5px; color:#0099FF;"></i> Change Field Order</a></li>
+          <li class="dropdown hidden-xs">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">More <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="ganttview.htm">Gantt Chart View</a></li>
+              <li><a href="calendarview.htm">Calendar View</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a href="#" onclick="editContactListColumns(); return false;">Contact List Fields</a></li>
+              <li><a href="#" onclick="editContactFieldOrder(); return false;">Change Column Order</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="cMain" class="container cMain">
+    <div class="cSettings">
+      <div class="btn-group hidden-xs hidden-sm hidden-md">
+        <button class="btn btn-primary" onclick="location.href='index.html';">Task Manager</button>
+        <button class="btn btn-primary active" onclick="location.href='contactlist.htm';">Contact Manager</button>
+        <button class="btn btn-primary" onclick="location.href='joblist.htm';">Job Manager</button>
+        <button class="btn btn-primary" onclick="location.href='calendarview.htm';">Calendar View</button>
+        <button class="btn btn-primary" onclick="location.href='ganttview.htm';">Gantt Chart View</button>
+      </div>
+      <div class="btn-group hidden-lg">
+        <button type="button" class="btn btn-primary">Contact Manager</button>
+        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span class="caret"></span>
+          <span class="sr-only">Toggle Dropdown</span>
+        </button>
+        <ul class="dropdown-menu">
+          <li><a href="index.html">Task Manager</a></li>
+          <li><a href="joblist.htm">Job Manager</a></li>
+          <li><a href="contactlist.htm">Contact Manager</a></li>
+          <li role="separator" class="divider"></li>
+          <li><a href="calendarview.htm">Calendar</a></li>
+          <li><a href="ganttview.htm">Gantt Chart</a></li>
+        </ul>
+      </div>
+            
+      <div class="btn-group" style="float:right;">
+        <button type="button" onclick="logout();" class="btn btn-default" title="Log Out"><i class="fa fa-sign-out"></i> Log Out</button>
+      </div> 
+      <form role="form" name="contactListSearchForm">
+        <div class="row cmSearchBar">
+          <div class="col-xs-12">
+            <div class="input-group">
+              <input type="text" class="form-control" id="contactListSearchBox" placeholder="Search for...">
+              <span class="input-group-btn">
+                <button class="btn btn-primary" type="button" onclick="$('#contactListSearchBox').val(''); createContactList();">Reset</button>
+                <button class="btn btn-primary" id="contactListSearchButton" type="submit"><i class="fa fa-search"></i><span class="hidden-xs"> Search</span></button>
+              </span>
+            </div>    
+          </div>
+        </div>
+      </form>
+      <div class="row" style="margin-top:10px;">
+        <div class="col-xs-12">
+          <div class="btn-group">
+            <button type="button" title="Add New Contact" onclick="editNewContact();" class="btn btn-primary"><i class="fa fa-file-text-o" style="margin-right:5px;"></i> New Contact</button> 
+          </div>
+          <div class="btn-group">
+            <button type="button" class="btn btn-primary dropdown-toggle" title="Settings" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fa fa-cog"></i> Settings <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              <li><a href="#" onclick="editContactListColumns();return false;">Contact List Fields</a></li>
+              <li><a href="#" onclick="editContactFieldOrder(); return false;">Change Field Order</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="background-color:#fff; padding:3px; border-radius:4px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);">
+      <div class="cSettingsInfo">
+        Number of Contacts: <span id="cCount"></span> <span id="activeFiltersMessage" style="margin-left:10px;"></span>
+      </div>
+      <div id="cContactList" class="cContactList"></div>
+    </div>
+  
+  </div>
+  <!-- JQuery UI -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+  <!-- Touch Punch -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+
+  <!-- Modernizr -->
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+  <!-- Bootstrap Dialog -->
+<!--  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.35.3/js/bootstrap-dialog.min.js"></script>-->
+  <script src="jquery/js/bootstrap-dialog.js"></script>
+  <!-- JS Cookie -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.3/js.cookie.min.js"></script>
+
+  <script src="js/tablesorter/jquery.tablesorter.min.js"></script>
+  <script src="js/moment.min.js"></script>
+  <script src="js/contactlogic.js"></script>
+  <script src="js/editContact.js"></script>
+  <script src="js/newContact.js"></script>
+  <script src="js/filterlogic.js"></script>
+  <script src="js/logout.js"></script>
+</body>
+
+</html>

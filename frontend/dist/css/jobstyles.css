@@ -1,0 +1,37 @@
+﻿.jSettings{
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+  background-color:#fff;
+  padding:10px;
+  border-radius:4px;
+}
+
+.jSettings{
+  margin-bottom:10px;
+}
+
+.jSettings hr{
+  margin-bottom:8px;
+  margin-top:15px;
+}
+
+.jJobList{
+  background-color:#fff;
+}
+
+.jMain{
+ padding-left:5px;
+ padding-right:5px;
+}
+
+.jSettingsInfo{
+  font-size:12px;  
+  padding:3px;
+}
+
+.jJobList table th{
+  cursor:pointer;
+}
+
+.jmSearchBar{
+  margin-top:10px;
+}

@@ -1,0 +1,135 @@
+﻿body{
+  background-color:#71726A;
+  padding-top:60px;
+}
+
+#sortableFields{
+  padding-left:0px;
+}
+
+#sortableFields li{
+  display:block;
+  border:1px #c0c0c0 solid;
+  margin:2px;
+  padding:5px;
+  background-color:#fff;
+  cursor:move;
+  max-width:200px;
+}
+
+.form-control, button, input[type=button], .modal-content, .btn, .modal-header, .input-group-addon, .dropdown-menu{
+  /* border-radius */
+}
+
+/* needed to fix overlapping bootstrapdialog windows and scrolling bug */
+.modal {
+  overflow: auto !important; 
+}
+
+
+.navbar-default .navbar-toggle{
+  border:1px #000 solid !important;
+}
+
+.navbar-default .navbar-toggle:focus, .navbar-default .navbar-toggle:hover{
+  background-color:inherit;
+}
+
+.navbar-default{
+  background-color:#000;
+  box-shadow:0px 0px 5px #000;
+  margin-bottom:15px;
+}
+
+.navbar-default .navbar-brand{
+  color:#f1f1f1;
+}
+
+.navbar-default .navbar-brand:focus, .navbar-default .navbar-brand:hover{
+  color:#ccc;
+}
+
+.navbar-default .navbar-nav > li > a{
+  color:#f1f1f1;
+}
+
+.navbar-default .navbar-nav > li > a:hover{
+  color:#CCCCCC;
+}
+
+.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:focus, .navbar-default .navbar-nav > .open > a:hover {
+  color:#f1f1f1;
+  background-color:#444;
+}
+
+.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:focus, .navbar-default .navbar-nav > .active > a:hover{
+  background-color:#444;
+  color:#f1f1f1;
+}
+
+.dropdown-menu > li > a:hover{
+  background-color:#337AB7;
+  color:#fff;
+}
+
+.bootstrap-switch{
+  margin-right:20px;
+}
+
+.activeFiltersMessage{
+  font-size:12px;
+  display:block;
+  float:right;
+  margin-top:7px;
+}
+
+.checkbox label{
+
+}
+
+.statusActive{
+  color:#CC0000;
+}
+
+.statusDone{
+  color:#0066FF;
+}
+
+span.activeFieldColor{
+  color:#0066FF;
+}
+
+span.notActiveColor{
+  color:#999999;
+}
+
+/* tables */
+table.tablesorter {
+	/*font-family:arial;
+	background-color: #CDCDCD;
+	margin:10px 0pt 15px;
+	font-size: 8pt;
+	width: 100%;
+	text-align: left;*/
+}
+table.tablesorter thead tr th, table.tablesorter tfoot tr th {
+	/*background-color: #e6EEEE;
+	border: 1px solid #FFF;
+	font-size: 8pt;
+	padding: 4px;*/
+}
+table.tablesorter thead tr .header {
+	background-repeat: no-repeat;
+	background-position: center right;
+
+}
+
+table.tablesorter thead tr .headerSortUp {
+	background-image: url(../js/tablesorter/asc.gif);
+}
+table.tablesorter thead tr .headerSortDown {
+	background-image: url(../js/tablesorter/desc.gif);
+}
+table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
+  background-color:aliceblue;
+}

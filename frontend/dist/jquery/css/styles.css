@@ -1,0 +1,802 @@
+﻿.main table{
+	border-collapse:collapse;
+}
+
+.rulerBar{
+	visibility:hidden;
+}
+
+circle{
+
+}
+
+.tTip{
+	position:relative;
+	border:none;
+	border-radius:0px;
+	box-shadow:0px 0px 4px #555;
+	position:absolute;
+	overflow:hidden;
+	max-width:800px !important;
+	white-space:pre-line;
+	min-width:200px;
+	z-index:99999;
+	font-family:inherit;
+	font-size:12px;
+	padding:0px;
+	margin:0px;
+}
+
+.ttWrap{
+  padding:10px;
+}
+
+.tTip .tipDesc{
+	margin-bottom:2px;
+	white-space:nowrap;
+	font-family:inherit;
+	font-size:14px;
+	background-color:#337AB7;
+	color:#fff;
+	padding:3px 5px 3px 5px
+}
+
+.smallerTooltipText{
+  font-size:12px;
+  font-family:inherit;
+}
+
+.tTip .tipDesc hr{
+	margin-top:3px;
+	margin-bottom:3px;
+}
+
+.tTip .tipNotes{
+	margin-bottom:3px;
+	padding:5px;
+	border:1px #c0c0c0 solid;
+	border-radius:0px;
+	color:#777;
+	font-style:italic;
+	white-space:nowrap;
+}
+
+.tipNotes{
+	margin-top:0px;
+}
+
+#colSort{
+	list-style-type: none; 
+	height:auto;
+	position:relative;
+	overflow:hidden;
+	padding:0px;
+	margin-top:2px;
+	margin-bottom:0px;
+	white-space:nowrap;
+}
+
+.colSortBlock{
+	
+	margin-top:0px;
+ 	margin-bottom:0px;
+}
+
+#colSort li{
+	 
+	padding:5px;
+	display:inline-block;
+	min-width:75px;
+	height:auto;
+	overflow:hidden; 
+	text-align:center;
+	border:1px #888 solid;
+	background-color:#fff;
+	margin-right:3px;
+	
+}
+
+#primarySort, #secondarySort{
+	font-family:inherit;
+}
+
+#colSort li:hover{
+	background-color:#aaa;
+	border:1px #666 solid;
+	cursor:move;
+}
+
+.ui-state-highlight{
+	height:14px !important;
+	
+}
+
+.todayButton{
+	margin-left:20px;
+	cursor:pointer;
+}
+
+.Today{
+	color:#FF0000;
+	text-shadow:none;
+}
+
+.todayButton:hover{
+}
+
+._jsPlumb_connector, ._jsPlumb_overlay, ._jsPlumb_endpoint{
+	z-index:0; /* set to 0 to show behind bars */
+}
+
+td, th{
+	vertical-align:top;
+	padding:0px;
+	border:1px #333 solid;
+	min-height:14px;
+}
+
+
+.extras{
+	display:none;
+	position:absolute;
+	clear:both;
+	border:none;
+}
+
+.gttLine{
+  position:relative;
+  top:5px;
+}
+
+.gttLine input[type=button]{
+  margin-left:15px;
+  border-radius:3px;
+}
+
+.sGantt{
+	white-space:nowrap;
+	padding-left:5px;
+	padding-right:5px;
+	padding-bottom:5px;
+	padding-top:2px;
+	background-color:#000;
+	border-radius:0px;
+	display:inline-block;
+	margin-right:10px;	
+	position:relative;
+	margin-top:10px;
+	font-size:12px;
+	/*width:100%;*/
+	/*min-height:400px;*/
+}
+
+.sGantt *{
+  box-sizing:content-box;
+}
+
+.main thead{
+	z-index:1;
+	position:relative;
+}
+
+.mainRuler{
+	position:relative;
+	background-color:aliceblue;
+	
+}
+
+.options{
+	color:#fff;
+	padding-left:0px;
+	padding-bottom:4px;
+	position:relative;
+	z-index:50;
+	display:inline;
+	float:left;
+	background-color:#000;
+	
+}
+
+.options img{
+	vertical-align:middle;
+}
+
+.options a{
+	text-decoration:none;
+	color:#fff;
+	position:relative;
+	top:1px;
+}
+
+.options a:hover{
+	color:#0099FF;
+}
+.optionsText{
+	color:#ccc;
+}
+.opts{
+	display:none;
+	background-color:#f1f1f1;
+	overflow:hidden;
+	padding-left:3px;
+	padding-bottom:3px;
+	border-radius:3px;
+	margin-bottom:5px;
+	padding-top:3px;
+	box-shadow:inset 0px 0px 3px #000;
+	font-weight:bold;
+	position:relative;
+	z-index:50;
+}
+
+.opts input[type=checkbox]{
+	vertical-align:middle;
+	position:relative;
+	top:-2px;
+}
+
+#applyGanttSettings, #restoreDefaults{
+}
+
+#applyGanttSettings:hover, #restoreDefaults:hover{
+
+}
+
+.optionBlock{
+	display:inline;
+	padding-right:10px;
+	position:relative;
+	margin-top:0px;
+}
+
+.optionBlock ul{
+	display:inline-block;
+}
+
+.tCount{
+	color:#999;
+	margin-left:8px;
+}
+
+#taskCount{
+	color:#ccc;
+}
+
+.tStart{
+	text-align:center;
+}
+
+.sortTable{
+	margin-top:10px;
+	border-collapse:collapse;
+}
+.sortTable, .sortTable td{
+	border:none;
+	background-color:inherit;
+}
+.sortTable td{
+	padding-right:5px;
+}
+.sortTable select{
+	width:100%;
+	margin-top:3px;
+	padding:3px;
+}
+
+
+
+#settingsArrow{
+	width:15px;
+	height:12px;
+	display:inline-block;
+	position:relative;
+	top:2px;
+}
+.settingsArrowDown{
+	background-image:url(../../images/downarrow.png);
+	background-repeat:no-repeat;
+}
+
+.settingsArrowUp{
+	background-image:url(../../images/uparrow.png);
+	background-repeat:no-repeat;
+}
+
+.main{
+	background-color:aliceblue;
+	position:relative;
+}
+
+#fixedGanttHeight{
+	width:30px;
+}
+
+.main tbody{
+	max-height:530px;
+	overflow-y:auto;
+	overflow-x:hidden;
+
+}
+/* needed to make table scrollable with fixed header */
+thead > tr, tbody{
+    /*display:block;*/
+}
+thead{
+	box-shadow: 0 3px 2px -2px #000;
+	position:relative;
+}
+
+.makeScrollable{
+	display:block;
+}
+
+.tTitle{
+	font-weight:700;
+	padding-left:5px;
+	padding-right:5px;
+	vertical-align:middle;
+	background-color:#222;
+	color:#fff;
+	font-size:1.2em;
+}
+
+th{
+
+}
+
+.loading{
+	color:#fff;
+}
+.tTaskNum{
+	text-align:center;
+}
+
+.weekend{
+	background-color:#cfcfcf !important;
+}
+
+
+.ruler{
+	background-color:#444;
+	color:#fff;
+	/*text-shadow:0px 0px 3px #000;*/
+}
+
+.ruler ul{
+	list-style: none;
+	margin:0px;
+	font-family:inherit;
+	padding:0px;
+	margin-left:0px;
+	padding-left:0px;
+	margin-left:-1px;
+	white-space:nowrap;
+}
+
+.ruler ul li{
+	display:inline-block;
+	position:relative;
+	float:left;
+	font-size:10px;
+	border:1px #333 solid;
+	border-right:none;
+	border-bottom:none;
+	white-space:nowrap;
+}
+
+.dates_table_first{
+	border:none;
+	position:relative;
+	border-left:1px #000 solid;
+	
+	
+}
+
+.dates_table{
+	border:none;
+	border-left:none;
+	position:relative;
+	
+	
+}
+
+.dates_table_first, .dates_table{
+	white-space:nowrap;
+	
+}
+
+.dates_table ul:first-child{
+	border-left:none;
+}
+
+.dtMonths{
+	text-align:center;
+	font-weight:normal;
+	border-top:none;
+	border-right:none;
+	border-left:none;
+	border-bottom:none;
+	color:#fff;
+	background-color:#222;
+	font-family:inherit;
+	font-size:1.2em;
+	padding:5px;
+	
+}
+
+.dtDays{
+	text-align:center;
+	white-space:nowrap;
+	border-bottom:none;
+	border-right:none;
+	
+	
+}
+
+.taskDescription{
+	padding-left:5px;
+	padding-right:5px;
+	vertical-align:middle;
+	background-color:#444 !important;
+	color:#fff;
+	z-index:6;
+}
+
+.currentDayLine{
+	background-color:#FFCC00 !important;
+}
+
+.dayGrid{
+	padding:0px;
+	border-top:none;
+	border-left:none;
+	position:relative;
+	background-image:url(../../images/grid.gif);
+	background-repeat:repeat-x;
+	
+	overflow:hidden;
+}
+
+.preLinkHover{
+	background-color:bisque !important;
+	border:1px #000 dashed;
+	color:inherit;
+}
+
+.gridCells{
+	border-left:none;
+	position:relative;
+	display:inline-block;
+	vertical-align:top;
+	
+	
+	/* for when it's a list */
+	list-style:none; 
+	margin:0px; 
+	padding:0px;
+}
+
+.jumpImage{
+	width:5px;
+	margin-right:4px;
+	border:none;
+}
+.scrollRight{
+	display:inline-block;
+	padding-left:4px;
+	margin-right:4px;
+	border:none;
+}
+
+.glyphicon.glyphicon-forward{
+  margin-right:2px;
+  color:#555;
+}
+
+.glyphicon.glyphicon-forward:hover{
+	color:#f1f1f1;
+}
+
+.gridCells li{
+	/* for when it's a list */
+	display:inline-block;
+	float:left;
+	border-top:none;
+	border-left:none;
+	height:25px;
+	border-left:1px #dfdfdf solid;
+	background-color:aliceblue;
+
+}
+
+.taskDescription{
+}
+
+.tDescription a{
+	color:inherit;
+	text-decoration:none;
+}
+.tDescription a:hover{
+	text-decoration:underline;
+}
+
+.taskDescription, .gridCells{
+	height:25px;
+	background-color:#f1f1f1;
+}
+
+.gridCells td{
+	border-top:none;
+	height:25px;
+	border-left:1px #dfdfdf solid;
+	background-color:aliceblue;
+}
+
+.dtDays.first{
+}
+
+/* required for firefox and absolute positioning */
+.barWrap{
+	position:relative;
+	/*background:aliceblue;*/
+	height:25px;
+}
+
+.barWrap a{
+	display:inline;
+	width:inherit;
+}
+
+.bar .startInner{
+	position:absolute;
+	margin-left:1px;
+	color:#000;
+	float:left;
+	top:1px;
+	font-size:.8em;
+	
+	padding-left:0px;
+	padding-right:3px;
+	display:inline;
+	cursor:pointer;
+	
+	border-radius:0px;
+	
+}
+
+.bar .durInner{
+	cursor:pointer;
+	position:absolute;
+	right:0px;
+	margin-right:1px;
+	float:right;
+	color:#000;
+	top:1px;
+	border-radius:0px;
+	padding-left:1px;
+	padding-right:0px;	
+	font-size:.8em;
+	display:inline;
+}
+
+.textOnBar{
+	margin-left:100%;
+	padding-left:10px;
+	position:relative;
+	z-index:auto;
+}
+
+.dragDate{
+	margin-left:100%;
+	border:1px #c0c0c0 solid;
+	position:absolute;
+	background-color:#fff;
+	top:-18px;
+	left:1px;
+	min-width:20px;
+	text-align:center;
+	display:none;
+}
+
+.bar{
+	position:absolute;
+	height:15px;
+	border:1px #414141 solid;
+	background-color:#000;
+	
+	top:4px;
+	z-index:1;
+	background: #87e0fd;
+	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzg3ZTBmZCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjQwJSIgc3RvcC1jb2xvcj0iIzUzY2JmMSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwNWFiZTAiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+	background: -moz-linear-gradient(top,  #87e0fd 0%, #53cbf1 40%, #05abe0 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#87e0fd), color-stop(40%,#53cbf1), color-stop(100%,#05abe0));
+	background: -webkit-linear-gradient(top,  #87e0fd 0%,#53cbf1 40%,#05abe0 100%);
+	background: -o-linear-gradient(top,  #87e0fd 0%,#53cbf1 40%,#05abe0 100%);
+	background: -ms-linear-gradient(top,  #87e0fd 0%,#53cbf1 40%,#05abe0 100%);
+	background: linear-gradient(to bottom,  #87e0fd 0%,#53cbf1 40%,#05abe0 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#87e0fd', endColorstr='#05abe0',GradientType=0 );
+	
+	
+}
+
+.bar a{
+	position:absolute;
+	width:100%;
+	height:inherit;
+}
+
+/* Formula for Bars 
+
+Left Position:	(cell width * (start day - 1)) + (start day)
+Bar Width: 		(duration * cell width) + (duration - 1)
+
+*/
+
+.controls{
+	margin-top:20px;
+	margin-bottom:5px;
+
+	padding:20px;
+	border-radius:10px;
+}
+
+.ui-datepicker{
+	z-index:10 !important;
+}
+
+.controls table td{
+	border:none;
+	border-collapse:separate;
+	padding:5px;
+	padding-top:0px;
+}
+
+.controls input[type=text], .controls input[type=number]{
+	width:300px;
+}
+
+
+
+#listPlugin{
+	
+}
+
+
+
+/* HAMBURGER MENU STYLES */
+
+.listWrap{
+	margin:auto;
+	height:auto;
+	position:relative;
+	top:200px;
+	padding:0px;
+}
+
+.listTitle{
+	background-color:#636363;
+	box-shadow:inset 0px -1px 0px #888, 0px 0px 3px #444;
+	border:1px #333 solid;
+	border-radius:3px;
+	position:relative;
+
+	
+}
+
+.dropList input[type=checkbox]{
+	position:relative;
+	vertical-align:middle;
+	top:-1px;
+}
+
+.dropList{
+	list-style:none;
+	margin:0px;
+	padding-left:0px;
+}
+
+.dropList li{
+	padding:3px 8px 2px 0px;
+	color:#000;
+	position:relative;
+	border-radius:0px;
+	white-space:nowrap;
+}
+
+.dropList li:hover{
+	background-color:#f1f1f1;	
+	cursor:pointer;
+}
+
+.hMenu{
+	position:relative;
+	background-color:#000;
+	margin-top:2px;
+	margin-bottom:1px;
+	border:1px #000 solid;
+	/*box-shadow: 0 1px 2px -1px #f1f1f1;*/
+	border-radius:0px;
+}
+
+.hMenu:hover{
+	/*box-shadow:0px 0px 1px #000;*/
+	/*border:1px #222 solid;*/
+	background-color:#555;
+}
+
+.hMenuActive{
+	/*border:1px #222 solid;*/
+	border-radius:0px;
+	box-shadow:inset 0px 2px 3px #000;
+	background-color:#555;
+	/*top:8px;
+	left:1px;*/
+}
+
+.menuWrap{
+	display:inline-block;
+	position:relative;
+}
+
+.menuDrop{
+	position:absolute;
+	background-color:#fff;
+	border:1px #222 solid;
+	border-radius:0px;
+	padding-top:10px;
+	padding-right:6px;
+	padding-bottom:7px;
+	padding-left:8px;
+	box-shadow:0px 0px 3px #000;
+	height:auto;
+	top:40px;
+	left:0px;
+	min-width:490px;
+	z-index:100;
+	color:#000;
+	display:none;
+}
+
+
+.menuNotch{
+	position:absolute;
+	height:13px;
+	width:13px;
+	border-left:1px #fff solid;
+	border-top:1px #fff solid;
+	background-color:#fff;
+	-webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    transform: rotate(45deg);
+	z-index:4;
+	top:-7px;
+}
+
+.menuDrop hr{
+  margin-top:10px;
+  margin-bottom:8px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

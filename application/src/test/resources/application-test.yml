@@ -15,6 +15,9 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: true
+  config:
+    import:
+      - migration-config-test.yml
 server:
   servlet:
     context-path: /api/v1

@@ -32,8 +32,9 @@
             **/Admin**, **/*Serializer.java, **/*serializer.java, **/*Constants.java, **/RouterValidator.java,
             **Configuration.java
         </sonar.coverage.exclusions>
+        <sonar.organization>sergeiragaev</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
-
     <dependencyManagement>
         <dependencies>
             <dependency>

@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 class MigrationControllerIT  extends BaseIntegrationTest {
-    private static final String TEST_DATA_FILE_NAME = "src/test/resources/SolidBuildersDatabaseFixed.zip";
+    private static final String TEST_DATA_FILE_NAME = "src/test/resources/testdata.zip";
     private static final String TEST_DATA_NON_ZIP_FILE_NAME = "src/test/resources/NonZipFile.zip";
 
     @BeforeEach

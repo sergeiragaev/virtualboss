@@ -10,8 +10,14 @@ import java.io.FileNotFoundException;
 @Component
 public class DBFReaderFactory {
     public DBFReader createReader(String dbfPath, String memoPath) throws FileNotFoundException {
-        DBFReader reader = new DBFReader(new FileInputStream(dbfPath));
-        if (memoPath != null) reader.setMemoFile(new File(memoPath));
-        return reader;
+        try {
+            DBFReader reader = new DBFReader(new FileInputStream(dbfPath));
+            if (memoPath != null) reader.setMemoFile(new File(memoPath));
+            return reader;
+        } catch (FileNotFoundException e) {
+            DBFReader reader = new DBFReader(new FileInputStream(dbfPath.toUpperCase()));
+            if (memoPath != null) reader.setMemoFile(new File(memoPath.toUpperCase()));
+            return reader;
+        }
     }
 }

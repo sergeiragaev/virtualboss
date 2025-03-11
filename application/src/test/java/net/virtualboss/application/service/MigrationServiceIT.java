@@ -27,6 +27,6 @@ class MigrationServiceIT extends BaseIntegrationTest {
                         .name(rs.getString("name"))
                         .build()
         );
-        assertEquals(10, employees.size());
+        assertEquals(3, employees.size());
     }
 }

@@ -53,6 +53,7 @@ public class UploadDataBaseService {
                 zipFile.extractFile(fileHeader, tempDir.toString(), lowerEntryName);
             }
         } catch (ZipException e) {
+            deleteDirectory(tempDir);
             log.info("Error extracting file {}: {}", file, e.getMessage());
         } finally {
             Files.delete(zip.toPath());
@@ -60,12 +61,16 @@ public class UploadDataBaseService {
 
         service.migrate(destination);
 
+        deleteDirectory(dir);
+
+        return "Data added";
+    }
+
+    private void deleteDirectory(Path dir) throws IOException {
         try (Stream<Path> paths = Files.walk(dir)) {
             paths.sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
         }
-
-        return "Data added";
     }
 }

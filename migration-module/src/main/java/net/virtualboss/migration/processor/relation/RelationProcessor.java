@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 @Log4j2
@@ -52,7 +53,7 @@ public class RelationProcessor extends BaseEntityProcessor {
                 path + "/" + fromEntity.getDbfFile(),
                 path + "/" + fromEntity.getMemoFile())) {
             DBFRow row;
-            List<Object[]> batchArgs = new ArrayList<>();
+            List<Object[]> batchArgsEmbedded = new CopyOnWriteArrayList<>();
 
             while ((row = reader.nextRow()) != null) {
                 String sourceFromId = row.getString(fromEntity.getIdFieldSource());
@@ -73,18 +74,18 @@ public class RelationProcessor extends BaseEntityProcessor {
 
                             if (toUuid == null) return;
 
-                            batchArgs.add(new Object[]{fromUuid, toUuid});
+                            batchArgsEmbedded.add(new Object[]{fromUuid, toUuid});
 
-                            if (batchArgs.size() >= migrationConfig.getBatchSize()) {
-                                executeBatchInsert(relation, batchArgs);
-                                batchArgs.clear();
+                            if (batchArgsEmbedded.size() >= migrationConfig.getBatchSize()) {
+                                executeBatchInsert(relation, batchArgsEmbedded);
+                                batchArgsEmbedded.clear();
                             }
                         });
             }
 
-            if (!batchArgs.isEmpty()) {
-                executeBatchInsert(relation, batchArgs);
-                batchArgs.clear();
+            if (!batchArgsEmbedded.isEmpty()) {
+                executeBatchInsert(relation, batchArgsEmbedded);
+                batchArgsEmbedded.clear();
             }
         } catch (Exception e) {
             throw new MigrationException(
@@ -100,7 +101,7 @@ public class RelationProcessor extends BaseEntityProcessor {
         try (DBFReader reader = dbfReaderFactory.createReader(
                 path + "/" + sourceFile, null)) {
             DBFRow row;
-            List<Object[]> batchArgs = new ArrayList<>();
+            List<Object[]> batchArgs = new CopyOnWriteArrayList<>();
 
             while ((row = reader.nextRow()) != null) {
                 Object sourceFromId = processColumn(row, relation.getFrom());

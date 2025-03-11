@@ -1,6 +1,7 @@
 package net.virtualboss.application.service;
 
 import net.virtualboss.common.exception.CircularLinkingException;
+import net.virtualboss.common.exception.EntityNotFoundException;
 import net.virtualboss.common.model.entity.Task;
 import net.virtualboss.common.repository.ContactRepository;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
@@ -148,8 +149,10 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         TaskFilter filter = new TaskFilter();
         String savedTaskId = savedTaskMap.get("TaskNumber").toString();
         filter.setTaskIds(Collections.singletonList(savedTaskId));
-        filter.setJobIds(Collections.singletonList(savedTaskMap.get("JobId").toString()));
-        filter.setContactIds(Collections.singletonList(savedTaskMap.get("ContactId").toString()));
+        filter.setJobIds(Collections.singletonList(savedTaskMap.get("ContactId").toString()));
+        filter.setContactIds(Collections.singletonList(savedTaskMap.get("JobId").toString()));
+        String taskId = savedTaskMap.get("TaskId").toString();
+        filter.setLinkingTask(taskId);
         filter.setIsDateRange(true);
         filter.setIsDeleted(false);
         filter.setThisDate(LocalDate.now().minusDays(10));
@@ -208,6 +211,22 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     }
 
     @Test
+    @DisplayName("create pending task and trying to link with non existent")
+    @Transactional
+    void createPendingTaskAndTryingToLinkWithNonExistent() {
+        create2PendingSequentialTasks();
+        long firstTaskNumber = taskRepository.findAll().stream().map(Task::getNumber).min(Long::compareTo).orElseThrow();
+        String firstTaskId = taskRepository.findByNumber(firstTaskNumber).orElseThrow().getId().toString();
+        UpsertTaskRequest upsertRequest = UpsertTaskRequest.builder().build();
+        CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
+        String pendingRef = String.valueOf(firstTaskNumber + 4);
+        TaskReferencesRequest taskRefRequest = TaskReferencesRequest.builder().pending(pendingRef).build();
+        assertThrows(EntityNotFoundException.class,
+                () -> taskService.saveTask(firstTaskId, upsertRequest, customFieldsAndLists, taskRefRequest)
+        );
+    }
+
+    @Test
     @DisplayName("Create 2 pending sequential tasks and changing first task dates")
     @Transactional
     void create2PendingSequentialTasksAndChangingFirstTaskDates() {
@@ -224,6 +243,11 @@ class TaskServiceTestIT extends TestDependenciesContainer {
 
         taskService.updateTaskByStartAndFinish(firstTask.getId().toString(),
                 firstTask.getTargetStart().plusDays(5), null);
+        assertNotEquals(oldFirstTaskStart, firstTask.getTargetStart());
+        assertNotEquals(oldFirstTaskDuration, firstTask.getDuration());
+
+        taskService.updateTaskByStartAndFinish(firstTask.getId().toString(),
+                firstTask.getTargetStart().minusDays(15), null);
         assertNotEquals(oldFirstTaskStart, firstTask.getTargetStart());
         assertNotEquals(oldFirstTaskDuration, firstTask.getDuration());
 

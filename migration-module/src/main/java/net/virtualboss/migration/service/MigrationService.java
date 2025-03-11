@@ -9,6 +9,7 @@ import net.virtualboss.field.service.FieldService;
 import net.virtualboss.field.web.dto.FieldDto;
 import net.virtualboss.migration.processor.EntityProcessor;
 import net.virtualboss.migration.processor.relation.RelationProcessor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -26,11 +27,16 @@ public class MigrationService {
 
     private final RelationProcessor relationProcessor;
 
+    @Value("${migration.test-data-path}")
+    private String testDataPath;
+
     public void migrate(String dataPath) {
 
         if (dataPath == null) {
-            dataPath = "application/src/test/resources/testdata";
+            dataPath = testDataPath;
         }
+
+
 
         migrateFields(dataPath);
 

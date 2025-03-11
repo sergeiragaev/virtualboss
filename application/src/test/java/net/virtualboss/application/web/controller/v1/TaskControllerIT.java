@@ -144,6 +144,24 @@ class TaskControllerIT extends TestDependenciesContainer {
     }
 
     @Test
+    @DisplayName("update task's dates by it's id is correct test")
+    void updateTaskDates_CorrectUpdate() throws Exception {
+        Task newTask = saveAndGetTestTaskToUpdate();
+        mockMvc.perform(put("/task")
+                        .param("taskId", String.valueOf(taskRepository.findAll().get(0).getId()))
+                        .param("Start", String.valueOf(LocalDate.now()))
+                )
+                .andExpect(jsonPath("[0].TaskTargetStart").value(
+                        String.valueOf(LocalDate.now())))
+                .andExpect(status().isOk()
+                );
+
+        Task task = taskService.getTaskById(newTask.getId().toString());
+        assertEquals(task.getNotes(), newTask.getNotes());
+        assertEquals(task.getTargetStart(), LocalDate.now());
+    }
+
+    @Test
     @DisplayName("update assigning task to Unassigned contact and empty job is correct test")
     void updateAssigningTaskToUnassignedContactAndEmptyJob_CorrectUpdate() throws Exception {
         Task newTask = saveAndGetTestTaskToUpdate();

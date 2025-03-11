@@ -1,8 +1,8 @@
-package net.virtualboss.application.service.migration;
+package net.virtualboss.application.service;
 
-import net.virtualboss.application.service.BaseIntegrationTest;
 import net.virtualboss.common.model.entity.Employee;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
@@ -13,14 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 class MigrationServiceIT extends BaseIntegrationTest {
 
-    private static final String TEST_DATA_PATH = "src/test/resources/testdata";
+    @Value("${migration.test-data-path}")
+    private String testDataPath;
 
     @Test
     void testMigrateEmployees() {
-        // Запуск миграции
-        migrationService.migrate(TEST_DATA_PATH);
+        migrationService.migrate(testDataPath);
 
-        // Проверка данных в БД
         List<Employee> employees = jdbcTemplate.query(
                 "SELECT * FROM employees",
                 (rs, rowNum) -> Employee.builder()
@@ -28,6 +27,6 @@ class MigrationServiceIT extends BaseIntegrationTest {
                         .name(rs.getString("name"))
                         .build()
         );
-        assertEquals(1, employees.size());
+        assertEquals(10, employees.size());
     }
 }

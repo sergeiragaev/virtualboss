@@ -18,3 +18,8 @@ spring:
 server:
   servlet:
     context-path: /api/v1
+file:
+  upload:
+    path: "src/main/resources/temp/"
+migration:
+  test-data-path: "src/test/resources/testdata"

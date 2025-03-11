@@ -5,6 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,9 +23,12 @@ public class UploadDataBaseService {
 
     private final MigrationService service;
 
+    @Value("${file.upload.path}")
+    private String uploadPath;
+
     public String convertData(MultipartFile file) throws IOException {
 
-        String destination = "application/src/main/resources/temp/" + UUID.randomUUID();
+        String destination = uploadPath + UUID.randomUUID();
         Path dir = Path.of(destination);
         Path tempDir = Files.createDirectory(dir);
 

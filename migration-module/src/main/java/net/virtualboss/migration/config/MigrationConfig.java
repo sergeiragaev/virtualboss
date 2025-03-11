@@ -16,6 +16,7 @@ public class MigrationConfig {
     private Map<String, EntityConfig> entities;
     private Integer batchSize;
     private List<RelationConfig> relations;
+    private String testDataPath;
 
     @Getter
     @Setter

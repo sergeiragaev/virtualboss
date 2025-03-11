@@ -139,7 +139,30 @@ class JobServiceTestIT extends TestDependenciesContainer {
         jobService.createJob(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
         CommonFilter filter = new CommonFilter();
         filter.setFindString("custom");
-        List<Map<String, Object>> result = jobService.findAll("JobId", filter);
+        List<Map<String, Object>> result = jobService.findAll(null, filter);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    @DisplayName("Search jobs with no filter set")
+    @Transactional
+    void searchAllJobs() {
+        jobService.createJob(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
+        CommonFilter filter = new CommonFilter();
+        List<Map<String, Object>> result = jobService.findAll(null, filter);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    @DisplayName("Search jobs with blank filter in find string")
+    @Transactional
+    void searchAllWithBlankFilterJobs() {
+        jobService.createJob(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
+        CommonFilter filter = new CommonFilter();
+        filter.setFindString(" ");
+        List<Map<String, Object>> result = jobService.findAll(null, filter);
         assertNotNull(result);
         assertEquals(1, result.size());
     }

@@ -55,3 +55,9 @@ server:
   port: 8080
   servlet:
     context-path: /api/v1
+
+file:
+  upload:
+    path: "application/src/main/resources/temp/"
+migration:
+  test-data-path: "application/src/test/resources/testdata"

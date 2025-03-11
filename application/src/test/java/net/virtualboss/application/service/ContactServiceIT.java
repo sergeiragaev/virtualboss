@@ -109,7 +109,30 @@ class ContactServiceIT extends TestDependenciesContainer {
         contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
         CommonFilter filter = new CommonFilter();
         filter.setFindString("custom");
-        List<Map<String, Object>> result = contactService.findAll("ContactId", filter);
+        List<Map<String, Object>> result = contactService.findAll(null, filter);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    @DisplayName("Search contacts with not filter set")
+    @Transactional
+    void searchAllContacts() {
+        contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
+        CommonFilter filter = new CommonFilter();
+        List<Map<String, Object>> result = contactService.findAll(null, filter);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    @DisplayName("Search contacts with blank filter find string")
+    @Transactional
+    void searchAllWithBlankContacts() {
+        contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
+        CommonFilter filter = new CommonFilter();
+        filter.setFindString(" ");
+        List<Map<String, Object>> result = contactService.findAll(null, filter);
         assertNotNull(result);
         assertEquals(1, result.size());
     }

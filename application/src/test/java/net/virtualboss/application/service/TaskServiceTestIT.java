@@ -3,6 +3,9 @@ package net.virtualboss.application.service;
 import net.virtualboss.common.exception.CircularLinkingException;
 import net.virtualboss.common.exception.EntityNotFoundException;
 import net.virtualboss.common.model.entity.Task;
+import net.virtualboss.common.model.enums.DateCriteria;
+import net.virtualboss.common.model.enums.DateRange;
+import net.virtualboss.common.model.enums.DateType;
 import net.virtualboss.common.repository.ContactRepository;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.task.web.dto.TaskFilter;
@@ -162,6 +165,67 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     }
 
     @Test
+    @DisplayName("Search task with date filters")
+    @Transactional
+    void searchTaskWithDateFilters() {
+        taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
+        TaskFilter filter = new TaskFilter();
+        filter.setIsDateRange(true);
+        filter.setIsDeleted(false);
+        filter.setDateRange(DateRange.DATE_PERIOD.getValue());
+        filter.setDateFrom(LocalDate.now().minusDays(365));
+        filter.setDateTo(LocalDate.now().minusDays(360));
+        filter.setDateCriteria(DateCriteria.EXACT.getValue());
+        filter.setDateType(DateType.TARGET_FINISH.getValue());
+        List<Map<String, Object>> result = taskService.findAll(null, filter);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Search task with today's date filters")
+    @Transactional
+    void searchTaskWithTodayDateFilters() {
+        taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
+        TaskFilter filter = new TaskFilter();
+        filter.setIsDateRange(true);
+        filter.setIsDeleted(false);
+        filter.setDateCriteria(DateCriteria.EXACT.getValue());
+        filter.setDateType(DateType.ACTUAL_FINISH.getValue());
+        List<Map<String, Object>> result = taskService.findAll(null, filter);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Search specific task by date filters")
+    @Transactional
+    void searchSpecificTaskByDateFilters() {
+        Map<String, Object> savedTaskMap = taskService.createNewTask(
+                generateTestTaskRequest(),
+                generateTestTaskCustomFieldsRequest(),
+                generateTestTaskReferenceRequest());
+        TaskFilter filter = new TaskFilter();
+        String savedTaskId = savedTaskMap.get("TaskId").toString();
+        filter.setIsActive(true);
+        filter.setIsDateRange(true);
+        filter.setIsDeleted(false);
+        filter.setDateType(DateType.ANY_DATE_FIELD.getValue());
+        filter.setDateCriteria(DateCriteria.ON_OR_AFTER.getValue());
+        List<Map<String, Object>> result = taskService.findAll(null, filter);
+        assertNotNull(result);
+        assertFalse(result.get(0).isEmpty());
+        assertEquals(1, result.size());
+        assertEquals(savedTaskId, result.get(0).get("TaskId").toString());
+    }
+
+    @Test
     @DisplayName("Create new task")
     @Transactional
     void createNewTask() {
@@ -246,6 +310,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         assertNotEquals(oldFirstTaskStart, firstTask.getTargetStart());
         assertNotEquals(oldFirstTaskDuration, firstTask.getDuration());
 
+        entityManager.flush();
+        entityManager.clear();
+
         taskService.updateTaskByStartAndFinish(firstTask.getId().toString(),
                 firstTask.getTargetStart().minusDays(15), null);
         assertNotEquals(oldFirstTaskStart, firstTask.getTargetStart());
@@ -255,7 +322,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         entityManager.clear();
 
         taskService.updateTaskByStartAndFinish(firstTask.getId().toString(),
-                null, firstTask.getTargetFinish().plusDays(5));
+                null, firstTask.getTargetFinish().plusDays(25));
 
         assertNotEquals(oldLastTaskFinish, taskRepository.findByNumber(firstTaskNumber + 2).orElseThrow().getTargetFinish());
         assertEquals(oldLastTaskDuration, lastTask.getDuration());

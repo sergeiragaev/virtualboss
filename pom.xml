@@ -10,9 +10,9 @@
     </parent>
 
     <groupId>net.virtualboss</groupId>
-    <artifactId>virtualboss-app</artifactId>
+    <artifactId>virtualboss</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>virtualboss-app</name>
+    <name>virtualboss</name>
     <description>VirtualBoss project</description>
     <packaging>pom</packaging>
 
@@ -34,6 +34,7 @@
         </sonar.coverage.exclusions>
         <sonar.organization>sergeiragaev</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.projectKey>sergeiragaev_virtualboss</sonar.projectKey>
     </properties>
     <dependencyManagement>
         <dependencies>

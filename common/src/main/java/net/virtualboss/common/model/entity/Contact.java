@@ -1,5 +1,6 @@
 package net.virtualboss.common.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -83,8 +84,9 @@ public class Contact {
     @Builder.Default
     private Boolean isDeleted = false;
 
-    @OneToMany(cascade = DETACH)
+    @OneToMany(cascade = DETACH, mappedBy = "contact")
     @Builder.Default
+    @JsonIgnore
     private Set<Task> tasks = new HashSet<>();
 
     @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})

@@ -94,7 +94,7 @@ public class Task implements Comparable<Task> {
     private Boolean isDeleted = false;
 
     @ManyToOne
-    @JoinColumn(nullable = false, name = "contact_id", referencedColumnName = "id")
+    @JoinColumn(nullable = false, name = "contact_id")
     private Contact contact;
 
     @ManyToOne

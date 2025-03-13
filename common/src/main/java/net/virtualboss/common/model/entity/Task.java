@@ -11,7 +11,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.lang.NonNull;
 
 import java.text.MessageFormat;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -169,65 +168,8 @@ public class Task implements Comparable<Task> {
         return number.compareTo(other.getNumber());
     }
 
-
-    public void calculateDates(Task task) {
-        if (!task.getFollows().isEmpty()) calculateStart(task);
-        calculateFinish(task);
-        if (task.getStatus() == TaskStatus.ACTIVE) task.setActualFinish(null);
-
-
-        if (task.getPendingTasks() != null) {
-            for (Task current : task.getPendingTasks()) {
-                calculateDates(current);
-            }
-        }
-    }
-
-    private void calculateStart(Task task) {
-        LocalDate start = LocalDate.ofEpochDay(0);
-        int shift = 1;
-        for (Task parentTask : task.getFollows()) {
-            LocalDate parentTaskFinish = parentTask.getStatus() == TaskStatus.ACTIVE ?
-                    parentTask.getTargetFinish() : parentTask.getActualFinish();
-            start = start.isBefore(parentTaskFinish) ? parentTaskFinish : start;
-            shift = task.getFinishPlus();
-        }
-        start = getValidDate(shift, start.plusDays(1));
-        task.setTargetStart(start);
-    }
-
-    private void calculateFinish(Task task) {
-        LocalDate finish = getValidDate(task.getDuration(), task.getTargetStart());
-        task.setTargetFinish(finish);
-    }
-
-    private LocalDate getValidDate(int shift, LocalDate date) {
-        date = date.minusDays(1);
-        if (shift == 0) {
-            return getValidDate(1, date);
-        } else {
-            int days = 0;
-            do {
-                date = shift < 0 ? date.minusDays(1) : date.plusDays(1);
-                if (!(date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY)) {
-                    days = shift < 0 ? --days : ++days;
-                }
-            } while (shift != days);
-        }
-        return date;
-    }
-
     public void assignTasksToJobAndContact() {
         if (job != null) job.getTasks().add(this);
         this.getContact().getTasks().add(this);
-    }
-
-    public static void recalculate(Task task) {
-        task.calculateDates(task);
-    }
-
-    public void setTargetStart(LocalDate targetStart) {
-        this.targetStart = getValidDate(1, targetStart);
-        this.targetFinish = getValidDate(this.duration, this.targetStart);
     }
 }

@@ -78,6 +78,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("size", String.valueOf(10))
                         .param("sort", "id asc")
                         .param("isActive", String.valueOf(true))
+                        .param("isDone", String.valueOf(true))
                         .param("dateType", String.valueOf(DateType.TARGET_START.getValue()))
                         .param("isDateRange", String.valueOf(true))
                         .param("dateRange", String.valueOf(DateRange.DATE_PERIOD.getValue()))
@@ -109,9 +110,9 @@ class TaskControllerIT extends TestDependenciesContainer {
                 objectMapper.writeValueAsString(generateTestTaskReferenceRequest()), true);
 
         mockMvc.perform(post("/task" +
-                                taskQueryString +
-                                taskCustomQueryString +
-                                taskReferenceQueryString)
+                             taskQueryString +
+                             taskCustomQueryString +
+                             taskReferenceQueryString)
                 )
                 .andExpect(jsonPath("$.TaskGroups").value("Test task group"))
                 .andExpect(jsonPath("$.TaskCustomField1").value(customFieldsAndLists.getCustomField1()))
@@ -130,8 +131,8 @@ class TaskControllerIT extends TestDependenciesContainer {
         customFL.setCustomField1("new custom field 1 value");
         String updatedCustomFL = getQueryString(objectMapper.writeValueAsString(customFL), true);
         mockMvc.perform(put("/task/" + taskRepository.findAll().get(0).getId() +
-                                updatedTaskQueryString +
-                                updatedCustomFL)
+                            updatedTaskQueryString +
+                            updatedCustomFL)
                 )
                 .andExpect(jsonPath("$.TaskCustomField1").value(
                         customFL.getCustomField1()))
@@ -177,9 +178,9 @@ class TaskControllerIT extends TestDependenciesContainer {
                 .build();
         String updatedReference = getQueryString(objectMapper.writeValueAsString(updatedTaskReference), true);
         mockMvc.perform(put("/task/" + taskRepository.findAll().get(0).getId() +
-                                updatedTaskQueryString +
-                                updatedCustomFL +
-                                updatedReference)
+                            updatedTaskQueryString +
+                            updatedCustomFL +
+                            updatedReference)
                 )
                 .andExpect(jsonPath("$.TaskCustomField1").value(
                         customFL.getCustomField1()))
@@ -201,6 +202,7 @@ class TaskControllerIT extends TestDependenciesContainer {
         return saveTaskInDbAndGet(UpsertTaskRequest.builder()
                         .targetStart(LocalDate.now())
                         .duration(2)
+                        .targetFinish(LocalDate.now().plusDays(2))
                         .notes("Some task notes")
                         .description("Test Task to update")
                         .actualFinish(LocalDate.now())

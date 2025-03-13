@@ -69,6 +69,8 @@ public class TestDependenciesContainer {
     protected ContactMapperV1 contactMapper;
     @Autowired
     protected TaskService taskService;
+    @Autowired
+    protected HolidayRepository holidayRepository;
 
     protected MockMvc mockMvc;
 
@@ -100,6 +102,7 @@ public class TestDependenciesContainer {
             TaskReferencesRequest referenceRequest) {
         Task task = taskMapper.requestToTask(request, customFieldsAndLists, referenceRequest);
         task.setTargetStart(request.getTargetStart());
+        task.setTargetFinish(request.getTargetFinish());
         task.setNumber(taskService.getNextNumberSequenceValue());
         return taskRepository.save(task);
     }
@@ -147,14 +150,17 @@ public class TestDependenciesContainer {
         Random random = new Random();
         int duration = random.nextInt(10) * (random.nextInt(10) > 5 ? -1 : 1);
         int finishPlus = random.nextInt(10) * (random.nextInt(10) > 5 ? -1 : 1);
+        TaskStatus status = random.nextInt(10) > 5 ? TaskStatus.ACTIVE : TaskStatus.DONE;
         return UpsertTaskRequest.builder()
                 .order("100")
                 .notes("Task notes")
                 .duration(duration)
                 .description("Test task")
                 .marked(true)
-                .status(TaskStatus.ACTIVE)
+                .status(status)
                 .targetStart(LocalDate.now())
+                .targetFinish(LocalDate.now().plusDays(duration))
+                .actualFinish(status == TaskStatus.ACTIVE ? null : LocalDate.now().plusDays(duration))
                 .finishPlus(finishPlus)
                 .build();
     }

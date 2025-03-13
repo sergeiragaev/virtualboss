@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/changeset/v1/006-create-employees-table.xml
   - include:
       file: db/changelog/changeset/v1/007-create-links-tables.xml
+  - include:
+      file: db/changelog/changeset/v1/008-insert-holidays-table-and-rules.sql

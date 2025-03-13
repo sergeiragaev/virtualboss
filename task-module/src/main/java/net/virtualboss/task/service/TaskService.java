@@ -47,6 +47,8 @@ public class TaskService {
     private final JobRepository jobRepository;
     private final ContactRepository contactRepository;
     private final TaskMapperV1 taskMapper;
+    private final TaskScheduleService taskScheduleService;
+    private final WorkingDaysCalculator workingDaysCalculator;
 
     @PersistenceContext
     private final EntityManager entityManager;
@@ -261,7 +263,7 @@ public class TaskService {
         BeanUtils.copyNonNullProperties(task, taskFromDb);
         taskFromDb.setJob(task.getJob());
         taskFromDb.assignTasksToJobAndContact();
-        Task.recalculate(taskFromDb);
+        taskScheduleService.recalculateTaskDates(taskFromDb);
         return TaskResponse.getFieldsMap(taskMapper.taskToResponse(taskFromDb), null);
     }
 
@@ -273,7 +275,12 @@ public class TaskService {
             LocalDate targetFinish) {
         Task taskFromDb = getTaskById(id);
         if (targetStart != null) {
-            int workingDays = getWorkingDays(taskFromDb.getTargetStart(), targetStart);
+            targetStart = workingDaysCalculator.addWorkDays(targetStart.minusDays(1), 1, "US");
+            int workingDays = (int) workingDaysCalculator.countBusinessDays(
+                    taskFromDb.getTargetStart(),
+                    targetStart,
+                    "US"
+            );
             if (!taskFromDb.getFollows().isEmpty()) {
                 taskFromDb.setFinishPlus(taskFromDb.getFinishPlus() + workingDays);
             }
@@ -282,10 +289,14 @@ public class TaskService {
             }
             taskFromDb.setTargetStart(targetStart);
         } else {
-            int workingDays = getWorkingDays(taskFromDb.getTargetFinish(), targetFinish);
+            int workingDays = (int) workingDaysCalculator.countBusinessDays(
+                    taskFromDb.getTargetFinish(),
+                    targetFinish,
+                    "US"
+            );
             taskFromDb.setDuration(taskFromDb.getDuration() + workingDays);
         }
-        Task.recalculate(taskFromDb);
+        taskScheduleService.recalculateTaskDates(taskFromDb);
         TaskFilter filter = new TaskFilter();
         List<String> taskNumbers = new ArrayList<>(taskRepository.findAllById(
                         taskRepository.findAllPendingIdsRecursive(taskFromDb.getId()))
@@ -293,20 +304,6 @@ public class TaskService {
         taskNumbers.add(taskFromDb.getNumber().toString());
         filter.setTaskIds(taskNumbers);
         return this.findAll("TaskId,TaskTargetStart,TaskTargetFinish,TaskDuration", filter);
-    }
-
-    private int getWorkingDays(LocalDate oldDate, LocalDate newDate) {
-        if (oldDate.isAfter(newDate)) {
-            return -(int) newDate.datesUntil(oldDate).filter(date -> {
-                int dow = date.getDayOfWeek().getValue();
-                return !(dow == 6 || dow == 7);
-            }).count();
-        } else {
-            return (int) oldDate.datesUntil(newDate).filter(date -> {
-                int dow = date.getDayOfWeek().getValue();
-                return !(dow == 6 || dow == 7);
-            }).count();
-        }
     }
 
     @Transactional
@@ -317,7 +314,12 @@ public class TaskService {
             TaskReferencesRequest referenceRequest) {
         Task task = taskMapper.requestToTask(request, customFieldsAndLists, referenceRequest);
         task.setNumber(getNextNumberSequenceValue());
-        task.setTargetStart(request.getTargetStart());
+        LocalDate validTargetStart =
+                workingDaysCalculator.addWorkDays(
+                        request.getTargetStart().minusDays(1), 1, "US");
+        task.setTargetStart(validTargetStart);
+        task.setTargetFinish(
+                workingDaysCalculator.addWorkDays(validTargetStart, task.getDuration() - 1, "US"));
         entityManager.persist(task);
         return TaskResponse.getFieldsMap(taskMapper.taskToResponse(
                 taskRepository.save(task)), null);
@@ -353,7 +355,7 @@ public class TaskService {
             if (taskIds.contains(parent.getId())) throw new CircularLinkingException(
                     MessageFormat.format(
                             "Cannot make {0} pending {1}, " +
-                                    "because {1} follows {0}",
+                            "because {1} follows {0}",
                             taskFromDb, parent)
             );
         });

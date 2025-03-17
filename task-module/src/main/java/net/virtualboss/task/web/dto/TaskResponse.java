@@ -1,9 +1,14 @@
 package net.virtualboss.task.web.dto;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import net.virtualboss.common.annotation.EntityMapping;
+import net.virtualboss.common.annotation.Flatten;
 import net.virtualboss.common.model.enums.TaskStatus;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.contact.web.dto.ContactResponse;
@@ -15,42 +20,57 @@ import java.util.*;
 
 @Builder
 @Data
-@JsonFilter("TaskResponseFilter")
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TaskResponse {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     @JsonProperty("TaskId")
+    @EntityMapping
     private UUID id;
 
     @JsonProperty("TaskNumber")
+    @EntityMapping
     private Long number;
 
     @JsonProperty("TaskDescription")
+    @EntityMapping
     private String description;
 
     @JsonProperty("TaskTargetStart")
+    @EntityMapping
     private LocalDate targetStart;
 
     @JsonProperty("TaskDuration")
     @Builder.Default
+    @EntityMapping
     private Integer duration = 0;
 
     @JsonProperty("TaskTargetFinish")
+    @EntityMapping
     private LocalDate targetFinish;
 
     @JsonProperty("TaskActualFinish")
+    @EntityMapping
     private LocalDate actualFinish;
 
     @JsonProperty("TaskStatus")
+    @EntityMapping
     private TaskStatus status;
 
     @JsonProperty("TaskOrder")
-    private String order;
+    @EntityMapping
+    private String taskOrder;
 
     @JsonProperty("TaskNotes")
     @Builder.Default
+    @EntityMapping
     private String notes = "";
 
     @JsonProperty("TaskMarked")
     @Builder.Default
+    @EntityMapping
     private String marked = "False";
 
     @JsonProperty("JobNumber")
@@ -58,15 +78,16 @@ public class TaskResponse {
     private String jobNumber = "";
 
     @JsonProperty("JobId")
-    @Builder.Default
-    private String jobId = "";
+    @EntityMapping
+    private UUID jobId;
 
     @JsonProperty("ContactPerson")
     @Builder.Default
     private String contactPerson = "";
 
     @JsonProperty("ContactId")
-    private String contactId;
+    @EntityMapping
+    private UUID contactId;
 
     @JsonProperty("TaskRequested")
     @Builder.Default
@@ -86,21 +107,26 @@ public class TaskResponse {
 
     @JsonProperty("FinishPlus")
     @Builder.Default
+    @EntityMapping
     private Integer finishPlus = 1;
 
     @JsonProperty("TaskDeleted")
     private Boolean isDeleted;
 
-    @JsonProperty("Job")
     @Builder.Default
-    private JobResponse jobResponse = JobResponse.builder().build();
+    @EntityMapping
+    @Flatten
+    private JobResponse job = JobResponse.builder().build();
 
-    @JsonProperty("Contact")
     @Builder.Default
-    private ContactResponse contactResponse = ContactResponse.builder().build();
+    @EntityMapping
+    @Flatten
+    private ContactResponse contact = ContactResponse.builder().build();
 
-    @JsonProperty("CustomFieldsAndLists")
+    @JsonProperty("TaskCustomFieldsAndLists")
     @Builder.Default
+    @Flatten(prefix = "Task")
+    @EntityMapping(path = "customFieldsAndListsValues")
     private CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
 
     public static Map<String, Object> getFieldsMap(TaskResponse taskResponse, Set<String> fieldList) {
@@ -131,15 +157,15 @@ public class TaskResponse {
                                                Map<String, Object> responseMap,
                                                Set<String> fieldList) {
         switch (fieldCaption) {
-            case "Contact" -> {
+            case "contact" -> {
                 processContact(taskResponse, responseMap, fieldList);
                 return true;
             }
-            case "Job" -> {
+            case "job" -> {
                 processJob(taskResponse, responseMap, fieldList);
                 return true;
             }
-            case "CustomFieldsAndLists" -> {
+            case "TaskCustomFieldsAndLists" -> {
                 processCustomFields(taskResponse, responseMap, fieldList);
                 return true;
             }
@@ -152,7 +178,7 @@ public class TaskResponse {
     private static void processContact(TaskResponse taskResponse,
                                        Map<String, Object> responseMap,
                                        Set<String> fieldList) {
-        Optional.ofNullable(taskResponse.contactResponse)
+        Optional.ofNullable(taskResponse.contact)
                 .ifPresent(contact -> responseMap.putAll(
                         ContactResponse.getFieldsMap(contact, fieldList)
                 ));
@@ -161,7 +187,7 @@ public class TaskResponse {
     private static void processJob(TaskResponse taskResponse,
                                    Map<String, Object> responseMap,
                                    Set<String> fieldList) {
-        Optional.ofNullable(taskResponse.jobResponse)
+        Optional.ofNullable(taskResponse.job)
                 .ifPresent(job -> responseMap.putAll(
                         JobResponse.getFieldsMap(job, fieldList)
                 ));

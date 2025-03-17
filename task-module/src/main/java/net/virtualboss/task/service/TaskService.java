@@ -1,25 +1,22 @@
 package net.virtualboss.task.service;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.CircularLinkingException;
 import net.virtualboss.common.exception.EntityNotFoundException;
+import net.virtualboss.common.model.entity.*;
+import net.virtualboss.common.model.enums.*;
+import net.virtualboss.common.util.*;
 import net.virtualboss.task.mapper.v1.TaskMapperV1;
-import net.virtualboss.common.model.entity.Contact;
-import net.virtualboss.common.model.entity.Job;
-import net.virtualboss.common.model.enums.DateCriteria;
-import net.virtualboss.common.model.enums.DateRange;
-import net.virtualboss.common.model.enums.DateType;
-import net.virtualboss.common.model.enums.TaskStatus;
-import net.virtualboss.common.util.BeanUtils;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.task.web.dto.TaskReferencesRequest;
 import net.virtualboss.task.web.dto.TaskResponse;
 import net.virtualboss.task.web.dto.TaskFilter;
-import net.virtualboss.task.repository.criteria.TaskFilterCriteria;
-import net.virtualboss.common.model.entity.Task;
 import net.virtualboss.common.repository.ContactRepository;
 import net.virtualboss.common.repository.JobRepository;
 import net.virtualboss.common.repository.TaskRepository;
@@ -30,7 +27,6 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,30 +62,73 @@ public class TaskService {
     }
 
     public List<Map<String, Object>> findAll(String fields, TaskFilter filter) {
-        Set<String> fieldSet = parseFields(fields);
+        if (fields == null) fields = "TaskId,TaskDescription";
+        Set<String> fieldsSet = parseFields(fields);
+        List<String> fieldsList = List.copyOf(fieldsSet);
+
+        QTask task = QTask.task;
+        QJob job = QJob.job;
+        QContact contact = QContact.contact;
+
+        QFieldValue fieldValueTask = new QFieldValue("fieldValueTask");
+        QField fieldTask = new QField("fieldTask");
+
+        QFieldValue fieldValueJob = new QFieldValue("fieldValueJob");
+        QField fieldJob = new QField("fieldJob");
+
+        QFieldValue fieldValueContact = new QFieldValue("fieldValueContact");
+        QField fieldContact = new QField("fieldContact");
+
+        JPAQueryFactory queryFactory = new JPAQueryFactory(entityManager);
+
         initializeFilterDefaults(filter);
         PageRequest pageRequest = createPageRequest(filter);
+        OrderSpecifier<?>[] orderSpecifiers =
+                QueryDslUtil.getOrderSpecifiers(pageRequest.getSort(), Task.class, "task");
 
-        return taskRepository.findAll(
-                        buildTaskFilterCriteria(filter),
-                        pageRequest
-                ).getContent()
-                .stream()
-                .map(taskMapper::taskToResponse)
-                .map(response -> TaskResponse.getFieldsMap(response, fieldSet))
-                .toList();
+        List<TaskResponse> tasks = queryFactory.select(
+                        QueryDslUtil.buildProjection(TaskResponse.class, task, fieldsList)
+                )
+                .from(task)
+                .leftJoin(task.job, job)
+                .leftJoin(task.contact, contact)
+                .leftJoin(task.customFieldsAndListsValues, fieldValueTask)
+                .leftJoin(job.customFieldsAndListsValues, fieldValueJob)
+                .leftJoin(contact.customFieldsAndListsValues, fieldValueContact)
+                .leftJoin(fieldValueTask.field, fieldTask)
+                .leftJoin(fieldValueJob.field, fieldJob)
+                .leftJoin(fieldValueContact.field, fieldContact)
+                .where(
+                        buildTaskFilterCriteriaQuery(filter)
+                )
+                .orderBy(orderSpecifiers)
+                .offset(pageRequest.getOffset())
+                .limit(pageRequest.getPageSize())
+                .groupBy(task.id).groupBy(task.contact).groupBy(task.job)
+                .fetch();
+
+        return tasks.stream().map(DtoFlattener::flatten).toList();
     }
 
     private Set<String> parseFields(String fields) {
-        String defaultFields = "TaskId,TaskDescription";
-        return Arrays.stream((fields != null ? fields : defaultFields).split(","))
+        Set<String> fieldsSet = Arrays.stream(fields.split(","))
+                .map(string -> {
+                    if (string.contains("TaskCustom")) return "TaskCustomFieldsAndLists." + string;
+                    if (string.contains("JobCustom")) return "job.JobCustomFieldsAndLists." + string;
+                    if (string.contains("ContactCustom")) return "contact.ContactCustomFieldsAndLists." + string;
+                    if (string.startsWith("Job")) return "job." + string;
+                    if (string.startsWith("Contact")) return "contact." + string;
+                    return string;
+                })
                 .collect(Collectors.toSet());
+        fieldsSet.addAll(List.of("TaskId", "job.JobId", "contact.ContactId"));
+        return fieldsSet;
     }
 
     private void initializeFilterDefaults(TaskFilter filter) {
         if (filter.getSize() == null) filter.setSize(100);
         if (filter.getPage() == null) filter.setPage(1);
-        if (filter.getSort() == null) filter.setSort("description asc");
+        if (filter.getSort() == null) filter.setSort("number asc");
     }
 
     private PageRequest createPageRequest(TaskFilter filter) {
@@ -121,8 +160,8 @@ public class TaskService {
         return null;
     }
 
-    private Specification<Task> buildTaskFilterCriteria(TaskFilter filter) {
-        return TaskFilterCriteria.builder()
+    private BooleanBuilder buildTaskFilterCriteriaQuery(TaskFilter filter) {
+        return net.virtualboss.task.repository.querydsl.TaskFilterCriteria.builder()
                 .findString(StringUtils.isBlank(filter.getFindString()) ? null : filter.getFindString())
                 .status(determineTaskStatus(filter))
                 .marked(filter.getIsMarked())
@@ -139,8 +178,7 @@ public class TaskService {
                 .contactList(getContactsByIds(filter.getContactIds()))
                 .taskList(getTaskIdsByNumbers(filter.getTaskIds()))
                 .excludeTaskIds(getExcludedTaskIds(filter))
-                .build()
-                .getSpecification();
+                .build().toPredicate();
     }
 
     private List<UUID> getExcludedTaskIds(TaskFilter filter) {
@@ -275,7 +313,7 @@ public class TaskService {
             LocalDate targetFinish) {
         Task taskFromDb = getTaskById(id);
         if (targetStart != null) {
-            targetStart = workingDaysCalculator.addWorkDays(targetStart.minusDays(1), 1, "US");
+            targetStart = workingDaysCalculator.addWorkDays(targetStart, 0, "US");
             int workingDays = (int) workingDaysCalculator.countBusinessDays(
                     taskFromDb.getTargetStart(),
                     targetStart,
@@ -303,7 +341,7 @@ public class TaskService {
                 .stream().map(Task::getNumber).map(String::valueOf).toList());
         taskNumbers.add(taskFromDb.getNumber().toString());
         filter.setTaskIds(taskNumbers);
-        return this.findAll("TaskId,TaskTargetStart,TaskTargetFinish,TaskDuration", filter);
+        return findAll("TaskId,TaskTargetStart,TaskTargetFinish,TaskDuration", filter);
     }
 
     @Transactional
@@ -313,7 +351,7 @@ public class TaskService {
             CustomFieldsAndLists customFieldsAndLists,
             TaskReferencesRequest referenceRequest) {
         Task task = taskMapper.requestToTask(request, customFieldsAndLists, referenceRequest);
-        task.setNumber(getNextNumberSequenceValue());
+        task.setNumber(getNextTaskNumberSequenceValue());
         LocalDate validTargetStart =
                 workingDaysCalculator.addWorkDays(
                         request.getTargetStart().minusDays(1), 1, "US");
@@ -333,7 +371,7 @@ public class TaskService {
         taskRepository.save(task);
     }
 
-    public Long getNextNumberSequenceValue() {
+    public Long getNextTaskNumberSequenceValue() {
         return (Long) entityManager.createNativeQuery("SELECT NEXTVAL('tasks_number_seq')")
                 .getSingleResult();
     }
@@ -360,4 +398,5 @@ public class TaskService {
             );
         });
     }
+
 }

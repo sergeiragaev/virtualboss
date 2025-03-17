@@ -1,4 +1,4 @@
-package net.virtualboss.common.model.entity;
+package net.virtualboss.common.repository.projection;
 
 import java.time.LocalDate;
 

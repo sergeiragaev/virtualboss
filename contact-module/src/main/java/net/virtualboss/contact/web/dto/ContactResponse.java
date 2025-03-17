@@ -1,8 +1,13 @@
 package net.virtualboss.contact.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import net.virtualboss.common.annotation.EntityMapping;
+import net.virtualboss.common.annotation.Flatten;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 
 import java.lang.reflect.Field;
@@ -10,83 +15,85 @@ import java.util.*;
 
 @Data
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@NoArgsConstructor
+@AllArgsConstructor
 public class ContactResponse {
     @JsonProperty("ContactId")
+    @EntityMapping
     private UUID id;
 
     @JsonProperty("ContactCompany")
-    @Builder.Default
-    private String company = "";
+    @EntityMapping
+    private String company;
 
     @JsonProperty("ContactProfession")
-    @Builder.Default
-    private String profession = "";
+    @EntityMapping
+    private String profession;
 
     @JsonProperty("ContactPerson")
     private String person;
 
-    public String getPerson() {
-        return firstName + " " + lastName;
-    }
-
     @JsonProperty("ContactFirstName")
-    @Builder.Default
-    private String firstName = "";
+    @EntityMapping
+    private String firstName;
 
     @JsonProperty("ContactLastName")
-    @Builder.Default
-    private String lastName = "";
+    @EntityMapping
+    private String lastName;
 
     @JsonProperty("ContactSupervisor")
-    @Builder.Default
-    private String supervisor = "";
+    @EntityMapping
+    private String supervisor;
 
     @JsonProperty("ContactSpouse")
-    @Builder.Default
-    private String spouse = "";
+    @EntityMapping
+    private String spouse;
 
     @JsonProperty("ContactTaxID")
-    @Builder.Default
-    private String taxId = "";
+    @EntityMapping
+    private String taxId;
 
     @JsonProperty("ContactWebSite")
-    @Builder.Default
-    private String webSite = "";
+    @EntityMapping
+    private String webSite;
 
     @JsonProperty("ContactWorkersCompDate")
-    @Builder.Default
-    private String workersCompDate = "";
+    @EntityMapping
+    private String workersCompDate;
 
     @JsonProperty("ContactInsuranceDate")
-    @Builder.Default
-    private String insuranceDate = "";
+    @EntityMapping
+    private String insuranceDate;
 
     @JsonProperty("ContactComments")
-    @Builder.Default
-    private String comments = "";
+    @EntityMapping
+    private String comments;
 
     @JsonProperty("ContactNotes")
-    @Builder.Default
-    private String notes = "";
+    @EntityMapping
+    private String notes;
 
     @JsonProperty("ContactFax")
-    @Builder.Default
-    private String fax = "";
+    @EntityMapping
+    private String fax;
 
     @JsonProperty("ContactEmail")
-    @Builder.Default
-    private String email = "";
+    @EntityMapping
+    private String email;
 
     @JsonProperty("ContactPhones")
-    @Builder.Default
-    private String phones = "";
+    @EntityMapping
+    private String phones;
 
     @JsonProperty("ContactDeleted")
     @Builder.Default
     private Boolean isDeleted = false;
 
-    @JsonProperty("CustomFieldsAndLists")
+    @JsonProperty("ContactCustomFieldsAndLists")
     @Builder.Default
+    @Flatten(prefix = "Contact")
+    @EntityMapping(path = "customFieldsAndListsValues")
     private CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
 
     @JsonProperty("ContactGroups")
@@ -126,7 +133,7 @@ public class ContactResponse {
             return true;
         }
 
-        if ("CustomFieldsAndLists".equals(fieldCaption)) {
+        if ("ContactCustomFieldsAndLists".equals(fieldCaption)) {
             processCustomFields(contactResponse, responseMap, fieldList);
             return true;
         }

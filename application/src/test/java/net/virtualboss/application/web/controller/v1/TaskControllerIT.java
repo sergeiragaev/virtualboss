@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -66,6 +67,7 @@ class TaskControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("search tasks with specific criteria api test")
+    @Transactional
     void searchTasks() throws Exception {
         UpsertTaskRequest testTaskRequest = generateTestTaskRequest();
         TaskReferencesRequest testTaskReference = generateTestTaskReferenceRequest();
@@ -73,7 +75,8 @@ class TaskControllerIT extends TestDependenciesContainer {
                 generateTestTaskCustomFieldsRequest(),
                 testTaskReference);
         mockMvc.perform(get("/task")
-                        .param("fields", "TaskId,TaskDescription,TaskCustomField1")
+                        .param("fields", "TaskId,TaskDescription,TaskCustomField1,TaskStatus," +
+                                         "JobCustomList1,ContactCustomField4,JobNumber,ContactCompany")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("sort", "id asc")
@@ -91,7 +94,13 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("findString", "Subdivision")
                 )
                 .andExpect(jsonPath("[0].TaskDescription").value(testTaskRequest.getDescription()))
+                .andExpect(jsonPath("[0].TaskStatus").value(testTaskRequest.getStatus().toCamelCase()))
+                .andExpect(jsonPath("[0].JobNumber").value(testTaskReference.getJobNumber()))
+                .andExpect(jsonPath("[0].ContactCompany").value(
+                        contactRepository.getReferenceById(UUID.fromString(testTaskReference.getContactId())).getCompany()))
                 .andExpect(jsonPath("[0].TaskCustomField1").value("task custom field 1"))
+                .andExpect(jsonPath("[0].JobCustomList1").value("job custom list 1"))
+                .andExpect(jsonPath("[0].ContactCustomField4").value("contact custom field 4"))
                 .andExpect(status().isOk());
     }
 

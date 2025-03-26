@@ -65,7 +65,7 @@ public class QueryDslUtil {
             if (dtoField.getType().equals(CustomFieldsAndLists.class)) {
                 Matcher matcher = CUSTOM_FIELD_PATTERN.matcher(dtoFieldName);
                 if (matcher.matches()) {
-                    String entityType = matcher.group(1); // Task, Job или Contact
+                    String entityType = matcher.group(1); // Task, Job or Contact
                     return processCustomField(nestedFields, entityType);
                 }
             }

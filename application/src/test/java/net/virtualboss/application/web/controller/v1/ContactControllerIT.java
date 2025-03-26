@@ -108,7 +108,7 @@ class ContactControllerIT extends TestDependenciesContainer {
         UpsertContactRequest testRequest = generateTestContactRequest();
         saveContactInDbAndGet(testRequest, generateTestContactCustomFieldsRequest());
         mockMvc.perform(get("/contact")
-                        .param("fields", "ContactId,ContactCompany,ContactCustomList1,ContactPerson")
+                        .param("fields", "ContactId,ContactCompany,ContactCustomList5,ContactPerson")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("sort", "firstName asc,lastName asc,company asc")
@@ -116,7 +116,7 @@ class ContactControllerIT extends TestDependenciesContainer {
                 )
                 .andExpect(jsonPath("[0].ContactCompany").value(testRequest.getCompany()))
                 .andExpect(jsonPath("[0].ContactCustomList5").value("contact custom list 5"))
-                .andExpect(jsonPath("[0].ContactPerson").value("First name Last name (Contact company)"))
+                .andExpect(jsonPath("[0].ContactPerson").value("First name Last name"))
                 .andExpect(status().isOk());
     }
 

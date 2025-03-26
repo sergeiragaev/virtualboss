@@ -1,4 +1,4 @@
-package net.virtualboss.contact.repository.querydsl;
+package net.virtualboss.contact.querydsl;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;

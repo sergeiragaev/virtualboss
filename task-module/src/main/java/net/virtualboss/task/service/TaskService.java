@@ -14,6 +14,7 @@ import net.virtualboss.common.model.enums.*;
 import net.virtualboss.common.util.*;
 import net.virtualboss.task.mapper.v1.TaskMapperV1;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
+import net.virtualboss.task.querydsl.TaskFilterCriteria;
 import net.virtualboss.task.web.dto.TaskReferencesRequest;
 import net.virtualboss.task.web.dto.TaskResponse;
 import net.virtualboss.task.web.dto.TaskFilter;
@@ -62,7 +63,9 @@ public class TaskService {
     }
 
     public List<Map<String, Object>> findAll(String fields, TaskFilter filter) {
-        if (fields == null) fields = "TaskId,TaskDescription";
+        String mustHaveFields = "TaskId,TaskDescription,JobId,ContactId";
+        fields = fields == null ? mustHaveFields : fields + "," + mustHaveFields;
+        if (fields.contains("ContactPerson")) fields = fields + "," + "ContactFirstName,ContactLastName";
         Set<String> fieldsSet = parseFields(fields);
         List<String> fieldsList = List.copyOf(fieldsSet);
 
@@ -107,11 +110,16 @@ public class TaskService {
                 .groupBy(task.id).groupBy(task.contact).groupBy(task.job)
                 .fetch();
 
-        return tasks.stream().map(DtoFlattener::flatten).toList();
+        if (fields.contains("ContactPerson")) tasks.forEach(
+                response -> response.getContact().setPerson(
+                        response.getContact().getPerson()));
+        List<String> fieldsListForCheck = Arrays.stream(fields.split(",")).toList();
+        return tasks.stream().map(response ->
+                DtoFlattener.flatten(response, fieldsListForCheck)).toList();
     }
 
     private Set<String> parseFields(String fields) {
-        Set<String> fieldsSet = Arrays.stream(fields.split(","))
+        return Arrays.stream(fields.split(","))
                 .map(string -> {
                     if (string.contains("TaskCustom")) return "TaskCustomFieldsAndLists." + string;
                     if (string.contains("JobCustom")) return "job.JobCustomFieldsAndLists." + string;
@@ -121,8 +129,6 @@ public class TaskService {
                     return string;
                 })
                 .collect(Collectors.toSet());
-        fieldsSet.addAll(List.of("TaskId", "job.JobId", "contact.ContactId"));
-        return fieldsSet;
     }
 
     private void initializeFilterDefaults(TaskFilter filter) {
@@ -161,7 +167,7 @@ public class TaskService {
     }
 
     private BooleanBuilder buildTaskFilterCriteriaQuery(TaskFilter filter) {
-        return net.virtualboss.task.repository.querydsl.TaskFilterCriteria.builder()
+        return TaskFilterCriteria.builder()
                 .findString(StringUtils.isBlank(filter.getFindString()) ? null : filter.getFindString())
                 .status(determineTaskStatus(filter))
                 .marked(filter.getIsMarked())

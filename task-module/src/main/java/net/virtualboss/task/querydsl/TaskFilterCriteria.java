@@ -1,4 +1,4 @@
-package net.virtualboss.task.repository.querydsl;
+package net.virtualboss.task.querydsl;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;

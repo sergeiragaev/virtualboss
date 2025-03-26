@@ -1,8 +1,6 @@
 package net.virtualboss.task.web.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,10 +20,7 @@ import java.util.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TaskResponse {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
     @JsonProperty("TaskId")
     @EntityMapping
     private UUID id;
@@ -80,10 +75,6 @@ public class TaskResponse {
     @JsonProperty("JobId")
     @EntityMapping
     private UUID jobId;
-
-    @JsonProperty("ContactPerson")
-    @Builder.Default
-    private String contactPerson = "";
 
     @JsonProperty("ContactId")
     @EntityMapping

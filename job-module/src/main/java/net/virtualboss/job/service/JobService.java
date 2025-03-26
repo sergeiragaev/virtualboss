@@ -1,19 +1,27 @@
 package net.virtualboss.job.service;
 
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.AlreadyExistsException;
 import net.virtualboss.common.exception.EntityNotFoundException;
+import net.virtualboss.common.model.entity.*;
 import net.virtualboss.common.service.MainService;
+import net.virtualboss.common.util.DtoFlattener;
+import net.virtualboss.common.util.QueryDslUtil;
 import net.virtualboss.job.mapper.v1.JobMapperV1;
 import net.virtualboss.common.util.BeanUtils;
-import net.virtualboss.job.repository.criteria.JobFilterCriteria;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.common.web.dto.filter.CommonFilter;
+import net.virtualboss.job.querydsl.JobFilterCriteria;
 import net.virtualboss.job.web.dto.JobResponse;
-import net.virtualboss.common.model.entity.Job;
 import net.virtualboss.common.repository.JobRepository;
 import net.virtualboss.job.web.dto.UpsertJobRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -33,6 +41,8 @@ public class JobService {
     private final JobRepository jobRepository;
     private final JobMapperV1 jobMapper;
     private final MainService mainService;
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     @Cacheable(value = "job", key = "#id")
     public Map<String, Object> findById(String id) {
@@ -40,32 +50,49 @@ public class JobService {
         return JobResponse.getFieldsMap(jobMapper.jobToResponse(job), null);
     }
 
-    public List<Map<String, Object>> findAll(String fields, CommonFilter commonFilter) {
-        if (fields == null) fields = "JobId,JobNumber";
-        Set<String> fieldList = Arrays.stream(fields.split(",")).collect(Collectors.toSet());
+    public List<Map<String, Object>> findAll(String fields, CommonFilter filter) {
+        String mustHaveFields = "JobId,JobNumber";
+        fields = fields == null ? mustHaveFields : fields + "," + mustHaveFields;
+        Set<String> fieldsSet = parseFields(fields);
+        List<String> fieldsList = List.copyOf(fieldsSet);
 
-        if (commonFilter.getSize() == null) commonFilter.setSize(Integer.MAX_VALUE);
-        if (commonFilter.getPage() == null) commonFilter.setPage(1);
-        if (commonFilter.getSort() == null) commonFilter.setSort("number asc");
+        initializeFilterDefaults(filter);
+        PageRequest pageRequest = createPageRequest(filter);
+        OrderSpecifier<?>[] orderSpecifiers =
+                QueryDslUtil.getOrderSpecifiers(pageRequest.getSort(), Job.class, "job");
 
-        String[] sorts = commonFilter.getSort().split(",");
-        List<Sort.Order> orders = new ArrayList<>();
-        for (String sort : sorts) {
-            String[] order = sort.split(" ");
-            orders.add(new Sort.Order(Sort.Direction.valueOf(order[1].toUpperCase()), order[0]));
-        }
+        QJob job = QJob.job;
 
-        return jobRepository.findAll(
-                        JobFilterCriteria.builder()
-                                .isDeleted(commonFilter.getIsDeleted())
-                                .findString(commonFilter.getFindString() == null || commonFilter.getFindString().isBlank() ? null : commonFilter.getFindString())
-                                .build().getSpecification(),
-                        PageRequest.of(commonFilter.getPage() - 1, commonFilter.getSize(),
-                                Sort.by(orders)
-                        ))
-                .map(jobMapper::jobToResponse).getContent().stream()
-                .map(jobResponse -> JobResponse.getFieldsMap(jobResponse, fieldList))
-                .toList();
+        QFieldValue fieldValueJob = new QFieldValue("fieldValueJob");
+        QField fieldJob = new QField("fieldJob");
+
+        JPAQueryFactory queryFactory = new JPAQueryFactory(entityManager);
+
+        List<JobResponse> jobs = queryFactory.select(
+                        QueryDslUtil.buildProjection(JobResponse.class, job, fieldsList)
+                )
+                .from(job)
+                .leftJoin(job.customFieldsAndListsValues, fieldValueJob)
+                .leftJoin(fieldValueJob.field, fieldJob)
+                .where(
+                        buildJobFilterCriteriaQuery(filter)
+                )
+                .orderBy(orderSpecifiers)
+                .offset(pageRequest.getOffset())
+                .limit(pageRequest.getPageSize())
+                .groupBy(job.id)
+                .fetch();
+
+        List<String> fieldsListForCheck = Arrays.stream(fields.split(",")).toList();
+        return jobs.stream().map(response ->
+                DtoFlattener.flatten(response, fieldsListForCheck)).toList();
+    }
+
+    private Predicate buildJobFilterCriteriaQuery(CommonFilter filter) {
+        return JobFilterCriteria.builder()
+                .findString(StringUtils.isBlank(filter.getFindString()) ? null : filter.getFindString())
+                .isDeleted(filter.getIsDeleted())
+                .build().toPredicate();
     }
 
     @Transactional
@@ -109,5 +136,40 @@ public class JobService {
         Optional<Job> optionalJob = jobRepository.findByNumberIgnoreCaseAndIsDeleted(jobNumber, false);
         if (optionalJob.isPresent()  && !optionalJob.get().getId().equals(uuid))
             throw new AlreadyExistsException(MessageFormat.format("Job with number <b>{0}</b> already exists!", jobNumber));
+    }
+
+    private void initializeFilterDefaults(CommonFilter filter) {
+        if (filter.getSize() == null) filter.setSize(Integer.MAX_VALUE);
+        if (filter.getPage() == null) filter.setPage(1);
+        if (filter.getSort() == null) filter.setSort("number asc");
+    }
+
+    private PageRequest createPageRequest(CommonFilter filter) {
+        return PageRequest.of(
+                filter.getPage() - 1,
+                filter.getSize(),
+                Sort.by(parseSortOrders(filter.getSort()))
+        );
+    }
+
+    private List<Sort.Order> parseSortOrders(String sortString) {
+        return Arrays.stream(sortString.split(","))
+                .map(this::createSortOrder)
+                .toList();
+    }
+
+    private Sort.Order createSortOrder(String sort) {
+        String[] parts = sort.trim().split(" ");
+        Sort.Direction direction = Sort.Direction.valueOf(parts[1].toUpperCase());
+        return new Sort.Order(direction, parts[0]);
+    }
+
+    private Set<String> parseFields(String fields) {
+        return Arrays.stream(fields.split(","))
+                .map(string -> {
+                    if (string.contains("JobCustom")) return "JobCustomFieldsAndLists." + string;
+                    return string;
+                })
+                .collect(Collectors.toSet());
     }
 }

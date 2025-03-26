@@ -47,7 +47,7 @@ public interface TaskMapperV1 {
 
     @Mapping(source = "job.number", target = "jobNumber")
     @Mapping(source = "job.id", target = "jobId")
-    @Mapping(source = "contact.person", target = "contactPerson")
+//    @Mapping(source = "contact.person", target = "contactPerson")
     @Mapping(source = "contact.id", target = "contactId")
     @Mapping(source = "requested.name", target = "requested")
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")

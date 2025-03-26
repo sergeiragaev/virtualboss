@@ -6,6 +6,7 @@ import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DtoFlattener {
@@ -14,28 +15,28 @@ public class DtoFlattener {
         throw new IllegalStateException("Utility class");
     }
 
-    public static Map<String, Object> flatten(Object dto) {
+    public static Map<String, Object> flatten(Object dto, List<String> fieldsList) {
         Map<String, Object> flatMap = new LinkedHashMap<>();
-        flattenInternal("", dto, flatMap);
+        flattenInternal("", dto, flatMap, fieldsList);
         return flatMap;
     }
 
-    private static void flattenInternal(String prefix, Object obj, Map<String, Object> result) {
+    private static void flattenInternal(String prefix, Object obj, Map<String, Object> result, List<String> fieldsList) {
         if (obj == null) return;
 
         for (Field field : obj.getClass().getDeclaredFields()) {
             ReflectionUtils.makeAccessible(field);
             try {
                 Object value = field.get(obj);
-                if (value == null) continue;
+                if (value == null) value = "";
 
                 Flatten flattenAnnotation = field.getAnnotation(Flatten.class);
                 if (flattenAnnotation != null) {
                     String newPrefix = prefix + flattenAnnotation.prefix();
-                    flattenInternal(newPrefix, value, result);
+                    flattenInternal(newPrefix, value, result, fieldsList);
                 } else {
                     String key = prefix + getJsonFieldName(field);
-                    result.put(key, value);
+                    if (fieldsList.contains(key)) result.put(key, value);
                 }
             } catch (IllegalAccessException e) {
                 throw new IllegalStateException("Failed to access field: " + field.getName(), e);

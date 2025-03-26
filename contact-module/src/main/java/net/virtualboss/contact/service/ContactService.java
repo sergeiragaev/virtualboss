@@ -9,15 +9,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.AccessDeniedException;
 import net.virtualboss.common.model.entity.*;
-import net.virtualboss.common.model.enums.EntityType;
-import net.virtualboss.common.service.CustomFieldService;
 import net.virtualboss.common.service.MainService;
 import net.virtualboss.common.util.DtoFlattener;
 import net.virtualboss.common.util.QueryDslUtil;
 import net.virtualboss.contact.mapper.v1.ContactMapperV1;
 import net.virtualboss.common.util.BeanUtils;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
-import net.virtualboss.contact.repository.querydsl.ContactFilterCriteria;
+import net.virtualboss.contact.querydsl.ContactFilterCriteria;
 import net.virtualboss.contact.web.dto.ContactResponse;
 import net.virtualboss.common.repository.ContactRepository;
 import net.virtualboss.contact.web.dto.UpsertContactRequest;
@@ -41,7 +39,6 @@ public class ContactService {
     private final ContactRepository repository;
     private final ContactMapperV1 mapper;
     private final MainService mainService;
-    private final CustomFieldService customFieldService;
     @PersistenceContext
     private final EntityManager entityManager;
 
@@ -51,7 +48,8 @@ public class ContactService {
     }
 
     public List<Map<String, Object>> findAll(String fields, CommonFilter filter) {
-        if (fields == null) fields = "ContactId,ContactPerson";
+        String mustHaveFields = "ContactId,ContactCompany,ContactFirstName,ContactLastName";
+        fields = fields == null ? mustHaveFields : fields + "," + mustHaveFields;
         Set<String> fieldsSet = parseFields(fields);
         List<String> fieldsList = List.copyOf(fieldsSet);
 
@@ -82,19 +80,10 @@ public class ContactService {
                 .limit(pageRequest.getPageSize())
                 .fetch();
 
-        if (fields.contains("ContactCustom") || fields.contains("ContactPerson")) {
-            for (ContactResponse contactResponse : contacts) {
-                Contact contactFromDb = repository.getReferenceById(contactResponse.getId());
-                contactResponse.setPerson(contactFromDb.getPerson());
-                if (fields.contains("ContactCustom")) {
-                    contactResponse.setCustomFieldsAndLists(
-                            customFieldService.setCustomFieldsAndLists(
-                                    contactFromDb.getCustomFieldsAndListsValues(), EntityType.CONTACT));
-                }
-            }
-        }
-
-        return contacts.stream().map(DtoFlattener::flatten).toList();
+        if (fields.contains("ContactPerson")) contacts.forEach(response -> response.setPerson(response.getPerson()));
+        List<String> fieldsListForCheck = Arrays.stream(fields.split(",")).toList();
+        return contacts.stream().map(response ->
+                DtoFlattener.flatten(response, fieldsListForCheck)).toList();
     }
 
     private BooleanBuilder buildContactFilterCriteriaQuery(CommonFilter filter) {
@@ -133,13 +122,6 @@ public class ContactService {
         return ContactResponse.getFieldsMap(mapper.contactToResponse(repository.save(contact)), null);
     }
 
-    private Set<String> parseFields(String fields) {
-        Set<String> fieldsSet = Arrays.stream(fields.split(","))
-                .collect(Collectors.toSet());
-        fieldsSet.add("ContactId");
-        return fieldsSet;
-    }
-
     private void initializeFilterDefaults(CommonFilter filter) {
         if (filter.getSize() == null) filter.setSize(Integer.MAX_VALUE);
         if (filter.getPage() == null) filter.setPage(1);
@@ -165,4 +147,14 @@ public class ContactService {
         Sort.Direction direction = Sort.Direction.valueOf(parts[1].toUpperCase());
         return new Sort.Order(direction, parts[0]);
     }
+
+    private Set<String> parseFields(String fields) {
+        return Arrays.stream(fields.split(","))
+                .map(string -> {
+                    if (string.contains("ContactCustom")) return "ContactCustomFieldsAndLists." + string;
+                    return string;
+                })
+                .collect(Collectors.toSet());
+    }
+
 }

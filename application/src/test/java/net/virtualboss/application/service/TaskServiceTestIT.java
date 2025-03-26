@@ -335,9 +335,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     }
 
     @Test
-    @DisplayName("Find all tasks by new mechanism 2")
+    @DisplayName("Find all tasks with nested entity custom fields")
     @Transactional
-    void findAllTasksByNewMechanism2() {
+    void findAllTasksWithNestedEntityCustomFields() {
         create2PendingSequentialTasks();
         List<Map<String, Object>> response = taskService.findAll(
                 "JobLot,TaskDescription,TaskTargetStart,JobNumber,TaskCustomField2,JobCustomList1", new TaskFilter());

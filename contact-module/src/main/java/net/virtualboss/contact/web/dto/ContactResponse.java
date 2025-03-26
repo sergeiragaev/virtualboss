@@ -1,6 +1,5 @@
 package net.virtualboss.contact.web.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +14,6 @@ import java.util.*;
 
 @Data
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @NoArgsConstructor
 @AllArgsConstructor
 public class ContactResponse {
@@ -25,66 +23,86 @@ public class ContactResponse {
 
     @JsonProperty("ContactCompany")
     @EntityMapping
-    private String company;
+    @Builder.Default
+    private String company = "";
 
     @JsonProperty("ContactProfession")
     @EntityMapping
-    private String profession;
+    @Builder.Default
+    private String profession = "";
 
     @JsonProperty("ContactPerson")
-    private String person;
+    @Builder.Default
+    private String person = "";
+
+    public String getPerson() {
+        return this.firstName + ((this.firstName.isBlank()) ? "" : " ") + this.lastName;
+    }
 
     @JsonProperty("ContactFirstName")
     @EntityMapping
-    private String firstName;
+    @Builder.Default
+    private String firstName = "";
 
     @JsonProperty("ContactLastName")
     @EntityMapping
-    private String lastName;
+    @Builder.Default
+    private String lastName = "";
 
     @JsonProperty("ContactSupervisor")
     @EntityMapping
-    private String supervisor;
+    @Builder.Default
+    private String supervisor = "";
 
     @JsonProperty("ContactSpouse")
     @EntityMapping
-    private String spouse;
+    @Builder.Default
+    private String spouse = "";
 
     @JsonProperty("ContactTaxID")
     @EntityMapping
-    private String taxId;
+    @Builder.Default
+    private String taxId = "";
 
     @JsonProperty("ContactWebSite")
     @EntityMapping
-    private String webSite;
+    @Builder.Default
+    private String webSite = "";
 
     @JsonProperty("ContactWorkersCompDate")
     @EntityMapping
-    private String workersCompDate;
+    @Builder.Default
+    private String workersCompDate = "";
 
     @JsonProperty("ContactInsuranceDate")
     @EntityMapping
-    private String insuranceDate;
+    @Builder.Default
+    private String insuranceDate = "";
 
     @JsonProperty("ContactComments")
     @EntityMapping
-    private String comments;
+    @Builder.Default
+    private String comments = "";
 
     @JsonProperty("ContactNotes")
     @EntityMapping
-    private String notes;
+    @Builder.Default
+    private String notes = "";
 
     @JsonProperty("ContactFax")
     @EntityMapping
-    private String fax;
+    @Builder.Default
+    private String fax = "";
 
     @JsonProperty("ContactEmail")
     @EntityMapping
-    private String email;
+    @Builder.Default
+    private String email = "";
 
     @JsonProperty("ContactPhones")
     @EntityMapping
-    private String phones;
+    @Builder.Default
+    private String phones = "";
 
     @JsonProperty("ContactDeleted")
     @Builder.Default

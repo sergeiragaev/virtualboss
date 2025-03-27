@@ -29,7 +29,7 @@ public class JobController {
 
     @GetMapping("/job/{id}")
     public ResponseEntity<Map<String, Object>> getJobById(@PathVariable String id) {
-        return ResponseEntity.ok(service.findById(id));
+        return ResponseEntity.ok(service.getById(id));
     }
 
     @DeleteMapping("/job/{id}")

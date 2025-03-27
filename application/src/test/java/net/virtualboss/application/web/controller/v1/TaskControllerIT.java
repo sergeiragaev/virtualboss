@@ -148,7 +148,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                 .andExpect(status().isOk()
                 );
 
-        Task task = taskService.getTaskById(newTask.getId().toString());
+        Task task = taskService.findById(newTask.getId().toString());
         assertEquals(task.getNotes(), newTask.getNotes());
         assertEquals(task.getDescription(), updatedTaskRequest.getDescription());
     }
@@ -166,7 +166,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                 .andExpect(status().isOk()
                 );
 
-        Task task = taskService.getTaskById(newTask.getId().toString());
+        Task task = taskService.findById(newTask.getId().toString());
         assertEquals(task.getNotes(), newTask.getNotes());
         assertEquals(task.getTargetStart(), LocalDate.now());
     }
@@ -199,7 +199,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                 .andExpect(status().isOk()
                 );
 
-        Task task = taskService.getTaskById(newTask.getId().toString());
+        Task task = taskService.findById(newTask.getId().toString());
         assertEquals(task.getNotes(), newTask.getNotes());
         assertEquals(task.getDescription(), updatedTaskRequest.getDescription());
         assertNull(task.getJob());

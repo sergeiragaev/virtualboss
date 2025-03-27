@@ -41,8 +41,7 @@ public class Contact {
     private String profession;
 
     public String getPerson() {
-        return firstName + " " + lastName +
-                " (" + company + ")";
+        return firstName + " " + lastName;
     }
 
     @Column(name = "first_name")

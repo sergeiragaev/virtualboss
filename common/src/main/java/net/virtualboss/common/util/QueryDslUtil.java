@@ -160,6 +160,7 @@ public class QueryDslUtil {
      * @param <T>   the entity type
      * @return an array of OrderSpecifier for use in QueryDSL.orderBy(...)
      */
+    @SuppressWarnings("unchecked")
     public static <T> OrderSpecifier<Comparable<Object>>[] getOrderSpecifiers(Sort sort, Class<T> entityClass, String alias) {
         List<OrderSpecifier<Comparable<Object>>> orders = new ArrayList<>();
         // Use PathBuilder to dynamically build paths

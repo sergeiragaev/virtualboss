@@ -2,11 +2,9 @@ package net.virtualboss.common.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import net.virtualboss.common.exception.EntityNotFoundException;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -107,9 +105,7 @@ public class Job {
     public String getCustomValueByName(String name) {
         return customFieldsAndListsValues.stream()
                 .filter(fieldValue -> fieldValue.getField().getName().equals(name))
-                .findAny().orElseThrow(() -> new EntityNotFoundException(
-                        MessageFormat.format("Custom field with name {0} does not exist", name)
-                )).getValue();
+                .findAny().orElse(FieldValue.builder().build()).getValue();
     }
 
 }

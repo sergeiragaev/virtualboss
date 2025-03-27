@@ -1,70 +1,121 @@
 package net.virtualboss.contact.service;
 
-import lombok.RequiredArgsConstructor;
+import com.querydsl.core.JoinType;
+import com.querydsl.core.types.Predicate;
+import jakarta.persistence.EntityManager;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.AccessDeniedException;
+import net.virtualboss.common.model.entity.*;
+import net.virtualboss.common.service.GenericService;
 import net.virtualboss.common.service.MainService;
 import net.virtualboss.contact.mapper.v1.ContactMapperV1;
 import net.virtualboss.common.util.BeanUtils;
-import net.virtualboss.contact.repository.criteria.ContactFilterCriteria;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
+import net.virtualboss.contact.querydsl.ContactFilterCriteria;
 import net.virtualboss.contact.web.dto.ContactResponse;
-import net.virtualboss.common.model.entity.Contact;
 import net.virtualboss.common.repository.ContactRepository;
 import net.virtualboss.contact.web.dto.UpsertContactRequest;
 import net.virtualboss.common.web.dto.filter.CommonFilter;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Log4j2
-public class ContactService {
+public class ContactService extends GenericService<Contact, UUID, ContactResponse, QContact> {
     private final ContactRepository repository;
     private final ContactMapperV1 mapper;
-    private final MainService mainService;
+
+    public ContactService(EntityManager entityManager,
+                          MainService mainService,
+                          ContactRepository repository,
+                          ContactMapperV1 mapper) {
+        super(entityManager, mainService, UUID::fromString, repository);
+        this.repository = repository;
+        this.mapper = mapper;
+    }
 
     @Cacheable(value = "contact", key = "#id")
-    public Map<String, Object> findById(String id) {
+    public Map<String, Object> getById(String id) {
         return ContactResponse.getFieldsMap(mapper.contactToResponse(mainService.getContactById(id)), null);
     }
 
-    public List<Map<String, Object>> findAll(String fields, CommonFilter commonFilter) {
-        if (fields == null) fields = "ContactId,ContactPerson";
-        Set<String> fieldList = Arrays.stream(fields.split(",")).collect(Collectors.toSet());
+    @Override
+    protected QContact getQEntity() {
+        return QContact.contact;
+    }
 
-        if (commonFilter.getSize() == null) commonFilter.setSize(Integer.MAX_VALUE);
-        if (commonFilter.getPage() == null) commonFilter.setPage(1);
-        if (commonFilter.getSort() == null) commonFilter.setSort("firstName asc,lastName asc,company asc");
+    @Override
+    protected Predicate buildFilterPredicate(CommonFilter filter) {
+        return ContactFilterCriteria.builder()
+                .findString(StringUtils.defaultIfBlank(filter.getFindString(), null))
+                .showUnassigned(false)
+                .isDeleted(filter.getIsDeleted())
+                .build()
+                .toPredicate();
+    }
 
-        String[] sorts = commonFilter.getSort().split(",");
-        List<Sort.Order> orders = new ArrayList<>();
-        for (String sort : sorts) {
-            String[] order = sort.split(" ");
-            orders.add(new Sort.Order(Sort.Direction.valueOf(order[1].toUpperCase()), order[0]));
-        }
+    @Override
+    protected String getCustomFieldPrefix() {
+        return "ContactCustom";
+    }
 
+    @Override
+    protected String getCustomFieldsAndListsPrefix() {
+        return "ContactCustomFieldsAndLists";
+    }
 
-        return repository.findAll(
-                ContactFilterCriteria.builder()
-                        .findString(commonFilter.getFindString() == null || commonFilter.getFindString().isBlank() ? null : commonFilter.getFindString())
-                        .showUnassigned(false)
-                        .isDeleted(commonFilter.getIsDeleted())
-                        .build().getSpecification(),
-                PageRequest.of(commonFilter.getPage() - 1, commonFilter.getSize(),
-                        Sort.by(orders)
-                ))
-                .map(mapper::contactToResponse).getContent().stream()
-                .map(contactResponse -> ContactResponse.getFieldsMap(contactResponse, fieldList))
-                .toList();
+    @Override
+    protected String getDefaultSort() {
+        return "firstName asc,lastName asc,company asc";
+    }
+
+    @Override
+    protected String getMustHaveFields() {
+        return "ContactId,ContactCompany,ContactFirstName,ContactLastName";
+    }
+
+    @Override
+    protected Class<Contact> getEntityClass() {
+        return Contact.class;
+    }
+
+    @Override
+    protected Class<ContactResponse> getResponseClass() {
+        return ContactResponse.class;
+    }
+
+    @Override
+    protected List<JoinExpression> getJoins() {
+        QContact contact = QContact.contact;
+        QFieldValue fieldValueContact = new QFieldValue("fieldValueContact");
+        QField fieldContact = new QField("fieldContact");
+
+        return List.of(
+                new CollectionJoin<>(contact.customFieldsAndListsValues, fieldValueContact, JoinType.LEFTJOIN),
+                new EntityJoin<>(fieldValueContact.field, fieldContact, JoinType.LEFTJOIN)
+        );
+    }
+
+    @Override
+    protected List<GroupByExpression> getGroupBy() {
+        QContact contact = QContact.contact;
+        return List.of(
+                new GroupByExpression(contact.id)
+        );
+    }
+
+    @Override
+    protected void processContactPerson(List<ContactResponse> responses) {
+        responses.forEach(response -> {
+            String person = response.getFirstName() + " " + response.getLastName();
+            response.setPerson(person);
+        });
     }
 
     @Transactional
@@ -94,4 +145,5 @@ public class ContactService {
         Contact contact = mapper.requestToContact(request, customFieldsAndLists);
         return ContactResponse.getFieldsMap(mapper.contactToResponse(repository.save(contact)), null);
     }
+
 }

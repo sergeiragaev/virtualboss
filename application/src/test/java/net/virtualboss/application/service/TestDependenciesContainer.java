@@ -103,7 +103,7 @@ public class TestDependenciesContainer {
         Task task = taskMapper.requestToTask(request, customFieldsAndLists, referenceRequest);
         task.setTargetStart(request.getTargetStart());
         task.setTargetFinish(request.getTargetFinish());
-        task.setNumber(taskService.getNextNumberSequenceValue());
+        task.setNumber(taskService.getNextTaskNumberSequenceValue());
         return taskRepository.save(task);
     }
 
@@ -199,8 +199,8 @@ public class TestDependenciesContainer {
         return CustomFieldsAndLists.builder()
                 .customField3("contact custom field 3")
                 .customField4("contact custom field 4")
-                .customList5("contact custom list 2")
-                .customList3("contact custom list 6")
+                .customList5("contact custom list 5")
+                .customList3("contact custom list 3")
                 .build();
     }
 

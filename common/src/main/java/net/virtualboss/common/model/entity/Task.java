@@ -3,14 +3,12 @@ package net.virtualboss.common.model.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
-import net.virtualboss.common.exception.EntityNotFoundException;
 import net.virtualboss.common.model.enums.TaskStatus;
 import net.virtualboss.common.util.TaskStatusConverter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.lang.NonNull;
 
-import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -134,9 +132,7 @@ public class Task implements Comparable<Task> {
     public String getCustomValueByName(String name) {
         return customFieldsAndListsValues.stream()
                 .filter(fieldValue -> fieldValue.getField().getName().equals(name))
-                .findAny().orElseThrow(() -> new EntityNotFoundException(
-                        MessageFormat.format("{0} does not have value!", name)
-                )).getValue();
+                .findAny().orElse(FieldValue.builder().build()).getValue();
     }
 
     @Override

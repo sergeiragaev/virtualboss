@@ -42,7 +42,7 @@ class JobServiceTestIT extends TestDependenciesContainer {
         UpsertJobRequest request = generateTestJobRequest();
         CustomFieldsAndLists customFieldsAndLists = generateTestJobCustomFieldsRequest();
         Map<String, Object> savedJob = jobService.createJob(request, customFieldsAndLists);
-        Job result = jobService.getJobById(savedJob.get("JobId").toString());
+        Job result = jobService.findById(savedJob.get("JobId").toString());
         assertEquals(savedJob.get("JobId"), result.getId());
         assertEquals(request.getNumber(), result.getNumber());
         assertEquals(customFieldsAndLists.getCustomField2(),

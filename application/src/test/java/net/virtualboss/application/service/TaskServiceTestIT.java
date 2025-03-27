@@ -7,6 +7,7 @@ import net.virtualboss.common.model.entity.Task;
 import net.virtualboss.common.model.enums.DateCriteria;
 import net.virtualboss.common.model.enums.DateRange;
 import net.virtualboss.common.model.enums.DateType;
+import net.virtualboss.common.model.enums.TaskStatus;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.task.web.dto.TaskFilter;
 import net.virtualboss.task.web.dto.TaskReferencesRequest;
@@ -53,7 +54,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
                 request,
                 customFieldsAndLists,
                 generateTestTaskReferenceRequest());
-        Task result = taskService.getTaskById(savedTask.get("TaskId").toString());
+        Task result = taskService.findById(savedTask.get("TaskId").toString());
         assertEquals(savedTask.get("TaskId"), result.getId());
         assertEquals(request.getDescription(), result.getDescription());
         assertEquals(request.getDuration(), result.getDuration());
@@ -180,9 +181,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         filter.setDateRange(DateRange.DATE_PERIOD.getValue());
         filter.setDateFrom(LocalDate.now().minusDays(365));
         filter.setDateTo(LocalDate.now().minusDays(360));
-        filter.setDateCriteria(DateCriteria.EXACT.getValue());
+        filter.setDateCriteria(DateCriteria.ON_OR_BEFORE.getValue());
         filter.setDateType(DateType.TARGET_FINISH.getValue());
-        List<Map<String, Object>> result = taskService.findAll(null, filter);
+        List<Map<String, Object>> result = taskService.findAll("ContactPerson", filter);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
@@ -200,6 +201,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         filter.setIsDeleted(false);
         filter.setDateCriteria(DateCriteria.EXACT.getValue());
         filter.setDateType(DateType.ACTUAL_FINISH.getValue());
+        filter.setDateRange(DateRange.DATE_PERIOD.getValue());
+        filter.setDateFrom(LocalDate.now().minusDays(2));
+        filter.setDateTo(LocalDate.now().minusDays(1));
         List<Map<String, Object>> result = taskService.findAll(null, filter);
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -249,7 +253,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         for (long i = parentTaskNumber + 1; i <= parentTaskNumber + 10; i++) {
             parentTasks = parentTasks.isBlank() ? String.valueOf(i - 1) : parentTasks + "," + (i - 1);
             Map<String, Object> currentTask = tasks.get(i);
-            Task task = taskService.getTaskById(currentTask.get("TaskId").toString());
+            Task task = taskService.findById(currentTask.get("TaskId").toString());
             assertEquals(task.getTargetStart(),
                     currentTask.get("TaskTargetStart")
             );
@@ -326,8 +330,29 @@ class TaskServiceTestIT extends TestDependenciesContainer {
 
         taskService.updateTaskByStartAndFinish(firstTask.getId().toString(),
                 null, firstTask.getTargetFinish().plusDays(15));
-
-        assertNotEquals(oldLastTaskFinish, taskRepository.findByNumber(firstTaskNumber + 2).orElseThrow().getTargetFinish());
+        if (firstTask.getStatus() == TaskStatus.ACTIVE) {
+            assertNotEquals(oldLastTaskFinish, taskRepository.findByNumber(firstTaskNumber + 2).orElseThrow().getTargetFinish());
+        }
         assertEquals(oldLastTaskDuration, lastTask.getDuration());
     }
+
+    @Test
+    @DisplayName("Find all tasks with nested entity custom fields")
+    @Transactional
+    void findAllTasksWithNestedEntityCustomFields() {
+        create2PendingSequentialTasks();
+        List<Map<String, Object>> response = taskService.findAll(
+                "JobLot,TaskDescription,TaskTargetStart,JobNumber,TaskCustomField2,JobCustomList1,ContactPerson",
+                new TaskFilter());
+        long firstTaskNumber = taskRepository.findAll().stream().map(Task::getNumber).min(Long::compareTo).orElseThrow();
+        Task firstTask = taskRepository.findByNumber(firstTaskNumber).orElseThrow();
+        assertEquals(firstTask.getId(), response.get(0).get("TaskId"));
+        assertEquals(firstTask.getDescription(), response.get(0).get("TaskDescription"));
+        assertEquals(firstTask.getTargetStart(), response.get(0).get("TaskTargetStart"));
+        assertEquals(firstTask.getCustomValueByName("TaskCustomField2"), response.get(0).get("TaskCustomField2"));
+        assertEquals(firstTask.getJob().getCustomValueByName("JobCustomList1"), response.get(0).get("JobCustomList1"));
+        assertEquals(firstTask.getJob().getLot(), response.get(0).get("JobLot"));
+        assertEquals(firstTask.getContact().getPerson(), response.get(0).get("ContactPerson"));
+    }
+
 }

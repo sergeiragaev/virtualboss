@@ -1,7 +1,7 @@
 package net.virtualboss.task.service;
 
 import lombok.RequiredArgsConstructor;
-import net.virtualboss.common.model.entity.HolidayProjection;
+import net.virtualboss.common.repository.projection.HolidayProjection;
 import net.virtualboss.common.repository.HolidayRepository;
 import org.springframework.stereotype.Service;
 

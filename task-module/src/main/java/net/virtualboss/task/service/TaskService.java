@@ -1,25 +1,22 @@
 package net.virtualboss.task.service;
 
+import com.querydsl.core.JoinType;
+import com.querydsl.core.types.Predicate;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.CircularLinkingException;
-import net.virtualboss.common.exception.EntityNotFoundException;
+import net.virtualboss.common.model.entity.*;
+import net.virtualboss.common.model.enums.*;
+import net.virtualboss.common.service.GenericService;
+import net.virtualboss.common.service.MainService;
+import net.virtualboss.common.util.*;
+import net.virtualboss.common.web.dto.filter.CommonFilter;
 import net.virtualboss.task.mapper.v1.TaskMapperV1;
-import net.virtualboss.common.model.entity.Contact;
-import net.virtualboss.common.model.entity.Job;
-import net.virtualboss.common.model.enums.DateCriteria;
-import net.virtualboss.common.model.enums.DateRange;
-import net.virtualboss.common.model.enums.DateType;
-import net.virtualboss.common.model.enums.TaskStatus;
-import net.virtualboss.common.util.BeanUtils;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
+import net.virtualboss.task.querydsl.TaskFilterCriteria;
 import net.virtualboss.task.web.dto.TaskReferencesRequest;
 import net.virtualboss.task.web.dto.TaskResponse;
 import net.virtualboss.task.web.dto.TaskFilter;
-import net.virtualboss.task.repository.criteria.TaskFilterCriteria;
-import net.virtualboss.common.model.entity.Task;
 import net.virtualboss.common.repository.ContactRepository;
 import net.virtualboss.common.repository.JobRepository;
 import net.virtualboss.common.repository.TaskRepository;
@@ -28,9 +25,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,77 +34,163 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Log4j2
-public class TaskService {
-    private final TaskRepository taskRepository;
+public class TaskService  extends GenericService<Task, UUID, TaskResponse, QTask> {
+    private final TaskRepository repository;
     private final JobRepository jobRepository;
     private final ContactRepository contactRepository;
-    private final TaskMapperV1 taskMapper;
+    private final TaskMapperV1 mapper;
     private final TaskScheduleService taskScheduleService;
     private final WorkingDaysCalculator workingDaysCalculator;
 
-    @PersistenceContext
-    private final EntityManager entityManager;
-
-    @Cacheable(value = "task", key = "#id")
-    public Map<String, Object> findById(String id) {
-        Task task = getTaskById(id);
-        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(task), null);
+    public TaskService(EntityManager entityManager,
+                       MainService mainService,
+                       TaskRepository taskRepository,
+                       JobRepository jobRepository,
+                       ContactRepository contactRepository,
+                       TaskMapperV1 taskMapper,
+                       TaskScheduleService taskScheduleService,
+                       WorkingDaysCalculator workingDaysCalculator) {
+        super(entityManager, mainService, UUID::fromString, taskRepository);
+        this.repository = taskRepository;
+        this.jobRepository = jobRepository;
+        this.contactRepository = contactRepository;
+        this.mapper = taskMapper;
+        this.taskScheduleService = taskScheduleService;
+        this.workingDaysCalculator = workingDaysCalculator;
     }
 
-    public Task getTaskById(String id) {
-        return taskRepository.findById(UUID.fromString(id))
-                .orElseThrow(() -> new EntityNotFoundException(
-                        MessageFormat.format("Task with id: {0} not found!", id)));
+    @Override
+    protected QTask getQEntity() {
+        return QTask.task;
     }
 
-    public List<Map<String, Object>> findAll(String fields, TaskFilter filter) {
-        Set<String> fieldSet = parseFields(fields);
-        initializeFilterDefaults(filter);
-        PageRequest pageRequest = createPageRequest(filter);
-
-        return taskRepository.findAll(
-                        buildTaskFilterCriteria(filter),
-                        pageRequest
-                ).getContent()
-                .stream()
-                .map(taskMapper::taskToResponse)
-                .map(response -> TaskResponse.getFieldsMap(response, fieldSet))
-                .toList();
+    @Override
+    protected Predicate buildFilterPredicate(CommonFilter filter) {
+        TaskFilter taskFilter = (TaskFilter) filter;
+        return TaskFilterCriteria.builder()
+                .findString(StringUtils.defaultIfBlank(taskFilter.getFindString(), null))
+                .status(determineTaskStatus(taskFilter))
+                .marked(taskFilter.getIsMarked())
+                .isDeleted(taskFilter.getIsDeleted())
+                .targetStartFrom(getFilterDate(taskFilter, "targetStartFrom"))
+                .targetStartTo(getFilterDate(taskFilter, "targetStartTo"))
+                .targetFinishFrom(getFilterDate(taskFilter, "targetFinishFrom"))
+                .targetFinishTo(getFilterDate(taskFilter, "targetFinishTo"))
+                .actualFinishFrom(getFilterDate(taskFilter, "actualFinishFrom"))
+                .actualFinishTo(getFilterDate(taskFilter, "actualFinishTo"))
+                .anyDateFieldFrom(getFilterDate(taskFilter, "anyDateFieldFrom"))
+                .anyDateFieldTo(getFilterDate(taskFilter, "anyDateFieldTo"))
+                .jobList(getJobsByIds(taskFilter.getJobIds()))
+                .contactList(getContactsByIds(taskFilter.getContactIds()))
+                .taskList(getTaskIdsByNumbers(taskFilter.getTaskIds()))
+                .excludeTaskIds(getExcludedTaskIds(taskFilter))
+                .build()
+                .toPredicate();
     }
 
-    private Set<String> parseFields(String fields) {
-        String defaultFields = "TaskId,TaskDescription";
-        return Arrays.stream((fields != null ? fields : defaultFields).split(","))
+    @Override
+    protected String getCustomFieldPrefix() {
+        return "TaskCustom";
+    }
+
+    @Override
+    protected String getCustomFieldsAndListsPrefix() {
+        return "TaskCustomFieldsAndLists";
+    }
+
+    @Override
+    protected Set<String> parseFields(String fields) {
+        return Arrays.stream(fields.split(","))
+                .map(field -> {
+                    if (field.contains(getCustomFieldPrefix())) return getCustomFieldsAndListsPrefix() + "." + field;
+                    if (field.contains("JobCustom")) return "job.JobCustomFieldsAndLists." + field;
+                    if (field.contains("ContactCustom")) return "contact.ContactCustomFieldsAndLists." + field;
+                    if (field.startsWith("Job")) return "job." + field;
+                    if (field.startsWith("Contact")) return "contact." + field;
+                    return field;
+                })
                 .collect(Collectors.toSet());
     }
 
-    private void initializeFilterDefaults(TaskFilter filter) {
-        if (filter.getSize() == null) filter.setSize(100);
-        if (filter.getPage() == null) filter.setPage(1);
-        if (filter.getSort() == null) filter.setSort("description asc");
+    @Override
+    protected String getDefaultSort() {
+        return "number asc";
     }
 
-    private PageRequest createPageRequest(TaskFilter filter) {
-        return PageRequest.of(
-                filter.getPage() - 1,
-                filter.getSize(),
-                Sort.by(parseSortOrders(filter.getSort()))
+    @Override
+    protected String getMustHaveFields() {
+        return "TaskId,TaskDescription,JobId,ContactId";
+    }
+
+    @Override
+    protected Class<Task> getEntityClass() {
+        return Task.class;
+    }
+
+    @Override
+    protected Class<TaskResponse> getResponseClass() {
+        return TaskResponse.class;
+    }
+
+    @Override
+    protected List<JoinExpression> getJoins() {
+        QTask task = QTask.task;
+        QJob job = QJob.job;
+        QContact contact = QContact.contact;
+        QFieldValue fieldValueTask = new QFieldValue("fieldValueTask");
+        QFieldValue fieldValueJob = new QFieldValue("fieldValueJob");
+        QFieldValue fieldValueContact = new QFieldValue("fieldValueContact");
+        QField fieldTask = new QField("fieldTask");
+        QField fieldJob = new QField("fieldJob");
+        QField fieldContact = new QField("fieldContact");
+        return List.of(
+                new CollectionJoin<>(task.customFieldsAndListsValues, fieldValueTask, JoinType.LEFTJOIN),
+                new EntityJoin<>(fieldValueTask.field, fieldTask, JoinType.LEFTJOIN),
+                new CollectionJoin<>(contact.customFieldsAndListsValues, fieldValueContact, JoinType.LEFTJOIN),
+                new EntityJoin<>(fieldValueContact.field, fieldContact, JoinType.LEFTJOIN),
+                new CollectionJoin<>(job.customFieldsAndListsValues, fieldValueJob, JoinType.LEFTJOIN),
+                new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN)
         );
     }
-
-    private List<Sort.Order> parseSortOrders(String sortString) {
-        return Arrays.stream(sortString.split(","))
-                .map(this::createSortOrder)
-                .toList();
+    @Override
+    protected List<GroupByExpression> getGroupBy() {
+        QTask task = QTask.task;
+        return List.of(
+                new GroupByExpression(task.id),
+                new GroupByExpression(task.job),
+                new GroupByExpression(task.contact)        );
     }
 
-    private Sort.Order createSortOrder(String sort) {
-        String[] parts = sort.trim().split(" ");
-        Sort.Direction direction = Sort.Direction.valueOf(parts[1].toUpperCase());
-        return new Sort.Order(direction, parts[0]);
+    @Override
+    public List<Map<String, Object>> findAll(String fields, CommonFilter filter) {
+        if (fields == null) fields = getMustHaveFields();
+        TaskFilter taskFilter = (TaskFilter) filter;
+        if (fields.contains("ContactPerson")) fields += ",ContactFirstName,ContactLastName";
+        return super.findAll(fields, taskFilter);
     }
+
+    @Override
+    protected void processContactPerson(List<TaskResponse> responses) {
+        responses.forEach(response -> {
+            String person = response.getContact().getFirstName() + " " + response.getContact().getLastName();
+            response.getContact().setPerson(person);
+        });
+    }
+
+    @Cacheable(value = "task", key = "#id")
+    public Map<String, Object> getById(String id) {
+        Task task = findById(id);
+        return TaskResponse.getFieldsMap(mapper.taskToResponse(task), null);
+    }
+
+    @Override
+    protected void initializeFilterDefaults(CommonFilter filter) {
+        if (filter.getSize() == null) filter.setSize(100);
+        if (filter.getPage() == null) filter.setPage(1);
+        if (filter.getSort() == null) filter.setSort(getDefaultSort());
+    }
+
 
     private TaskStatus determineTaskStatus(TaskFilter filter) {
         boolean isActive = Boolean.TRUE.equals(filter.getIsActive());
@@ -121,33 +201,11 @@ public class TaskService {
         return null;
     }
 
-    private Specification<Task> buildTaskFilterCriteria(TaskFilter filter) {
-        return TaskFilterCriteria.builder()
-                .findString(StringUtils.isBlank(filter.getFindString()) ? null : filter.getFindString())
-                .status(determineTaskStatus(filter))
-                .marked(filter.getIsMarked())
-                .isDeleted(filter.getIsDeleted())
-                .targetStartFrom(getFilterDate(filter, "targetStartFrom"))
-                .targetStartTo(getFilterDate(filter, "targetStartTo"))
-                .targetFinishFrom(getFilterDate(filter, "targetFinishFrom"))
-                .targetFinishTo(getFilterDate(filter, "targetFinishTo"))
-                .actualFinishFrom(getFilterDate(filter, "actualFinishFrom"))
-                .actualFinishTo(getFilterDate(filter, "actualFinishTo"))
-                .anyDateFieldFrom(getFilterDate(filter, "anyDateFieldFrom"))
-                .anyDateFieldTo(getFilterDate(filter, "anyDateFieldTo"))
-                .jobList(getJobsByIds(filter.getJobIds()))
-                .contactList(getContactsByIds(filter.getContactIds()))
-                .taskList(getTaskIdsByNumbers(filter.getTaskIds()))
-                .excludeTaskIds(getExcludedTaskIds(filter))
-                .build()
-                .getSpecification();
-    }
-
     private List<UUID> getExcludedTaskIds(TaskFilter filter) {
         if (filter.getLinkingTask() == null) return List.of();
 
         UUID linkingTaskId = UUID.fromString(filter.getLinkingTask());
-        List<UUID> excludedIds = new ArrayList<>(taskRepository.findAllPendingIdsRecursive(linkingTaskId));
+        List<UUID> excludedIds = new ArrayList<>(repository.findAllPendingIdsRecursive(linkingTaskId));
         excludedIds.add(linkingTaskId);
         return excludedIds;
     }
@@ -166,7 +224,7 @@ public class TaskService {
 
     private List<UUID> getTaskIdsByNumbers(List<String> taskNumbers) {
         if (taskNumbers == null) return List.of();
-        return taskRepository.findAllByNumberIn(
+        return repository.findAllByNumberIn(
                         taskNumbers.stream()
                                 .map(Long::valueOf)
                                 .toList()
@@ -255,8 +313,8 @@ public class TaskService {
             UpsertTaskRequest request,
             CustomFieldsAndLists customFieldsAndLists,
             TaskReferencesRequest referenceRequest) {
-        Task task = taskMapper.requestToTask(id, request, customFieldsAndLists, referenceRequest);
-        Task taskFromDb = getTaskById(id);
+        Task task = mapper.requestToTask(id, request, customFieldsAndLists, referenceRequest);
+        Task taskFromDb = findById(id);
         checkIfFollowsAlreadyPending(task, taskFromDb);
         task.getCustomFieldsAndListsValues().addAll(taskFromDb.getCustomFieldsAndListsValues());
         removeTasksFromJobAndContact(taskFromDb);
@@ -264,7 +322,7 @@ public class TaskService {
         taskFromDb.setJob(task.getJob());
         taskFromDb.assignTasksToJobAndContact();
         taskScheduleService.recalculateTaskDates(taskFromDb);
-        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(taskFromDb), null);
+        return TaskResponse.getFieldsMap(mapper.taskToResponse(taskFromDb), null);
     }
 
     @Transactional
@@ -273,9 +331,9 @@ public class TaskService {
             String id,
             LocalDate targetStart,
             LocalDate targetFinish) {
-        Task taskFromDb = getTaskById(id);
+        Task taskFromDb = findById(id);
         if (targetStart != null) {
-            targetStart = workingDaysCalculator.addWorkDays(targetStart.minusDays(1), 1, "US");
+            targetStart = workingDaysCalculator.addWorkDays(targetStart, 0, "US");
             int workingDays = (int) workingDaysCalculator.countBusinessDays(
                     taskFromDb.getTargetStart(),
                     targetStart,
@@ -298,12 +356,12 @@ public class TaskService {
         }
         taskScheduleService.recalculateTaskDates(taskFromDb);
         TaskFilter filter = new TaskFilter();
-        List<String> taskNumbers = new ArrayList<>(taskRepository.findAllById(
-                        taskRepository.findAllPendingIdsRecursive(taskFromDb.getId()))
+        List<String> taskNumbers = new ArrayList<>(repository.findAllById(
+                        repository.findAllPendingIdsRecursive(taskFromDb.getId()))
                 .stream().map(Task::getNumber).map(String::valueOf).toList());
         taskNumbers.add(taskFromDb.getNumber().toString());
         filter.setTaskIds(taskNumbers);
-        return this.findAll("TaskId,TaskTargetStart,TaskTargetFinish,TaskDuration", filter);
+        return findAll("TaskId,TaskTargetStart,TaskTargetFinish,TaskDuration", filter);
     }
 
     @Transactional
@@ -312,8 +370,8 @@ public class TaskService {
             UpsertTaskRequest request,
             CustomFieldsAndLists customFieldsAndLists,
             TaskReferencesRequest referenceRequest) {
-        Task task = taskMapper.requestToTask(request, customFieldsAndLists, referenceRequest);
-        task.setNumber(getNextNumberSequenceValue());
+        Task task = mapper.requestToTask(request, customFieldsAndLists, referenceRequest);
+        task.setNumber(getNextTaskNumberSequenceValue());
         LocalDate validTargetStart =
                 workingDaysCalculator.addWorkDays(
                         request.getTargetStart().minusDays(1), 1, "US");
@@ -321,19 +379,19 @@ public class TaskService {
         task.setTargetFinish(
                 workingDaysCalculator.addWorkDays(validTargetStart, task.getDuration() - 1, "US"));
         entityManager.persist(task);
-        return TaskResponse.getFieldsMap(taskMapper.taskToResponse(
-                taskRepository.save(task)), null);
+        return TaskResponse.getFieldsMap(mapper.taskToResponse(
+                repository.save(task)), null);
     }
 
     @Transactional
     @CacheEvict(value = "task", key = "#id")
     public void deleteTaskById(String id) {
-        Task task = getTaskById(id);
+        Task task = findById(id);
         task.setIsDeleted(true);
-        taskRepository.save(task);
+        repository.save(task);
     }
 
-    public Long getNextNumberSequenceValue() {
+    public Long getNextTaskNumberSequenceValue() {
         return (Long) entityManager.createNativeQuery("SELECT NEXTVAL('tasks_number_seq')")
                 .getSingleResult();
     }
@@ -350,7 +408,7 @@ public class TaskService {
     }
 
     private void checkIfFollowsAlreadyPending(Task task, Task taskFromDb) {
-        List<UUID> taskIds = taskRepository.findAllPendingIdsRecursive(task.getId());
+        List<UUID> taskIds = repository.findAllPendingIdsRecursive(task.getId());
         task.getFollows().forEach(parent -> {
             if (taskIds.contains(parent.getId())) throw new CircularLinkingException(
                     MessageFormat.format(

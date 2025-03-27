@@ -23,7 +23,8 @@ public class FieldValue {
     private Field field;
 
     @Column(name = "\"value\"", nullable = false)
-    private String value;
+    @Builder.Default
+    private String value = "";
 
     @Override
     public boolean equals(Object o) {

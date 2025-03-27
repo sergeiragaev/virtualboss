@@ -32,7 +32,7 @@ public class TaskController {
 
     @GetMapping("/task/{id}")
     public ResponseEntity<Map<String, Object>> taskDetails(@PathVariable String id) {
-        return ResponseEntity.ok(service.findById(id));
+        return ResponseEntity.ok(service.getById(id));
     }
 
     @PutMapping("/task/{id}")

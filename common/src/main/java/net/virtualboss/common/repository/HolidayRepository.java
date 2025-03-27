@@ -1,7 +1,7 @@
 package net.virtualboss.common.repository;
 
 import net.virtualboss.common.model.entity.Holiday;
-import net.virtualboss.common.model.entity.HolidayProjection;
+import net.virtualboss.common.repository.projection.HolidayProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

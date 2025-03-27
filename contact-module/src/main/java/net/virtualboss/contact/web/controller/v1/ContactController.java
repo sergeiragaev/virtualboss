@@ -29,7 +29,7 @@ public class ContactController {
 
     @GetMapping("/contact/{id}")
     public ResponseEntity<Map<String, Object>> getContactById(@PathVariable String id) {
-        return ResponseEntity.ok(service.findById(id));
+        return ResponseEntity.ok(service.getById(id));
     }
 
     @DeleteMapping("/contact/{id}")

@@ -1,112 +1,146 @@
 package net.virtualboss.job.service;
 
-import lombok.RequiredArgsConstructor;
+import com.querydsl.core.JoinType;
+import com.querydsl.core.types.Predicate;
+import jakarta.persistence.EntityManager;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.AlreadyExistsException;
-import net.virtualboss.common.exception.EntityNotFoundException;
+import net.virtualboss.common.model.entity.*;
+import net.virtualboss.common.service.GenericService;
 import net.virtualboss.common.service.MainService;
 import net.virtualboss.job.mapper.v1.JobMapperV1;
 import net.virtualboss.common.util.BeanUtils;
-import net.virtualboss.job.repository.criteria.JobFilterCriteria;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.common.web.dto.filter.CommonFilter;
+import net.virtualboss.job.querydsl.JobFilterCriteria;
 import net.virtualboss.job.web.dto.JobResponse;
-import net.virtualboss.common.model.entity.Job;
 import net.virtualboss.common.repository.JobRepository;
 import net.virtualboss.job.web.dto.UpsertJobRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Log4j2
-public class JobService {
-    private final JobRepository jobRepository;
-    private final JobMapperV1 jobMapper;
-    private final MainService mainService;
+public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
+    private final JobRepository repository;
+    private final JobMapperV1 mapper;
 
-    @Cacheable(value = "job", key = "#id")
-    public Map<String, Object> findById(String id) {
-        Job job = getJobById(id);
-        return JobResponse.getFieldsMap(jobMapper.jobToResponse(job), null);
+    public JobService(EntityManager entityManager,
+                      MainService mainService,
+                      JobRepository jobRepository,
+                      JobMapperV1 jobMapper) {
+        super(entityManager, mainService, UUID::fromString, jobRepository);
+        this.repository = jobRepository;
+        this.mapper = jobMapper;
     }
 
-    public List<Map<String, Object>> findAll(String fields, CommonFilter commonFilter) {
-        if (fields == null) fields = "JobId,JobNumber";
-        Set<String> fieldList = Arrays.stream(fields.split(",")).collect(Collectors.toSet());
+    @Override
+    protected QJob getQEntity() {
+        return QJob.job;
+    }
 
-        if (commonFilter.getSize() == null) commonFilter.setSize(Integer.MAX_VALUE);
-        if (commonFilter.getPage() == null) commonFilter.setPage(1);
-        if (commonFilter.getSort() == null) commonFilter.setSort("number asc");
+    @Override
+    protected Predicate buildFilterPredicate(CommonFilter filter) {
+        return JobFilterCriteria.builder()
+                .findString(StringUtils.defaultIfBlank(filter.getFindString(), null))
+                .isDeleted(filter.getIsDeleted())
+                .build()
+                .toPredicate();
+    }
 
-        String[] sorts = commonFilter.getSort().split(",");
-        List<Sort.Order> orders = new ArrayList<>();
-        for (String sort : sorts) {
-            String[] order = sort.split(" ");
-            orders.add(new Sort.Order(Sort.Direction.valueOf(order[1].toUpperCase()), order[0]));
-        }
+    @Override
+    protected String getCustomFieldPrefix() {
+        return "JobCustom";
+    }
 
-        return jobRepository.findAll(
-                        JobFilterCriteria.builder()
-                                .isDeleted(commonFilter.getIsDeleted())
-                                .findString(commonFilter.getFindString() == null || commonFilter.getFindString().isBlank() ? null : commonFilter.getFindString())
-                                .build().getSpecification(),
-                        PageRequest.of(commonFilter.getPage() - 1, commonFilter.getSize(),
-                                Sort.by(orders)
-                        ))
-                .map(jobMapper::jobToResponse).getContent().stream()
-                .map(jobResponse -> JobResponse.getFieldsMap(jobResponse, fieldList))
-                .toList();
+    @Override
+    protected String getCustomFieldsAndListsPrefix() {
+        return "JobCustomFieldsAndLists";
+    }
+
+    @Override
+    protected String getDefaultSort() {
+        return "number asc";
+    }
+
+    @Override
+    protected String getMustHaveFields() {
+        return "JobId,JobNumber";
+    }
+
+    @Override
+    protected Class<Job> getEntityClass() {
+        return Job.class;
+    }
+
+    @Override
+    protected Class<JobResponse> getResponseClass() {
+        return JobResponse.class;
+    }
+
+    @Override
+    protected List<JoinExpression> getJoins() {
+        QJob job = QJob.job;
+        QFieldValue fieldValueJob = new QFieldValue("fieldValueJob");
+        QField fieldJob = new QField("fieldJob");
+
+        return List.of(
+                new CollectionJoin<>(job.customFieldsAndListsValues, fieldValueJob, JoinType.LEFTJOIN),
+                new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN)
+        );
+    }
+    @Override
+    protected List<GroupByExpression> getGroupBy() {
+        QJob job = QJob.job;
+        return List.of(
+                new GroupByExpression(job.id)
+        );
+    }
+
+    @Cacheable(value = "job", key = "#id")
+    public Map<String, Object> getById(String id) {
+        Job job = findById(id);
+        return JobResponse.getFieldsMap(mapper.jobToResponse(job), null);
     }
 
     @Transactional
     @CacheEvict(value = "job", key = "#id")
     public void deleteJob(String id) {
-        Job job = getJobById(id);
+        Job job = findById(id);
         mainService.eraseJobFromTasks(job);
         job.setIsDeleted(true);
-        jobRepository.save(job);
+        repository.save(job);
     }
 
     @Transactional
     @CachePut(value = "job", key = "#id")
     public Map<String, Object> saveJob(String id, UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
         checkIfJobAlreadyExist(id, request);
-        Job job = jobMapper.requestToJob(id, request, customFieldsAndLists);
-        Job jobFromDb = getJobById(id);
+        Job job = mapper.requestToJob(id, request, customFieldsAndLists);
+        Job jobFromDb = findById(id);
         job.getCustomFieldsAndListsValues().addAll(jobFromDb.getCustomFieldsAndListsValues());
         BeanUtils.copyNonNullProperties(job, jobFromDb);
-        return JobResponse.getFieldsMap(jobMapper.jobToResponse(jobRepository.save(jobFromDb)), null);
+        return JobResponse.getFieldsMap(mapper.jobToResponse(repository.save(jobFromDb)), null);
     }
 
     @Transactional
     public Map<String, Object> createJob(UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
         checkIfJobAlreadyExist(null, request);
-        Job job = jobMapper.requestToJob(request, customFieldsAndLists);
-        return JobResponse.getFieldsMap(jobMapper.jobToResponse(jobRepository.save(job)), null);
-    }
-
-    public Job getJobById(String id) {
-        return jobRepository.findById(UUID.fromString(id))
-                .orElseThrow(
-                        () -> new EntityNotFoundException(
-                                MessageFormat.format("Job with Id: {0} not found!", id)
-                        ));
+        Job job = mapper.requestToJob(request, customFieldsAndLists);
+        return JobResponse.getFieldsMap(mapper.jobToResponse(repository.save(job)), null);
     }
 
     private void checkIfJobAlreadyExist(String id, UpsertJobRequest request) {
         UUID uuid = id == null ? null : UUID.fromString(id);
         String jobNumber = request.getNumber();
-        Optional<Job> optionalJob = jobRepository.findByNumberIgnoreCaseAndIsDeleted(jobNumber, false);
+        Optional<Job> optionalJob = repository.findByNumberIgnoreCaseAndIsDeleted(jobNumber, false);
         if (optionalJob.isPresent()  && !optionalJob.get().getId().equals(uuid))
             throw new AlreadyExistsException(MessageFormat.format("Job with number <b>{0}</b> already exists!", jobNumber));
     }

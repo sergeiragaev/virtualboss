@@ -33,6 +33,7 @@ public interface TaskMapperV1 {
     @Mapping(target = "groups", ignore = true)
     Task setCFLAndReferencesToTask(Task task, CustomFieldsAndLists customFieldsAndLists, TaskReferencesRequest request);
 
+    @Mapping(source = "order", target = "taskOrder")
     Task requestToTask(UpsertTaskRequest request);
 
     default Task requestToTask(String id,
@@ -45,11 +46,9 @@ public interface TaskMapperV1 {
     }
 
     @Mapping(source = "job.number", target = "jobNumber")
-    @Mapping(source = "job", target = "jobResponse")
     @Mapping(source = "job.id", target = "jobId")
-    @Mapping(source = "contact.person", target = "contactPerson")
+//    @Mapping(source = "contact.person", target = "contactPerson")
     @Mapping(source = "contact.id", target = "contactId")
-    @Mapping(source = "contact", target = "contactResponse")
     @Mapping(source = "requested.name", target = "requested")
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
     TaskResponse taskToResponse(Task task);

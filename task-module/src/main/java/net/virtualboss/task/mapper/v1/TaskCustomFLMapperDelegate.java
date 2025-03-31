@@ -18,6 +18,6 @@ public abstract class TaskCustomFLMapperDelegate implements TaskCustomFLMapperV1
 
     @Override
     public CustomFieldsAndLists map(FieldsWrapper wrapper) {
-        return customFieldService.setCustomFieldsAndLists(wrapper.values(), EntityType.TASK);
+        return customFieldService.populateCustomFields(wrapper.values(), EntityType.TASK);
     }
 }

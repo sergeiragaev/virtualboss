@@ -17,6 +17,6 @@ public abstract class ContactCustomFLMapperDelegate implements ContactCustomFLMa
 
     @Override
     public CustomFieldsAndLists map(FieldsWrapper wrapper) {
-        return customFieldService.setCustomFieldsAndLists(wrapper.values(), EntityType.CONTACT);
+        return customFieldService.populateCustomFields(wrapper.values(), EntityType.CONTACT);
     }
 }

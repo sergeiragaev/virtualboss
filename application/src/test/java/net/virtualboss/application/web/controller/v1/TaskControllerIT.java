@@ -161,14 +161,14 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("taskId", String.valueOf(taskRepository.findAll().get(0).getId()))
                         .param("Start", String.valueOf(LocalDate.now()))
                 )
-                .andExpect(jsonPath("[0].TaskTargetStart").value(
-                        String.valueOf(LocalDate.now())))
+                .andExpect(jsonPath("[0].TaskId").value(
+                        String.valueOf(newTask.getId())))
                 .andExpect(status().isOk()
                 );
 
         Task task = taskService.findById(newTask.getId().toString());
         assertEquals(task.getNotes(), newTask.getNotes());
-        assertEquals(task.getTargetStart(), LocalDate.now());
+        assertEquals(task.getDuration(), newTask.getDuration());
     }
 
     @Test

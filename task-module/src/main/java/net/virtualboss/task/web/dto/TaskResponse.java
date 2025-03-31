@@ -12,7 +12,6 @@ import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.contact.web.dto.ContactResponse;
 import net.virtualboss.job.web.dto.JobResponse;
 
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -119,93 +118,4 @@ public class TaskResponse {
     @Flatten(prefix = "Task")
     @EntityMapping(path = "customFieldsAndListsValues")
     private CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
-
-    public static Map<String, Object> getFieldsMap(TaskResponse taskResponse, Set<String> fieldList) {
-        Map<String, Object> responseMap = new HashMap<>();
-
-        for (Field field : taskResponse.getClass().getDeclaredFields()) {
-            String fieldCaption = getFieldCaption(field);
-
-            if (processSpecialField(fieldCaption, taskResponse, responseMap, fieldList)) {
-                continue;
-            }
-
-            if (shouldIncludeField(fieldCaption, fieldList)) {
-                addFieldToMap(taskResponse, responseMap, field, fieldCaption);
-            }
-        }
-        return responseMap;
-    }
-
-    private static String getFieldCaption(Field field) {
-        return field.isAnnotationPresent(JsonProperty.class)
-                ? field.getAnnotation(JsonProperty.class).value()
-                : field.getName();
-    }
-
-    private static boolean processSpecialField(String fieldCaption,
-                                               TaskResponse taskResponse,
-                                               Map<String, Object> responseMap,
-                                               Set<String> fieldList) {
-        switch (fieldCaption) {
-            case "contact" -> {
-                processContact(taskResponse, responseMap, fieldList);
-                return true;
-            }
-            case "job" -> {
-                processJob(taskResponse, responseMap, fieldList);
-                return true;
-            }
-            case "TaskCustomFieldsAndLists" -> {
-                processCustomFields(taskResponse, responseMap, fieldList);
-                return true;
-            }
-            default -> {
-                return false;
-            }
-        }
-    }
-
-    private static void processContact(TaskResponse taskResponse,
-                                       Map<String, Object> responseMap,
-                                       Set<String> fieldList) {
-        Optional.ofNullable(taskResponse.contact)
-                .ifPresent(contact -> responseMap.putAll(
-                        ContactResponse.getFieldsMap(contact, fieldList)
-                ));
-    }
-
-    private static void processJob(TaskResponse taskResponse,
-                                   Map<String, Object> responseMap,
-                                   Set<String> fieldList) {
-        Optional.ofNullable(taskResponse.job)
-                .ifPresent(job -> responseMap.putAll(
-                        JobResponse.getFieldsMap(job, fieldList)
-                ));
-    }
-
-    private static void processCustomFields(TaskResponse taskResponse,
-                                            Map<String, Object> responseMap,
-                                            Set<String> fieldList) {
-        Optional.ofNullable(taskResponse.customFieldsAndLists)
-                .ifPresent(customFields -> responseMap.putAll(
-                        CustomFieldsAndLists.getFieldsMap(customFields, "Task", fieldList)
-                ));
-    }
-
-    private static boolean shouldIncludeField(String fieldCaption, Set<String> fieldList) {
-        return fieldList == null || fieldList.contains(fieldCaption);
-    }
-
-    private static void addFieldToMap(TaskResponse taskResponse,
-                                      Map<String, Object> responseMap,
-                                      Field field,
-                                      String fieldCaption) {
-        try {
-            Optional.ofNullable(field.get(taskResponse))
-                    .ifPresent(value -> responseMap.put(fieldCaption, value));
-        } catch (IllegalAccessException e) {
-            throw new IllegalStateException("Failed to access field: " + field.getName(), e);
-        }
-    }
 }

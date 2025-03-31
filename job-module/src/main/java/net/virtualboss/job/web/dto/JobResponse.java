@@ -9,7 +9,6 @@ import net.virtualboss.common.annotation.EntityMapping;
 import net.virtualboss.common.annotation.Flatten;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 @Data
@@ -128,67 +127,4 @@ public class JobResponse {
     @JsonProperty("JobDeleted")
     @Builder.Default
     private Boolean isDeleted = false;
-
-
-    public static Map<String, Object> getFieldsMap(JobResponse jobResponse, Set<String> fieldList) {
-        Map<String, Object> responseMap = new HashMap<>();
-
-        for (Field field : jobResponse.getClass().getDeclaredFields()) {
-            String fieldCaption = getFieldCaption(field);
-
-            if (processSpecialField(fieldCaption, jobResponse, responseMap, fieldList)) {
-                continue;
-            }
-
-            if (shouldIncludeField(fieldCaption, fieldList)) {
-                addFieldToMap(jobResponse, responseMap, field, fieldCaption);
-            }
-        }
-
-        return responseMap;
-    }
-
-    private static String getFieldCaption(Field field) {
-        return field.isAnnotationPresent(JsonProperty.class)
-                ? field.getAnnotation(JsonProperty.class).value()
-                : field.getName();
-    }
-
-    private static boolean processSpecialField(String fieldCaption,
-                                               JobResponse jobResponse,
-                                               Map<String, Object> responseMap,
-                                               Set<String> fieldList) {
-
-        if ("JobCustomFieldsAndLists".equals(fieldCaption)) {
-            processCustomFields(jobResponse, responseMap, fieldList);
-            return true;
-        }
-
-        return false;
-    }
-
-    private static void processCustomFields(JobResponse jobResponse,
-                                            Map<String, Object> responseMap,
-                                            Set<String> fieldList) {
-        Optional.ofNullable(jobResponse.customFieldsAndLists)
-                .ifPresent(customFields -> responseMap.putAll(
-                        CustomFieldsAndLists.getFieldsMap(customFields, "Job", fieldList)
-                ));
-    }
-
-    private static boolean shouldIncludeField(String fieldCaption, Set<String> fieldList) {
-        return fieldList == null || fieldList.contains(fieldCaption);
-    }
-
-    private static void addFieldToMap(JobResponse jobResponse,
-                                      Map<String, Object> responseMap,
-                                      Field field,
-                                      String fieldCaption) {
-        try {
-            Optional.ofNullable(field.get(jobResponse))
-                    .ifPresent(value -> responseMap.put(fieldCaption, value));
-        } catch (IllegalAccessException e) {
-            throw new IllegalStateException("Failed to access field: " + field.getName(), e);
-        }
-    }
 }

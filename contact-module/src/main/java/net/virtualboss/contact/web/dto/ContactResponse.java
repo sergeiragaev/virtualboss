@@ -9,7 +9,6 @@ import net.virtualboss.common.annotation.EntityMapping;
 import net.virtualboss.common.annotation.Flatten;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 @Data
@@ -34,10 +33,6 @@ public class ContactResponse {
     @JsonProperty("ContactPerson")
     @Builder.Default
     private String person = "";
-
-    public String getPerson() {
-        return this.firstName + ((this.firstName.isBlank()) ? "" : " ") + this.lastName;
-    }
 
     @JsonProperty("ContactFirstName")
     @EntityMapping
@@ -118,74 +113,14 @@ public class ContactResponse {
     @Builder.Default
     private String groups = "";
 
-    public static Map<String, Object> getFieldsMap(ContactResponse contactResponse, Set<String> fieldList) {
-        Map<String, Object> responseMap = new HashMap<>();
-
-        for (Field field : contactResponse.getClass().getDeclaredFields()) {
-            String fieldCaption = getFieldCaption(field);
-
-            if (processSpecialField(fieldCaption, contactResponse, responseMap, fieldList)) {
-                continue;
-            }
-
-            if (shouldIncludeField(fieldCaption, fieldList)) {
-                addFieldToMap(contactResponse, responseMap, field, fieldCaption);
-            }
+    /**
+     * Вычисляемое поле "ContactPerson", объединяющее имя и фамилию.
+     */
+    public String getPerson() {
+        String fullName = firstName;
+        if (!firstName.isBlank() && !lastName.isBlank()) {
+            fullName += " " + lastName;
         }
-
-        return responseMap;
-    }
-
-    private static String getFieldCaption(Field field) {
-        return field.isAnnotationPresent(JsonProperty.class)
-                ? field.getAnnotation(JsonProperty.class).value()
-                : field.getName();
-    }
-
-    private static boolean processSpecialField(String fieldCaption,
-                                               ContactResponse contactResponse,
-                                               Map<String, Object> responseMap,
-                                               Set<String> fieldList) {
-        if ("ContactPerson".equals(fieldCaption)) {
-            processContactPerson(contactResponse, responseMap);
-            return true;
-        }
-
-        if ("ContactCustomFieldsAndLists".equals(fieldCaption)) {
-            processCustomFields(contactResponse, responseMap, fieldList);
-            return true;
-        }
-
-        return false;
-    }
-
-    private static void processContactPerson(ContactResponse contactResponse, Map<String, Object> responseMap) {
-        Optional.ofNullable(contactResponse.getPerson())
-                .ifPresent(person -> responseMap.put("ContactPerson", person));
-    }
-
-    private static void processCustomFields(ContactResponse contactResponse,
-                                            Map<String, Object> responseMap,
-                                            Set<String> fieldList) {
-        Optional.ofNullable(contactResponse.customFieldsAndLists)
-                .ifPresent(customFields -> responseMap.putAll(
-                        CustomFieldsAndLists.getFieldsMap(customFields, "Contact", fieldList)
-                ));
-    }
-
-    private static boolean shouldIncludeField(String fieldCaption, Set<String> fieldList) {
-        return fieldList == null || fieldList.contains(fieldCaption);
-    }
-
-    private static void addFieldToMap(ContactResponse contactResponse,
-                                      Map<String, Object> responseMap,
-                                      Field field,
-                                      String fieldCaption) {
-        try {
-            Optional.ofNullable(field.get(contactResponse))
-                    .ifPresent(value -> responseMap.put(fieldCaption, value));
-        } catch (IllegalAccessException e) {
-            throw new IllegalStateException("Failed to access field: " + field.getName(), e);
-        }
+        return fullName;
     }
 }

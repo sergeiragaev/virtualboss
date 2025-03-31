@@ -23,7 +23,7 @@
         </sonar.coverage.jacoco.xmlReportPaths>
         <sonar.core.codeCoveragePlugin>jacoco</sonar.core.codeCoveragePlugin>
         <sonar.coverage.exclusions>
-            **/config/**, **/dto/**, **/exception/**,**/handler/**, **/mapper/**,
+            **/config/**, **/dto/**, **/exception/**,**/handler/**,
             **/model/**, **/processor/**, **/repository/**, **/adminservice/**, **Application.java,
             **/Admin**, **/*Serializer.java, **/*serializer.java, **/*Constants.java, **/RouterValidator.java,
             **Configuration.java

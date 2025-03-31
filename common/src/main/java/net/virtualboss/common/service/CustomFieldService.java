@@ -2,6 +2,7 @@ package net.virtualboss.common.service;
 
 import lombok.RequiredArgsConstructor;
 import net.virtualboss.common.exception.EntityNotFoundException;
+import net.virtualboss.common.mapper.v1.CustomFieldsMapper;
 import net.virtualboss.common.model.entity.Field;
 import net.virtualboss.common.model.entity.FieldValue;
 import net.virtualboss.common.model.enums.EntityType;
@@ -19,38 +20,37 @@ public class CustomFieldService {
 
     private final FieldRepository fieldRepository;
     private final FieldValueRepository fieldValueRepository;
+    private final CustomFieldsMapper customFieldsMapper;
 
-    public Set<FieldValue> createCustomList(CustomFieldsAndLists customFieldsAndLists, EntityType type) {
+    public Set<FieldValue> createCustomFieldValues(CustomFieldsAndLists customFieldsAndLists, EntityType type) {
         Set<FieldValue> values = new HashSet<>();
-        String prefix = type.name().charAt(0) + type.name().toLowerCase().substring(1);
-        Map<String, String> customFieldsMap =
-                CustomFieldsAndLists.getFieldsMap(customFieldsAndLists, prefix, null);
-        for (Map.Entry<String, String> entry : customFieldsMap.entrySet()) {
-            String fieldCaption = entry.getKey();
-            if (entry.getValue() == null) continue;
-            String fieldValue = entry.getValue();
-            if (!fieldValue.isBlank()) {
-                Field field = fieldRepository
-                        .findByName(fieldCaption)
-                        .orElseThrow(() -> new EntityNotFoundException(
-                                MessageFormat.format("Field with name {0} not found!", fieldCaption)));
-                FieldValue value = fieldValueRepository
-                        .findByFieldAndValue(field, fieldValue).orElse(
-                                FieldValue.builder()
-                                        .field(field)
-                                        .value(fieldValue)
-                                        .build()
-                        );
-
-                values.add(value);
+        String prefix = formatPrefix(type.name());
+        Map<String, String> customFieldsMap = customFieldsMapper.getFieldsMap(customFieldsAndLists, prefix, null);
+        customFieldsMap.forEach((caption, fieldValue) -> {
+            if (fieldValue == null || fieldValue.isBlank()) {
+                return;
             }
-        }
+            Field field = fieldRepository.findByName(caption)
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            MessageFormat.format("Field with name {0} not found!", caption)));
+            FieldValue value = fieldValueRepository.findByFieldAndValue(field, fieldValue)
+                    .orElse(FieldValue.builder()
+                            .field(field)
+                            .value(fieldValue)
+                            .build());
+            values.add(value);
+        });
         return values;
     }
 
-    public CustomFieldsAndLists setCustomFieldsAndLists(Set<FieldValue> values, EntityType type) {
+    public CustomFieldsAndLists populateCustomFields(Set<FieldValue> values, EntityType type) {
         CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder().build();
-        CustomFieldsAndLists.setCustomFieldsAndListsValues(customFieldsAndLists, values, type.name());
+        customFieldsMapper.setCustomFieldsAndListsValues(customFieldsAndLists, values, type.name());
         return customFieldsAndLists;
+    }
+
+    private String formatPrefix(String typeName) {
+        // Преобразует, например, "ORDER" в "Order"
+        return typeName.charAt(0) + typeName.substring(1).toLowerCase();
     }
 }

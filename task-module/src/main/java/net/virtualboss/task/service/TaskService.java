@@ -13,6 +13,7 @@ import net.virtualboss.common.util.*;
 import net.virtualboss.common.web.dto.filter.CommonFilter;
 import net.virtualboss.task.mapper.v1.TaskMapperV1;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
+import net.virtualboss.task.mapper.v1.TaskResponseMapper;
 import net.virtualboss.task.querydsl.TaskFilterCriteria;
 import net.virtualboss.task.web.dto.TaskReferencesRequest;
 import net.virtualboss.task.web.dto.TaskResponse;
@@ -35,13 +36,14 @@ import java.util.stream.Collectors;
 
 @Service
 @Log4j2
-public class TaskService  extends GenericService<Task, UUID, TaskResponse, QTask> {
+public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask> {
     private final TaskRepository repository;
     private final JobRepository jobRepository;
     private final ContactRepository contactRepository;
     private final TaskMapperV1 mapper;
     private final TaskScheduleService taskScheduleService;
     private final WorkingDaysCalculator workingDaysCalculator;
+    private final TaskResponseMapper taskResponseMapper;
 
     public TaskService(EntityManager entityManager,
                        MainService mainService,
@@ -50,7 +52,8 @@ public class TaskService  extends GenericService<Task, UUID, TaskResponse, QTask
                        ContactRepository contactRepository,
                        TaskMapperV1 taskMapper,
                        TaskScheduleService taskScheduleService,
-                       WorkingDaysCalculator workingDaysCalculator) {
+                       WorkingDaysCalculator workingDaysCalculator,
+                       TaskResponseMapper taskResponseMapper) {
         super(entityManager, mainService, UUID::fromString, taskRepository);
         this.repository = taskRepository;
         this.jobRepository = jobRepository;
@@ -58,6 +61,7 @@ public class TaskService  extends GenericService<Task, UUID, TaskResponse, QTask
         this.mapper = taskMapper;
         this.taskScheduleService = taskScheduleService;
         this.workingDaysCalculator = workingDaysCalculator;
+        this.taskResponseMapper = taskResponseMapper;
     }
 
     @Override
@@ -153,13 +157,14 @@ public class TaskService  extends GenericService<Task, UUID, TaskResponse, QTask
                 new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN)
         );
     }
+
     @Override
     protected List<GroupByExpression> getGroupBy() {
         QTask task = QTask.task;
         return List.of(
                 new GroupByExpression(task.id),
                 new GroupByExpression(task.job),
-                new GroupByExpression(task.contact)        );
+                new GroupByExpression(task.contact));
     }
 
     @Override
@@ -181,7 +186,7 @@ public class TaskService  extends GenericService<Task, UUID, TaskResponse, QTask
     @Cacheable(value = "task", key = "#id")
     public Map<String, Object> getById(String id) {
         Task task = findById(id);
-        return TaskResponse.getFieldsMap(mapper.taskToResponse(task), null);
+        return taskResponseMapper.map(mapper.taskToResponse(task), null);
     }
 
     @Override
@@ -322,7 +327,7 @@ public class TaskService  extends GenericService<Task, UUID, TaskResponse, QTask
         taskFromDb.setJob(task.getJob());
         taskFromDb.assignTasksToJobAndContact();
         taskScheduleService.recalculateTaskDates(taskFromDb);
-        return TaskResponse.getFieldsMap(mapper.taskToResponse(taskFromDb), null);
+        return taskResponseMapper.map(mapper.taskToResponse(taskFromDb), null);
     }
 
     @Transactional
@@ -379,8 +384,9 @@ public class TaskService  extends GenericService<Task, UUID, TaskResponse, QTask
         task.setTargetFinish(
                 workingDaysCalculator.addWorkDays(validTargetStart, task.getDuration() - 1, "US"));
         entityManager.persist(task);
-        return TaskResponse.getFieldsMap(mapper.taskToResponse(
-                repository.save(task)), null);
+        return taskResponseMapper.map(
+                mapper.taskToResponse(
+                        repository.save(task)), null);
     }
 
     @Transactional

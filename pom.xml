@@ -27,7 +27,7 @@
         <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/jacoco-aggregator/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
         <sonar.coverage.exclusions>
-            **/config/**, **/dto/**, **/exception/**,**/handler/**, **/mapper/**,
+            **/config/**, **/dto/**, **/exception/**,**/handler/**,
             **/model/**, **/processor/**, **/repository/**, **/adminservice/**, **Application.java,
             **/Admin**, **/*Serializer.java, **/*serializer.java, **/*Constants.java, **/RouterValidator.java,
             **Configuration.java
@@ -70,5 +70,4 @@
             </plugins>
         </pluginManagement>
     </build>
-
 </project>

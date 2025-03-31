@@ -12,6 +12,7 @@ import net.virtualboss.job.mapper.v1.JobMapperV1;
 import net.virtualboss.common.util.BeanUtils;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.common.web.dto.filter.CommonFilter;
+import net.virtualboss.job.mapper.v1.JobResponseMapper;
 import net.virtualboss.job.querydsl.JobFilterCriteria;
 import net.virtualboss.job.web.dto.JobResponse;
 import net.virtualboss.common.repository.JobRepository;
@@ -31,14 +32,17 @@ import java.util.*;
 public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
     private final JobRepository repository;
     private final JobMapperV1 mapper;
+    private final JobResponseMapper jobResponseMapper;
 
     public JobService(EntityManager entityManager,
                       MainService mainService,
                       JobRepository jobRepository,
-                      JobMapperV1 jobMapper) {
+                      JobMapperV1 jobMapper,
+                      JobResponseMapper jobResponseMapper) {
         super(entityManager, mainService, UUID::fromString, jobRepository);
         this.repository = jobRepository;
         this.mapper = jobMapper;
+        this.jobResponseMapper = jobResponseMapper;
     }
 
     @Override
@@ -107,7 +111,7 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
     @Cacheable(value = "job", key = "#id")
     public Map<String, Object> getById(String id) {
         Job job = findById(id);
-        return JobResponse.getFieldsMap(mapper.jobToResponse(job), null);
+        return jobResponseMapper.map(mapper.jobToResponse(job), null);
     }
 
     @Transactional
@@ -127,14 +131,14 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
         Job jobFromDb = findById(id);
         job.getCustomFieldsAndListsValues().addAll(jobFromDb.getCustomFieldsAndListsValues());
         BeanUtils.copyNonNullProperties(job, jobFromDb);
-        return JobResponse.getFieldsMap(mapper.jobToResponse(repository.save(jobFromDb)), null);
+        return jobResponseMapper.map(mapper.jobToResponse(repository.save(jobFromDb)), null);
     }
 
     @Transactional
     public Map<String, Object> createJob(UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
         checkIfJobAlreadyExist(null, request);
         Job job = mapper.requestToJob(request, customFieldsAndLists);
-        return JobResponse.getFieldsMap(mapper.jobToResponse(repository.save(job)), null);
+        return jobResponseMapper.map(mapper.jobToResponse(repository.save(job)), null);
     }
 
     private void checkIfJobAlreadyExist(String id, UpsertJobRequest request) {

@@ -40,7 +40,8 @@ public abstract class TaskMapperDelegate implements TaskMapperV1 {
 
     @Override
     public Task setCFLAndReferencesToTask(Task task, CustomFieldsAndLists customFieldsAndLists, TaskReferencesRequest request) {
-        task.setCustomFieldsAndListsValues(customFieldService.createCustomList(customFieldsAndLists, EntityType.TASK));
+        task.setCustomFieldsAndListsValues(
+                customFieldService.createCustomFieldValues(customFieldsAndLists, EntityType.TASK));
         task.setContact(mainService.getContactById(request.getContactId()));
         task.setJob(mainService.getJobByNumber(request.getJobNumber()));
         task.setRequested(employeeService.findByName(request.getRequested()));

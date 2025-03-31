@@ -17,6 +17,6 @@ public abstract class JobCustomFLMapperDelegate implements JobCustomFLMapperV1 {
 
     @Override
     public CustomFieldsAndLists map(FieldsWrapper wrapper) {
-        return customFieldService.setCustomFieldsAndLists(wrapper.values(), EntityType.JOB);
+        return customFieldService.populateCustomFields(wrapper.values(), EntityType.JOB);
     }
 }

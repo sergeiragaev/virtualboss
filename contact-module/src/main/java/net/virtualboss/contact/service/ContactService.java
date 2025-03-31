@@ -11,6 +11,7 @@ import net.virtualboss.common.service.MainService;
 import net.virtualboss.contact.mapper.v1.ContactMapperV1;
 import net.virtualboss.common.util.BeanUtils;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
+import net.virtualboss.contact.mapper.v1.ContactResponseMapper;
 import net.virtualboss.contact.querydsl.ContactFilterCriteria;
 import net.virtualboss.contact.web.dto.ContactResponse;
 import net.virtualboss.common.repository.ContactRepository;
@@ -30,19 +31,22 @@ import java.util.*;
 public class ContactService extends GenericService<Contact, UUID, ContactResponse, QContact> {
     private final ContactRepository repository;
     private final ContactMapperV1 mapper;
+    private final ContactResponseMapper contactResponseMapper;
 
     public ContactService(EntityManager entityManager,
                           MainService mainService,
                           ContactRepository repository,
-                          ContactMapperV1 mapper) {
+                          ContactMapperV1 mapper,
+                          ContactResponseMapper contactResponseMapper) {
         super(entityManager, mainService, UUID::fromString, repository);
         this.repository = repository;
         this.mapper = mapper;
+        this.contactResponseMapper = contactResponseMapper;
     }
 
     @Cacheable(value = "contact", key = "#id")
     public Map<String, Object> getById(String id) {
-        return ContactResponse.getFieldsMap(mapper.contactToResponse(mainService.getContactById(id)), null);
+        return contactResponseMapper.map(mapper.contactToResponse(mainService.getContactById(id)), null);
     }
 
     @Override
@@ -137,13 +141,13 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
         Contact contactFromDB = mainService.getContactById(id);
         contact.getCustomFieldsAndListsValues().addAll(contactFromDB.getCustomFieldsAndListsValues());
         BeanUtils.copyNonNullProperties(contact, contactFromDB);
-        return ContactResponse.getFieldsMap(mapper.contactToResponse(repository.save(contactFromDB)), null);
+        return contactResponseMapper.map(mapper.contactToResponse(repository.save(contactFromDB)), null);
     }
 
     @Transactional
     public Map<String, Object> createContact(UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
         Contact contact = mapper.requestToContact(request, customFieldsAndLists);
-        return ContactResponse.getFieldsMap(mapper.contactToResponse(repository.save(contact)), null);
+        return contactResponseMapper.map(mapper.contactToResponse(repository.save(contact)), null);
     }
 
 }

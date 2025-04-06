@@ -76,7 +76,7 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
 
     @Override
     protected String getDefaultSort() {
-        return "firstName asc,lastName asc,company asc";
+        return "firstName:asc,lastName:asc,company:asc";
     }
 
     @Override
@@ -112,14 +112,6 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
         return List.of(
                 new GroupByExpression(contact.id)
         );
-    }
-
-    @Override
-    protected void processContactPerson(List<ContactResponse> responses) {
-        responses.forEach(response -> {
-            String person = response.getFirstName() + " " + response.getLastName();
-            response.setPerson(person);
-        });
     }
 
     @Transactional

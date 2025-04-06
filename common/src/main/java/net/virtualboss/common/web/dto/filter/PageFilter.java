@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class PageFilter {
-    private Integer size;
+    private Integer limit;
     private Integer page;
     private String sort;
 }

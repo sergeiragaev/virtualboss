@@ -12,11 +12,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -109,9 +109,9 @@ class ContactServiceIT extends TestDependenciesContainer {
         contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
         CommonFilter filter = new CommonFilter();
         filter.setFindString("custom");
-        List<Map<String, Object>> result = contactService.findAll(null, filter);
+        Page<Map<String, Object>> result = contactService.findAll(null, filter);
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.getTotalElements());
     }
 
     @Test
@@ -120,9 +120,9 @@ class ContactServiceIT extends TestDependenciesContainer {
     void searchAllContacts() {
         contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
         CommonFilter filter = new CommonFilter();
-        List<Map<String, Object>> result = contactService.findAll(null, filter);
+        Page<Map<String, Object>> result = contactService.findAll(null, filter);
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.getTotalElements());
     }
 
     @Test
@@ -132,9 +132,9 @@ class ContactServiceIT extends TestDependenciesContainer {
         contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
         CommonFilter filter = new CommonFilter();
         filter.setFindString(" ");
-        List<Map<String, Object>> result = contactService.findAll(null, filter);
+        Page<Map<String, Object>> result = contactService.findAll(null, filter);
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.getTotalElements());
     }
 
     @Test
@@ -147,11 +147,11 @@ class ContactServiceIT extends TestDependenciesContainer {
         String savedContactId = savedContactMap.get("ContactId").toString();
         filter.setFindString(savedContactCompany);
         filter.setIsDeleted(false);
-        List<Map<String, Object>> result = contactService.findAll("ContactId", filter);
+        Page<Map<String, Object>> result = contactService.findAll("ContactId", filter);
         assertNotNull(result);
-        assertFalse(result.get(0).isEmpty());
-        assertEquals(1, result.size());
-        assertEquals(savedContactId, result.get(0).get("ContactId").toString());
+        assertFalse(result.getContent().get(0).isEmpty());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(savedContactId, result.getContent().get(0).get("ContactId").toString());
     }
 
     @Test
@@ -163,8 +163,8 @@ class ContactServiceIT extends TestDependenciesContainer {
         String savedContactId = savedContactMap.get("ContactId").toString();
         filter.setIsDeleted(false);
         filter.setFindString(savedContactId);
-        List<Map<String, Object>> result = contactService.findAll("ContactId", filter);
+        Page<Map<String, Object>> result = contactService.findAll("ContactId", filter);
         assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertTrue(result.getContent().isEmpty());
     }
 }

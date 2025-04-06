@@ -62,7 +62,7 @@ public class CustomFieldsMapper {
                     .findFirst()
                     .ifPresent(val -> {
                         ReflectionUtils.makeAccessible(field);
-                        ReflectionUtils.setField(field, instance, val.getValue());
+                        ReflectionUtils.setField(field, instance, val.getCustomValue());
                     });
         }
     }

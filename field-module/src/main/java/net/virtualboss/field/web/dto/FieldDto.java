@@ -11,6 +11,6 @@ public class FieldDto {
     private String defaultValue;
     private String alias;
     private boolean enabled;
-    private short order;
+    private short fieldOrder;
 
 }

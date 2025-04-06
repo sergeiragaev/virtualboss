@@ -6,11 +6,11 @@ import net.virtualboss.contact.service.ContactService;
 import net.virtualboss.contact.web.dto.UpsertContactRequest;
 import net.virtualboss.common.web.dto.filter.CommonFilter;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 
@@ -21,7 +21,7 @@ public class ContactController {
     private final ContactService service;
 
     @GetMapping("/contact")
-    public ResponseEntity<List<Map<String, Object>>> getContacts(
+    public ResponseEntity<Page<Map<String, Object>>> getContacts(
             @RequestParam(required = false) String fields,
             CommonFilter commonFilter) {
         return ResponseEntity.ok(service.findAll(fields, commonFilter));

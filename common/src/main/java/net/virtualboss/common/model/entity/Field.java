@@ -25,6 +25,9 @@ public class Field {
     @Column(nullable = false)
     private Boolean enabled = true;
 
-    @Column(nullable = false, name = "\"order\"")
-    private Short order;
+    @Column(nullable = false, name = "field_order")
+    private Short fieldOrder;
+
+    @Column(nullable = false)
+    private String path;
 }

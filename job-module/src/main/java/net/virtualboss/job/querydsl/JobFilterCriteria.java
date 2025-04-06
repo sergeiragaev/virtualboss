@@ -49,7 +49,7 @@ public class JobFilterCriteria {
                 .or(job.notes.containsIgnoreCase(searchStr))
                 .or(job.ownerName.containsIgnoreCase(searchStr))
                 .or(job.company.containsIgnoreCase(searchStr))
-                .or(job.customFieldsAndListsValues.any().value.containsIgnoreCase(searchStr));
+                .or(job.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr));
     }
 
         private BooleanBuilder newBooleanBuilder() {

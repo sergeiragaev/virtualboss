@@ -90,7 +90,7 @@ public class MigrationService {
                         .defaultValue(row.getString("FI_NAME"))
                         .alias(row.getString("FI_ALIAS"))
                         .enabled(row.getBoolean("FI_RVBLIST"))
-                        .order((short) row.getInt("FI_RVBORDR"))
+                        .fieldOrder((short) row.getInt("FI_RVBORDR"))
                         .build();
                 fieldService.updateField(fieldDto);
             } catch (Exception e) {

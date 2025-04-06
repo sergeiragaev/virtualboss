@@ -71,7 +71,7 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
 
     @Override
     protected String getDefaultSort() {
-        return "number asc";
+        return "number:asc";
     }
 
     @Override

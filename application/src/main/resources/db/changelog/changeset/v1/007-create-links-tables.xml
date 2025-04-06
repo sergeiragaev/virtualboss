@@ -65,7 +65,7 @@
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true"/>
             </column>
-            <column name="value" type="VARCHAR(255)">
+            <column name="custom_value" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="field_id" type="INTEGER"/>

@@ -16,12 +16,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -114,9 +114,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
                 generateTestTaskReferenceRequest());
         TaskFilter filter = new TaskFilter();
         filter.setFindString("custom");
-        List<Map<String, Object>> result = taskService.findAll("TaskId", filter);
+        Page<Map<String, Object>> result = taskService.findAll("TaskId", filter);
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.getTotalElements());
     }
 
     @Test
@@ -137,11 +137,11 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         filter.setIsDateRange(true);
         filter.setIsDeleted(false);
         filter.setThisDate(LocalDate.now().plusDays(5));
-        List<Map<String, Object>> result = taskService.findAll(null, filter);
+        Page<Map<String, Object>> result = taskService.findAll(null, filter);
         assertNotNull(result);
-        assertFalse(result.get(0).isEmpty());
-        assertEquals(1, result.size());
-        assertEquals(savedTaskId, result.get(0).get("TaskId").toString());
+        assertFalse(result.getContent().get(0).isEmpty());
+        assertEquals(1, result.getContent().size());
+        assertEquals(savedTaskId, result.getContent().get(0).get("TaskId").toString());
     }
 
     @Test
@@ -162,9 +162,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         filter.setIsDateRange(true);
         filter.setIsDeleted(false);
         filter.setThisDate(LocalDate.now().minusDays(10));
-        List<Map<String, Object>> result = taskService.findAll("TaskId", filter);
+        Page<Map<String, Object>> result = taskService.findAll("TaskId", filter);
         assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertTrue(result.getContent().isEmpty());
     }
 
     @Test
@@ -183,9 +183,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         filter.setDateTo(LocalDate.now().minusDays(360));
         filter.setDateCriteria(DateCriteria.ON_OR_BEFORE.getValue());
         filter.setDateType(DateType.TARGET_FINISH.getValue());
-        List<Map<String, Object>> result = taskService.findAll("ContactPerson", filter);
+        Page<Map<String, Object>> result = taskService.findAll("ContactPerson", filter);
         assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertTrue(result.getContent().isEmpty());
     }
 
     @Test
@@ -204,9 +204,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         filter.setDateRange(DateRange.DATE_PERIOD.getValue());
         filter.setDateFrom(LocalDate.now().minusDays(2));
         filter.setDateTo(LocalDate.now().minusDays(1));
-        List<Map<String, Object>> result = taskService.findAll(null, filter);
+        Page<Map<String, Object>> result = taskService.findAll(null, filter);
         assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertTrue(result.getContent().isEmpty());
     }
 
     @Test
@@ -225,11 +225,11 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         filter.setIsDeleted(false);
         filter.setDateType(DateType.ANY_DATE_FIELD.getValue());
         filter.setDateCriteria(DateCriteria.ON_OR_AFTER.getValue());
-        List<Map<String, Object>> result = taskService.findAll(null, filter);
+        Page<Map<String, Object>> result = taskService.findAll(null, filter);
         assertNotNull(result);
-        assertFalse(result.get(0).isEmpty());
-        assertEquals(1, result.size());
-        assertEquals(savedTaskId, result.get(0).get("TaskId").toString());
+        assertFalse(result.getContent().get(0).isEmpty());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(savedTaskId, result.getContent().get(0).get("TaskId").toString());
     }
 
     @Test
@@ -329,7 +329,7 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         entityManager.clear();
 
         taskService.updateTaskByStartAndFinish(firstTask.getId().toString(),
-                null, firstTask.getTargetFinish().plusDays(15));
+                null, firstTask.getTargetFinish().plusDays(25));
         if (firstTask.getStatus() == TaskStatus.ACTIVE) {
             assertNotEquals(oldLastTaskFinish, taskRepository.findByNumber(firstTaskNumber + 2).orElseThrow().getTargetFinish());
         }
@@ -341,18 +341,18 @@ class TaskServiceTestIT extends TestDependenciesContainer {
     @Transactional
     void findAllTasksWithNestedEntityCustomFields() {
         create2PendingSequentialTasks();
-        List<Map<String, Object>> response = taskService.findAll(
+        Page<Map<String, Object>> response = taskService.findAll(
                 "JobLot,TaskDescription,TaskTargetStart,JobNumber,TaskCustomField2,JobCustomList1,ContactPerson",
                 new TaskFilter());
         long firstTaskNumber = taskRepository.findAll().stream().map(Task::getNumber).min(Long::compareTo).orElseThrow();
         Task firstTask = taskRepository.findByNumber(firstTaskNumber).orElseThrow();
-        assertEquals(firstTask.getId(), response.get(0).get("TaskId"));
-        assertEquals(firstTask.getDescription(), response.get(0).get("TaskDescription"));
-        assertEquals(firstTask.getTargetStart(), response.get(0).get("TaskTargetStart"));
-        assertEquals(firstTask.getCustomValueByName("TaskCustomField2"), response.get(0).get("TaskCustomField2"));
-        assertEquals(firstTask.getJob().getCustomValueByName("JobCustomList1"), response.get(0).get("JobCustomList1"));
-        assertEquals(firstTask.getJob().getLot(), response.get(0).get("JobLot"));
-        assertEquals(firstTask.getContact().getPerson(), response.get(0).get("ContactPerson"));
+        assertEquals(firstTask.getId(), response.getContent().get(0).get("TaskId"));
+        assertEquals(firstTask.getDescription(), response.getContent().get(0).get("TaskDescription"));
+        assertEquals(firstTask.getTargetStart(), response.getContent().get(0).get("TaskTargetStart"));
+        assertEquals(firstTask.getCustomValueByName("TaskCustomField2"), response.getContent().get(0).get("TaskCustomField2"));
+        assertEquals(firstTask.getJob().getCustomValueByName("JobCustomList1"), response.getContent().get(0).get("JobCustomList1"));
+        assertEquals(firstTask.getJob().getLot(), response.getContent().get(0).get("JobLot"));
+        assertEquals(firstTask.getContact().getPerson(), response.getContent().get(0).get("ContactPerson"));
     }
 
 }

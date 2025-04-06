@@ -2,11 +2,13 @@ package net.virtualboss.task.service;
 
 import com.querydsl.core.JoinType;
 import com.querydsl.core.types.Predicate;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.CircularLinkingException;
 import net.virtualboss.common.model.entity.*;
 import net.virtualboss.common.model.enums.*;
+import net.virtualboss.common.repository.FieldRepository;
 import net.virtualboss.common.service.GenericService;
 import net.virtualboss.common.service.MainService;
 import net.virtualboss.common.util.*;
@@ -26,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +47,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
     private final TaskScheduleService taskScheduleService;
     private final WorkingDaysCalculator workingDaysCalculator;
     private final TaskResponseMapper taskResponseMapper;
+    private final FieldRepository fieldRepository;
 
     public TaskService(EntityManager entityManager,
                        MainService mainService,
@@ -53,7 +57,8 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
                        TaskMapperV1 taskMapper,
                        TaskScheduleService taskScheduleService,
                        WorkingDaysCalculator workingDaysCalculator,
-                       TaskResponseMapper taskResponseMapper) {
+                       TaskResponseMapper taskResponseMapper,
+                       FieldRepository fieldRepository) {
         super(entityManager, mainService, UUID::fromString, taskRepository);
         this.repository = taskRepository;
         this.jobRepository = jobRepository;
@@ -62,6 +67,47 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
         this.taskScheduleService = taskScheduleService;
         this.workingDaysCalculator = workingDaysCalculator;
         this.taskResponseMapper = taskResponseMapper;
+        this.fieldRepository = fieldRepository;
+    }
+
+    @PostConstruct
+    private void setSortFieldMapping() {
+        fieldRepository.findAll().forEach(this::mapFieldToSorting);
+    }
+
+    private void mapFieldToSorting(Field field) {
+        String fieldName = field.getName();
+        String path = field.getPath();
+
+        String mappedPath = determineMappedPath(fieldName, path);
+        sortFieldMapping.put(fieldName, mappedPath);
+    }
+
+    private String determineMappedPath(String fieldName, String path) {
+        Map<String, String> customMappings = Map.of(
+                "TaskCustom", "customFields.",
+                "JobCustom", "Job.customFields.",
+                "ContactCustom", "Contact.customFields."
+        );
+
+        Optional<String> customPrefix = customMappings.entrySet().stream()
+                .filter(entry -> fieldName.startsWith(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst();
+
+        if (customPrefix.isPresent()) {
+            return customPrefix.get() + path;
+        }
+
+        if (fieldName.startsWith("Job")) {
+            return "job." + path;
+        }
+
+        if (fieldName.startsWith("Contact")) {
+            return "contact." + path;
+        }
+
+        return path;
     }
 
     @Override
@@ -119,7 +165,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
 
     @Override
     protected String getDefaultSort() {
-        return "number asc";
+        return "number";
     }
 
     @Override
@@ -148,13 +194,15 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
         QField fieldTask = new QField("fieldTask");
         QField fieldJob = new QField("fieldJob");
         QField fieldContact = new QField("fieldContact");
+        QTask taskFollows = new QTask("task_follows_0");
         return List.of(
                 new CollectionJoin<>(task.customFieldsAndListsValues, fieldValueTask, JoinType.LEFTJOIN),
                 new EntityJoin<>(fieldValueTask.field, fieldTask, JoinType.LEFTJOIN),
                 new CollectionJoin<>(contact.customFieldsAndListsValues, fieldValueContact, JoinType.LEFTJOIN),
                 new EntityJoin<>(fieldValueContact.field, fieldContact, JoinType.LEFTJOIN),
                 new CollectionJoin<>(job.customFieldsAndListsValues, fieldValueJob, JoinType.LEFTJOIN),
-                new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN)
+                new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN),
+                new CollectionJoin<>(QTask.task.follows, taskFollows, JoinType.LEFTJOIN)
         );
     }
 
@@ -168,19 +216,10 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
     }
 
     @Override
-    public List<Map<String, Object>> findAll(String fields, CommonFilter filter) {
+    public Page<Map<String, Object>> findAll(String fields, CommonFilter filter) {
         if (fields == null) fields = getMustHaveFields();
         TaskFilter taskFilter = (TaskFilter) filter;
-        if (fields.contains("ContactPerson")) fields += ",ContactFirstName,ContactLastName";
         return super.findAll(fields, taskFilter);
-    }
-
-    @Override
-    protected void processContactPerson(List<TaskResponse> responses) {
-        responses.forEach(response -> {
-            String person = response.getContact().getFirstName() + " " + response.getContact().getLastName();
-            response.getContact().setPerson(person);
-        });
     }
 
     @Cacheable(value = "task", key = "#id")
@@ -191,7 +230,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
 
     @Override
     protected void initializeFilterDefaults(CommonFilter filter) {
-        if (filter.getSize() == null) filter.setSize(100);
+        if (filter.getLimit() == null) filter.setLimit(100);
         if (filter.getPage() == null) filter.setPage(1);
         if (filter.getSort() == null) filter.setSort(getDefaultSort());
     }
@@ -332,7 +371,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
 
     @Transactional
     @CacheEvict(value = "task", allEntries = true)
-    public List<Map<String, Object>> updateTaskByStartAndFinish(
+    public Page<Map<String, Object>> updateTaskByStartAndFinish(
             String id,
             LocalDate targetStart,
             LocalDate targetFinish) {

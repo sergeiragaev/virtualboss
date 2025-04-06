@@ -10,6 +10,8 @@ import net.virtualboss.common.exception.EntityNotFoundException;
 import net.virtualboss.common.util.DtoFlattener;
 import net.virtualboss.common.util.QueryDslUtil;
 import net.virtualboss.common.web.dto.filter.CommonFilter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,6 +29,8 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
     protected final MainService mainService;
     private final Function<String, K> idConverter;
     private final JpaRepository<E, K> repository;
+    private final JPAQueryFactory queryFactory;
+    protected Map<String, String> sortFieldMapping = new HashMap<>();
 
     protected GenericService(EntityManager entityManager,
                              MainService mainService,
@@ -36,6 +40,7 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
         this.mainService = mainService;
         this.idConverter = idConverter;
         this.repository = repository;
+        this.queryFactory = new JPAQueryFactory(entityManager);
     }
 
     protected abstract Q getQEntity();
@@ -50,10 +55,10 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
 
     protected abstract String getMustHaveFields();
 
-
     public interface JoinExpression {
 
-        default void apply(JPAQuery<?> query) {}
+        default void apply(JPAQuery<?> query) {
+        }
     }
 
     public record EntityJoin<E>(
@@ -99,7 +104,7 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
         return Collections.emptyList();
     }
 
-    public List<Map<String, Object>> findAll(String fields, CommonFilter filter) {
+    public Page<Map<String, Object>> findAll(String fields, CommonFilter filter) {
         String combinedFields = fields == null ?
                 getMustHaveFields() :
                 fields + "," + getMustHaveFields();
@@ -110,7 +115,6 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
         initializeFilterDefaults(filter);
         PageRequest pageRequest = createPageRequest(filter);
 
-        JPAQueryFactory queryFactory = new JPAQueryFactory(entityManager);
 
         JPAQuery<R> query = queryFactory.select(
                         QueryDslUtil.buildProjection(getResponseClass(), getQEntity(), fieldsList)
@@ -121,22 +125,25 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
         applyJoins(query);
         applyGroupBy(query);
 
+        long totalCount = executeCountQuery(filter);
+
+        OrderSpecifier<?>[] orderSpecifiers = getOrderSpecifiers(pageRequest);
+
         List<R> responses = query
-                .orderBy(getOrderSpecifiers(pageRequest))
+                .orderBy(orderSpecifiers)
                 .offset(pageRequest.getOffset())
                 .limit(pageRequest.getPageSize())
                 .fetch();
 
+
         List<String> comdinedFieldsList = Arrays.asList(combinedFields.split(","));
 
-        if (comdinedFieldsList.contains("ContactPerson")) processContactPerson(responses);
-
-        return responses.stream()
-                .map(response -> DtoFlattener.flatten(response,comdinedFieldsList))
+        List<Map<String, Object>> data = responses.stream()
+                .map(response -> DtoFlattener.flatten(response, comdinedFieldsList))
                 .toList();
+        
+        return new PageImpl<>(data, pageRequest, totalCount);
     }
-
-    protected void processContactPerson(List<R> responses) {}
 
     protected OrderSpecifier<Comparable<Object>>[] getOrderSpecifiers(PageRequest pageRequest) {
         return QueryDslUtil.getOrderSpecifiers(
@@ -145,8 +152,9 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
                 getQEntity().getMetadata().getName()
         );
     }
+
     protected void initializeFilterDefaults(CommonFilter filter) {
-        if (filter.getSize() == null) filter.setSize(Integer.MAX_VALUE);
+        if (filter.getLimit() == null) filter.setLimit(Integer.MAX_VALUE);
         if (filter.getPage() == null) filter.setPage(1);
         if (filter.getSort() == null) filter.setSort(getDefaultSort());
     }
@@ -154,21 +162,34 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
     protected PageRequest createPageRequest(CommonFilter filter) {
         return PageRequest.of(
                 filter.getPage() - 1,
-                filter.getSize(),
+                filter.getLimit(),
                 Sort.by(parseSortOrders(filter.getSort()))
         );
     }
 
     private List<Sort.Order> parseSortOrders(String sortString) {
         return Arrays.stream(sortString.split(","))
-                .map(this::createSortOrder)
+                .map(this::processSortField)
                 .toList();
     }
 
-    private Sort.Order createSortOrder(String sort) {
-        String[] parts = sort.trim().split(" ");
-        Sort.Direction direction = Sort.Direction.valueOf(parts[1].toUpperCase());
-        return new Sort.Order(direction, parts[0]);
+    private Sort.Order processSortField(String sortField) {
+        String[] parts = sortField.trim().split(":");
+        String fieldName = convertField(parts[0]);
+        Sort.Direction direction = parseDirection(parts);
+
+        return new Sort.Order(direction, fieldName);
+    }
+
+    private String convertField(String frontendField) {
+        return sortFieldMapping.getOrDefault(frontendField, frontendField);
+    }
+
+    private Sort.Direction parseDirection(String[] parts) {
+        if (parts.length > 1) {
+            return Sort.Direction.fromString(parts[1].toUpperCase());
+        }
+        return Sort.Direction.ASC; // Дефолтное направление
     }
 
     protected Set<String> parseFields(String fields) {
@@ -182,7 +203,6 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
                 .collect(Collectors.toSet());
     }
 
-
     protected abstract Class<E> getEntityClass();
 
     protected abstract Class<R> getResponseClass();
@@ -192,7 +212,6 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
             join.apply(query);
         }
     }
-
 
     private void applyGroupBy(JPAQuery<R> query) {
         if (!getGroupBy().isEmpty()) {
@@ -208,5 +227,22 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
                 .orElseThrow(() -> new EntityNotFoundException(
                         MessageFormat.format("Entity with Id: {0} not found!", id)
                 ));
+    }
+
+    private long executeCountQuery(CommonFilter filter) {
+        Q root = getQEntity();
+        Predicate predicate = buildFilterPredicate(filter);
+
+        Expression<Long> countExpression = root.countDistinct();
+
+        JPAQuery<Long> countQuery = queryFactory
+                .select(countExpression)
+                .from(root)
+                .where(predicate);
+
+        applyJoins((JPAQuery<R>) countQuery);
+        applyGroupBy((JPAQuery<R>) countQuery);
+
+        return countQuery.fetch().size();
     }
 }

@@ -22,7 +22,10 @@
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="order" type="smallint">
+            <column name="field_order" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="path" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>

@@ -141,7 +141,7 @@ public class TaskFilterCriteria {
         return task.description.containsIgnoreCase(searchStr)
                 .or(task.notes.containsIgnoreCase(searchStr))
                 .or(task.taskOrder.containsIgnoreCase(searchStr))
-                .or(task.customFieldsAndListsValues.any().value.containsIgnoreCase(searchStr));
+                .or(task.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr));
     }
 
     private BooleanExpression createJobSearchPredicate(QTask task, String searchStr) {
@@ -153,7 +153,7 @@ public class TaskFilterCriteria {
                         .or(job.notes.containsIgnoreCase(searchStr))
                         .or(job.ownerName.containsIgnoreCase(searchStr))
                         .or(job.company.containsIgnoreCase(searchStr))
-                        .or(job.customFieldsAndListsValues.any().value.containsIgnoreCase(searchStr)))
+                        .or(job.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr)))
                 .orElse(null);
     }
 
@@ -167,7 +167,7 @@ public class TaskFilterCriteria {
                         .or(contact.supervisor.containsIgnoreCase(searchStr))
                         .or(contact.spouse.containsIgnoreCase(searchStr))
                         .or(contact.company.containsIgnoreCase(searchStr))
-                        .or(contact.customFieldsAndListsValues.any().value.containsIgnoreCase(searchStr)))
+                        .or(contact.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr)))
                 .orElse(null);
     }
 

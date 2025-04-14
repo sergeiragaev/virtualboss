@@ -213,7 +213,7 @@ public class DatabaseSaver {
 
             List<Long> existingIds = jdbcTemplate.query(connection -> {
                         PreparedStatement ps = connection.prepareStatement(
-                                "SELECT id FROM custom_values WHERE field_id = ? AND value = ?"
+                                "SELECT id FROM custom_values WHERE field_id = ? AND custom_value = ?"
                         );
                         ps.setLong(1, field.getId());
                         ps.setString(2, value);
@@ -229,7 +229,7 @@ public class DatabaseSaver {
             KeyHolder keyHolder = new GeneratedKeyHolder();
             jdbcTemplate.update(connection -> {
                 PreparedStatement ps = connection.prepareStatement(
-                        "INSERT INTO custom_values (field_id, value) VALUES (?, ?)",
+                        "INSERT INTO custom_values (field_id, custom_value) VALUES (?, ?)",
                         new String[]{"id"}
                 );
                 ps.setLong(1, field.getId());
@@ -255,7 +255,7 @@ public class DatabaseSaver {
                 new FieldValueRowMapper()
         );
         values.forEach(v -> fieldValueCache.put(
-                v.getFieldId() + ":" + v.getValue(),
+                v.getFieldId() + ":" + v.getFieldValue(),
                 v.getId()
         ));
     }

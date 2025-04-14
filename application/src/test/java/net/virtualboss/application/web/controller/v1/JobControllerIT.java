@@ -111,11 +111,11 @@ class JobControllerIT extends TestDependenciesContainer {
                         .param("fields", "JobId,JobNumber,JobCustomField2")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
-                        .param("sort", "number asc")
+                        .param("sort", "number:asc")
                         .param("findString", "custom field")
                 )
-                .andExpect(jsonPath("[0].JobNumber").value(testRequest.getNumber()))
-                .andExpect(jsonPath("[0].JobCustomField2").value("job custom field 2"))
+                .andExpect(jsonPath("content.[0].JobNumber").value(testRequest.getNumber()))
+                .andExpect(jsonPath("content.[0].JobCustomField2").value("job custom field 2"))
                 .andExpect(status().isOk());
     }
 
@@ -130,7 +130,7 @@ class JobControllerIT extends TestDependenciesContainer {
                         .param("isDeleted", String.valueOf(true))
                         .param("findString", "custom list")
                 )
-                .andExpect(jsonPath("[0].JobNumber").value(testRequest.getNumber()))
+                .andExpect(jsonPath("content.[0].JobNumber").value(testRequest.getNumber()))
                 .andExpect(status().isOk());
     }
 

@@ -9,6 +9,7 @@ import net.virtualboss.common.annotation.EntityMapping;
 import net.virtualboss.common.annotation.Flatten;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Data
@@ -31,6 +32,7 @@ public class ContactResponse {
     private String profession = "";
 
     @JsonProperty("ContactPerson")
+    @EntityMapping
     @Builder.Default
     private String person = "";
 
@@ -66,13 +68,11 @@ public class ContactResponse {
 
     @JsonProperty("ContactWorkersCompDate")
     @EntityMapping
-    @Builder.Default
-    private String workersCompDate = "";
+    private LocalDate workersCompDate;
 
     @JsonProperty("ContactInsuranceDate")
     @EntityMapping
-    @Builder.Default
-    private String insuranceDate = "";
+    private LocalDate insuranceDate;
 
     @JsonProperty("ContactComments")
     @EntityMapping

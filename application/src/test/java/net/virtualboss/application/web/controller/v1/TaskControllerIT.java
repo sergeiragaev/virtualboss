@@ -79,7 +79,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                                          "JobCustomList1,ContactCustomField4,JobNumber,ContactCompany")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
-                        .param("sort", "id asc")
+                        .param("sort", "TaskNumber:asc,ContactCustomField4:desc,TaskCustomField1:asc")
                         .param("isActive", String.valueOf(true))
                         .param("isDone", String.valueOf(true))
                         .param("dateType", String.valueOf(DateType.TARGET_START.getValue()))
@@ -90,17 +90,17 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("dateCriteria", String.valueOf(DateCriteria.EXACT.getValue()))
                         .param("jobIds", String.valueOf(
                                 jobRepository.findByNumberIgnoreCaseAndIsDeleted(testTaskReference.getJobNumber(), false).orElseThrow().getId()))
-                        .param("custIds", String.valueOf(testTaskReference.getContactId()))
+                        .param("contactIds", String.valueOf(testTaskReference.getContactId()))
                         .param("findString", "Subdivision")
                 )
-                .andExpect(jsonPath("[0].TaskDescription").value(testTaskRequest.getDescription()))
-                .andExpect(jsonPath("[0].TaskStatus").value(testTaskRequest.getStatus().toCamelCase()))
-                .andExpect(jsonPath("[0].JobNumber").value(testTaskReference.getJobNumber()))
-                .andExpect(jsonPath("[0].ContactCompany").value(
+                .andExpect(jsonPath("content.[0].TaskDescription").value(testTaskRequest.getDescription()))
+                .andExpect(jsonPath("content.[0].TaskStatus").value(testTaskRequest.getStatus().toCamelCase()))
+                .andExpect(jsonPath("content.[0].JobNumber").value(testTaskReference.getJobNumber()))
+                .andExpect(jsonPath("content.[0].ContactCompany").value(
                         contactRepository.getReferenceById(UUID.fromString(testTaskReference.getContactId())).getCompany()))
-                .andExpect(jsonPath("[0].TaskCustomField1").value("task custom field 1"))
-                .andExpect(jsonPath("[0].JobCustomList1").value("job custom list 1"))
-                .andExpect(jsonPath("[0].ContactCustomField4").value("contact custom field 4"))
+                .andExpect(jsonPath("content.[0].TaskCustomField1").value("task custom field 1"))
+                .andExpect(jsonPath("content.[0].JobCustomList1").value("job custom list 1"))
+                .andExpect(jsonPath("content.[0].ContactCustomField4").value("contact custom field 4"))
                 .andExpect(status().isOk());
     }
 
@@ -161,7 +161,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("taskId", String.valueOf(taskRepository.findAll().get(0).getId()))
                         .param("Start", String.valueOf(LocalDate.now()))
                 )
-                .andExpect(jsonPath("[0].TaskId").value(
+                .andExpect(jsonPath("content.[0].TaskId").value(
                         String.valueOf(newTask.getId())))
                 .andExpect(status().isOk()
                 );
@@ -216,6 +216,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .description("Test Task to update")
                         .actualFinish(LocalDate.now())
                         .status(TaskStatus.DONE)
+                        .marked(false)
                         .build(),
                 generateTestTaskCustomFieldsRequest(),
                 generateTestTaskReferenceRequest());

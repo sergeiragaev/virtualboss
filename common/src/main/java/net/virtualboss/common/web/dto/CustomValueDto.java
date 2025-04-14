@@ -8,5 +8,5 @@ import lombok.Setter;
 public class CustomValueDto {
     private Long id;
     private Integer fieldId;
-    private String value;
+    private String fieldValue;
 }

@@ -1,14 +1,19 @@
 ﻿/***********************************************************************************************/
-var defaultJobFieldsToShow = "JobNumber,JobOwnerName,JobEmail,JobNotes";
-var defaultJobFilters = ""; // empty is all active jobs
+const defaultJobFieldsToShow = "JobNumber,JobOwnerName,JobEmail,JobNotes";
+const defaultJobFilters = ""; // empty is all active jobs
 /***********************************************************************************************/
 // use array.join(',') to convert an array to comma separated string.
-var allJobFieldCaptionNames = ["JobNumber","JobLot","JobOwnerName","JobSubdivision","JobLockBox","JobAddress1","JobAddress2","JobCity","JobState","JobPostal","JobCountry","JobHomePhone","JobWorkPhone","JobCellPhone","JobFax","JobCompany","JobEmail","JobNotes","JobDirections","JobCustomField1","JobCustomField2","JobCustomField3","JobCustomField4","JobCustomField5","JobCustomField6","JobCustomList1","JobCustomList2","JobCustomList3","JobCustomList4","JobCustomList5","JobCustomList6"];
+const allJobFieldCaptionNames = ["JobNumber", "JobLot", "JobOwnerName", "JobSubdivision", "JobLockBox", "JobAddress1", "JobAddress2", "JobCity", "JobState", "JobPostal", "JobCountry", "JobHomePhone", "JobWorkPhone", "JobCellPhone", "JobFax", "JobCompany", "JobEmail", "JobNotes", "JobDirections", "JobCustomField1", "JobCustomField2", "JobCustomField3", "JobCustomField4", "JobCustomField5", "JobCustomField6", "JobCustomList1", "JobCustomList2", "JobCustomList3", "JobCustomList4", "JobCustomList5", "JobCustomList6"];
+/***********************************************************************************************/
+let jobsPerPage = 20;
+let jCurrentPage = 1;
+let jTotalPages = 1;
 /***********************************************************************************************/
 
 $(document).ready(function(){
   loadJobSettings();
   loadJobFilters();
+  setupEventHandlers();
   createJobList();
 });
 
@@ -22,6 +27,18 @@ function loadJobSettings(){
   if(!Cookies.get("JobListSort")){
     setCookie("JobListSort", "[[0,0]]");
   }
+
+  if (!Cookies.get("ShowAllJobs")) {
+    setCookie("ShowAllJobs", false);
+  }
+
+  if (!Cookies.get("JobLimit")) {
+    setCookie("JobLimit", jobsPerPage);
+  } else {
+    jobsPerPage = parseInt(Cookies.get("JobLimit"), 10);
+  }
+
+  jCurrentPage = parseInt(Cookies.get('jCurrentPage')) || 1;
 
   // set Job custom field options
   
@@ -75,25 +92,31 @@ function loadJobSettings(){
     setCookie("ShowJobCustomList6", false);
   }
   
-  $("form[name=jobListSearchForm]").submit(function(event){   
-    var phrase = $("#jobListSearchBox").val();
-
-    createJobList("/api/v1/job?FindString=" + encodeURIComponent(phrase));
-
-    event.preventDefault();
-  });
+  // $("form[name=jobListSearchForm]").submit(function(event){
+  //   var phrase = $("#jobListSearchBox").val();
+  //
+  //   createJobList("/api/v1/job?FindString=" + encodeURIComponent(phrase));
+  //
+  //   event.preventDefault();
+  // });
 }
 
 function loadJobFilters(){
   if(!Cookies.get("JobFilters")){
     setCookie("JobFilters", defaultJobFilters);
   }
+  if (!Cookies.get("jobListFindString")) {
+    setCookie("jobListFindString", "");
+  }
+
+  $("#jobListSearchBox").val(Cookies.get('jobListFindString'));
 }
 
 function createJobList(customUrl){
+  let dataUrl;
   var jobFieldsArray = getJobFieldsToShowArray();
-  var jobFieldsString = Cookies.get("JobListFieldsToShow");
   var activeJobFilters = getActiveJobFilters();
+  const sortParams = getSortParams(jobFieldsArray);
 
   BootstrapDialog.show({
     title: "Loading Jobs, Please wait...",
@@ -102,15 +125,16 @@ function createJobList(customUrl){
 
   // START JOB LIST CREATION  
   if(!customUrl){
-    var dataUrl = "/api/v1/job?fields=JobId," + jobFieldsArray.join(',');
+    dataUrl = "/api/v1/job?fields=JobId," + jobFieldsArray.join(',');
     if(activeJobFilters){
       dataUrl += "&" + activeJobFilters;
     }
   }else{
-    var dataUrl = customUrl + "&fields=JobId," + jobFieldsArray.join(',');
+    dataUrl = customUrl + "&fields=JobId," + jobFieldsArray.join(',');
   }
-  
-  var tblData = "";
+
+  let findString = Cookies.get('jobListFindString') || '';
+  dataUrl += '&page=' + jCurrentPage + '&limit=' + jobsPerPage + '&sort=' + sortParams + '&findString=' + findString;
 
   $.ajax({
     url: dataUrl,
@@ -120,7 +144,11 @@ function createJobList(customUrl){
         logout();
       }
 
-      if(!jobs.length){
+      jTotalPages = jobs.page.totalPages;
+
+      updatePagination();
+
+      if(!jobs.page.totalElements){
         BootstrapDialog.closeAll();
         BootstrapDialog.show({
           title: "No Results",
@@ -129,12 +157,14 @@ function createJobList(customUrl){
         
         return;
       }
-      
-      if(jobs.length >= 200){
-        $("#jCount").html(jobs.length + " (Showing 200 out of " + jobs.length + ") You can use the Search feature to get more focused results.");
-      }else{
-        $("#jCount").html(jobs.length);
-      }
+
+      updateJobCount(jobs.page.totalElements);
+
+      // if(jobs.content.length >= 200){
+      //   $("#jCount").html(jobs.content.length + " (Showing 200 out of " + jobs.content.length + ") You can use the Search feature to get more focused results.");
+      // }else{
+      //   $("#jCount").html(jobs.content.length);
+      // }
       
       var tbl = "<div class='table-responsive'>";
           tbl += "<table class='table table-bordered table-condensed table-striped tablesorter table-hover'>";
@@ -157,18 +187,18 @@ function createJobList(customUrl){
           tbl += "  </thead>";
           tbl += "  <tbody>";
 
-          $.each(jobs, function(i){
-            tbl += "<tr onclick=\"editJob('" + jobs[i]['JobId'] + "');\" style='cursor:pointer;'>";
+          $.each(jobs.content, function(i){
+            tbl += "<tr onclick=\"editJob('" + jobs.content[i]['JobId'] + "');\" style='cursor:pointer;'>";
 
             $.each(jobFieldsArray, function(j){
               if(this == "JobNumber"){
-                tbl += "<td><a href='#' onclick=\"return false;\">" + jobs[i][this] + "</a></td>";
+                tbl += "<td><a href='#' onclick=\"return false;\">" + jobs.content[i][this] + "</a></td>";
               }else if(this == "JobNotes"){
-                tbl += "<td>" + jobs[i][this]; //.replace(/\\n/g, '<br />') + "</td>";
+                tbl += "<td>" + jobs.content[i][this]; //.replace(/\\n/g, '<br />') + "</td>";
               // }else if(this == "JobAddress1"){
               //   tbl += "<td>" + jobs[i]['JobAddress'] + "</td>";
               }else{
-                tbl += "<td>" + jobs[i][this] + "</td>";
+                tbl += "<td>" + jobs.content[i][this] + "</td>";
               }
             });
 
@@ -180,13 +210,7 @@ function createJobList(customUrl){
           tbl += "</div>";
 
           $("#jJobList").html(tbl);
-
-          $("#jJobList table").tablesorter({
-            sortList: eval(Cookies.get("JobListSort"))
-          }).bind("sortStart",function(){
-          }).bind("sortEnd", function(data){
-            setCookie("JobListSort", data.delegateTarget.config.sortList);
-          });
+          initTableSorting();
 
           BootstrapDialog.closeAll();
           postEffects();
@@ -448,7 +472,129 @@ function editJobFieldOrder(){
   });
 }
 
+function updatePagination() {
+  $('#jPageInfo').text(`Page ${jCurrentPage} of ${jTotalPages}`);
+  $('#jPrevPage').prop('disabled', jCurrentPage === 1);
+  $('#jNextPage').prop('disabled', jCurrentPage >= jTotalPages);
+  Cookies.set('jCurrentPage', jCurrentPage);
+}
 
+function updateJobCount(total) {
+  if (!total) {
+    $("#jCount").html("0, <span style='font-style:italic; color:#ababab;'>nothing matched your search or current filters</span>");
+  } else if (eval(Cookies.get('ShowAllJobs'))) {
+    $("#jCount").html("<a href='#' onclick=\"editOptions(); return false;\">" + total + "</a>");
+  } else {
+    $("#jCount").html(total + " (<a href='#' title='Change number of jobs to show' onclick=\"editOptions(); return false;\">Showing</a> up to " + Cookies.get('JobLimit') + ")");
+  }
+}
 
+function editOptions() {
+  let msg = "";
+  msg += "<form role='form' name='jobManagerOptionsForm'>";
+
+  msg += "<div class='checkbox'>";
+  msg += "  <label>";
+
+  if (eval(Cookies.get('ShowAllJobs'))) {
+    msg += "<input type='checkbox' onchange='jobLimitToggle();' name='ShowAllJobs' checked='checked' id='jobLimitOptionToggle'> Show All Jobs";
+  } else {
+    msg += "<input type='checkbox' onchange='jobLimitToggle();' name='ShowAllJobs' id='jobLimitOptionToggle'> Show All Jobs";
+  }
+
+  msg += "  </label>";
+  msg += "  <br />";
+  msg += "  <div style='margin-left:20px; margin-top:5px;'>";
+  msg += "    Show up to ";
+
+  if (eval(Cookies.get('ShowAllJobs'))) {
+    msg += "<input type='text' name='JobLimit' class='form-control' disabled='true' id='jobLimitOption' value='" + Cookies.get('JobLimit') + "' style='max-width:75px; display:inline-block;'>";
+  } else {
+    msg += "<input type='text' name='JobLimit' id='jobLimitOption' class='form-control' value='" + Cookies.get('JobLimit') + "' style='max-width:75px; display:inline-block;'>";
+  }
+
+  msg += "    Jobs";
+  msg += "  </div>";
+  msg += " </div>";
+  msg += "</form>";
+
+  BootstrapDialog.show({
+    title: "Job Manager Options",
+    message: msg,
+    buttons: [{
+      label: "Cancel",
+      cssClass: "btn-default",
+      action: function (dialogRef) {
+        dialogRef.close();
+      }
+    }, {
+      label: "Save Changes",
+      cssClass: "btn-primary",
+      action: function (dialogRef) {
+
+        if ($("#jobLimitOptionToggle").prop("checked")) {
+          setCookie('ShowAllJobs', true);
+          jCurrentPage = 1;
+        } else {
+          setCookie('ShowAllJobs', false);
+          setCookie('JobLimit', $("#jobLimitOption").val());
+          jobsPerPage = $("#jobLimitOption").val();
+          jCurrentPage = 1;
+        }
+
+        dialogRef.close();
+        createJobList();
+      }
+    }]
+  });
+}
+
+function jobLimitToggle() {
+  var state = $("#jobLimitOptionToggle").prop("checked");
+
+  if (state) {
+    $("#jobLimitOption").attr("disabled", true);
+  } else {
+    $("#jobLimitOption").attr("disabled", false);
+  }
+}
+
+function setupEventHandlers() {
+  $('#jPrevPage').click(() => changePage(-1));
+  $('#jNextPage').click(() => changePage(1));
+
+  $("form[name='jobListSearchForm']").submit(function (e) {
+    e.preventDefault();
+    jCurrentPage = 1;
+    const phrase = $("#jobListSearchBox").val().replace(/["'&?,;]/g, "");
+    Cookies.set('jobListFindString', phrase);
+    createJobList();
+  });
+}
+
+function changePage(delta) {
+  jCurrentPage = Math.max(1, jCurrentPage + delta);
+  createJobList();
+}
+
+function getSortParams(jobFieldsArray) {
+  const savedSort = JSON.parse(Cookies.get("JobListSort") || '[]');
+  return savedSort.map(([fieldIndex, direction]) => {
+    const field = jobFieldsArray[fieldIndex];
+    return `${field}:${direction === 0 ? 'asc' : 'desc'}`;
+  }).join(',');
+}
+
+function initTableSorting() {
+  $("#jJobList table").tablesorter({
+    sortList: eval(Cookies.get("JobListSort"))
+  }).bind("sortStart", function () {
+
+  }).bind("sortEnd", function (data) {
+    setCookie("JobListSort", data.delegateTarget.config.sortList);
+    jCurrentPage = 1;
+    createJobList();
+  });
+}
 
 

@@ -13,7 +13,7 @@ public class FieldRowMapper implements RowMapper<Field> {
         field.setId(rs.getInt("id"));
         field.setName(rs.getString("name"));
         field.setAlias(rs.getString("alias"));
-        field.setOrder(rs.getShort("order"));
+        field.setFieldOrder(rs.getShort("field_order"));
         field.setDefaultValue(rs.getString("default_value"));
         return field;
     }

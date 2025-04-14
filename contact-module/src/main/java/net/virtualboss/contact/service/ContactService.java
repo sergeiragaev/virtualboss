@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.AccessDeniedException;
 import net.virtualboss.common.model.entity.*;
+import net.virtualboss.common.repository.FieldRepository;
 import net.virtualboss.common.service.GenericService;
 import net.virtualboss.common.service.MainService;
 import net.virtualboss.contact.mapper.v1.ContactMapperV1;
@@ -32,16 +33,28 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
     private final ContactRepository repository;
     private final ContactMapperV1 mapper;
     private final ContactResponseMapper contactResponseMapper;
+    private final Map<String, String> customMappings = Map.of("ContactCustom", "customFields.");
 
     public ContactService(EntityManager entityManager,
                           MainService mainService,
                           ContactRepository repository,
                           ContactMapperV1 mapper,
-                          ContactResponseMapper contactResponseMapper) {
-        super(entityManager, mainService, UUID::fromString, repository);
+                          ContactResponseMapper contactResponseMapper,
+                          FieldRepository fieldRepository) {
+        super(entityManager, mainService, UUID::fromString, repository, fieldRepository);
         this.repository = repository;
         this.mapper = mapper;
         this.contactResponseMapper = contactResponseMapper;
+    }
+
+    @Override
+    protected Map<String, String> getCustomMappings() {
+        return customMappings;
+    }
+
+    @Override
+    protected Map<String, String> getNestedMappings() {
+        return Map.of();
     }
 
     @Cacheable(value = "contact", key = "#id")
@@ -76,7 +89,7 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
 
     @Override
     protected String getDefaultSort() {
-        return "firstName asc,lastName asc,company asc";
+        return "firstName:asc,lastName:asc,company:asc";
     }
 
     @Override
@@ -112,14 +125,6 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
         return List.of(
                 new GroupByExpression(contact.id)
         );
-    }
-
-    @Override
-    protected void processContactPerson(List<ContactResponse> responses) {
-        responses.forEach(response -> {
-            String person = response.getFirstName() + " " + response.getLastName();
-            response.setPerson(person);
-        });
     }
 
     @Transactional

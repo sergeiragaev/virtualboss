@@ -105,7 +105,7 @@ public class Job {
     public String getCustomValueByName(String name) {
         return customFieldsAndListsValues.stream()
                 .filter(fieldValue -> fieldValue.getField().getName().equals(name))
-                .findAny().orElse(FieldValue.builder().build()).getValue();
+                .findAny().orElse(FieldValue.builder().build()).getCustomValue();
     }
 
 }

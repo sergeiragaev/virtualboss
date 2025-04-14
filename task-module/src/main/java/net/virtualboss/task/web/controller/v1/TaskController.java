@@ -7,12 +7,12 @@ import net.virtualboss.task.service.TaskService;
 import net.virtualboss.task.web.dto.TaskReferencesRequest;
 import net.virtualboss.task.web.dto.UpsertTaskRequest;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 
 
@@ -23,7 +23,7 @@ public class TaskController {
     private final TaskService service;
 
     @GetMapping("/task")
-    public ResponseEntity<List<Map<String, Object>>> getTasks(
+    public ResponseEntity<Page<Map<String, Object>>> getTasks(
             @ModelAttribute TaskFilter filter,
             @RequestParam String fields) {
         return ResponseEntity.ok(service.findAll(fields, filter));
@@ -45,7 +45,7 @@ public class TaskController {
     }
 
     @PutMapping("/task")
-    public ResponseEntity<Object> updateTask(
+    public ResponseEntity<Page<Map<String, Object>>> updateTask(
             @RequestParam(value = "taskId") String id,
             @RequestParam(value = "Start", required = false) LocalDate targetStart,
             @RequestParam(value = "End", required = false) LocalDate targetFinish) {

@@ -13,7 +13,7 @@ public class FieldValueRowMapper implements RowMapper<CustomValueDto> {
     public CustomValueDto mapRow(ResultSet rs, int rowNum) throws SQLException {
         CustomValueDto fieldValue = new CustomValueDto();
         fieldValue.setId(rs.getLong("id"));
-        fieldValue.setValue(rs.getString("value"));
+        fieldValue.setFieldValue(rs.getString("custom_value"));
         fieldValue.setFieldId(rs.getInt("field_id"));
         return fieldValue;
     }

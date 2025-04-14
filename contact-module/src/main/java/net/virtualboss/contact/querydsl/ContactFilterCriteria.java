@@ -51,14 +51,14 @@ public class ContactFilterCriteria {
                 .or(contact.supervisor.containsIgnoreCase(searchStr))
                 .or(contact.spouse.containsIgnoreCase(searchStr))
                 .or(contact.company.containsIgnoreCase(searchStr))
-                .or(contact.customFieldsAndListsValues.any().value.containsIgnoreCase(searchStr));
+                .or(contact.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr));
     }
 
     private void applyUnassignedFilter(QContact contact, BooleanBuilder builder) {
         Optional.ofNullable(showUnassigned).ifPresent(flag -> {
             BooleanExpression unassignedCondition = flag ?
                     contact.company.equalsIgnoreCase(UNASSIGNED_COMPANY) :
-                    contact.company.ne(UNASSIGNED_COMPANY);
+                    contact.company.toLowerCase().ne(UNASSIGNED_COMPANY);
 
             builder.and(unassignedCondition);
         });

@@ -6,11 +6,11 @@ import net.virtualboss.common.web.dto.filter.CommonFilter;
 import net.virtualboss.job.service.JobService;
 import net.virtualboss.job.web.dto.UpsertJobRequest;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 
@@ -21,7 +21,7 @@ public class JobController {
     private final JobService service;
 
     @GetMapping("/job")
-    public ResponseEntity<List<Map<String, Object>>> getJobs(
+    public ResponseEntity<Page<Map<String, Object>>> getJobs(
             @RequestParam(required = false) String fields,
             CommonFilter commonFilter) {
         return ResponseEntity.ok(service.findAll(fields, commonFilter));

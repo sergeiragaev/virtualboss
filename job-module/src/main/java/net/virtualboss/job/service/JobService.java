@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.AlreadyExistsException;
 import net.virtualboss.common.model.entity.*;
+import net.virtualboss.common.repository.FieldRepository;
 import net.virtualboss.common.service.GenericService;
 import net.virtualboss.common.service.MainService;
 import net.virtualboss.job.mapper.v1.JobMapperV1;
@@ -33,16 +34,28 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
     private final JobRepository repository;
     private final JobMapperV1 mapper;
     private final JobResponseMapper jobResponseMapper;
+    private final Map<String, String> customMappings = Map.of("JobCustom", "customFields.");
 
     public JobService(EntityManager entityManager,
                       MainService mainService,
                       JobRepository jobRepository,
                       JobMapperV1 jobMapper,
-                      JobResponseMapper jobResponseMapper) {
-        super(entityManager, mainService, UUID::fromString, jobRepository);
+                      JobResponseMapper jobResponseMapper,
+                      FieldRepository fieldRepository) {
+        super(entityManager, mainService, UUID::fromString, jobRepository, fieldRepository);
         this.repository = jobRepository;
         this.mapper = jobMapper;
         this.jobResponseMapper = jobResponseMapper;
+    }
+
+    @Override
+    protected Map<String, String> getCustomMappings() {
+        return customMappings;
+    }
+
+    @Override
+    protected Map<String, String> getNestedMappings() {
+        return Map.of();
     }
 
     @Override
@@ -71,7 +84,7 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
 
     @Override
     protected String getDefaultSort() {
-        return "number asc";
+        return "number:asc";
     }
 
     @Override
@@ -100,6 +113,7 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
                 new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN)
         );
     }
+
     @Override
     protected List<GroupByExpression> getGroupBy() {
         QJob job = QJob.job;
@@ -145,7 +159,7 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
         UUID uuid = id == null ? null : UUID.fromString(id);
         String jobNumber = request.getNumber();
         Optional<Job> optionalJob = repository.findByNumberIgnoreCaseAndIsDeleted(jobNumber, false);
-        if (optionalJob.isPresent()  && !optionalJob.get().getId().equals(uuid))
+        if (optionalJob.isPresent() && !optionalJob.get().getId().equals(uuid))
             throw new AlreadyExistsException(MessageFormat.format("Job with number <b>{0}</b> already exists!", jobNumber));
     }
 }

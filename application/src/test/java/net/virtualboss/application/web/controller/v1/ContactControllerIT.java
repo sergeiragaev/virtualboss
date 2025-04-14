@@ -111,12 +111,12 @@ class ContactControllerIT extends TestDependenciesContainer {
                         .param("fields", "ContactId,ContactCompany,ContactCustomList5,ContactPerson")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
-                        .param("sort", "firstName asc,lastName asc,company asc")
+                        .param("sort", "firstName:asc,lastName:asc,company:asc")
                         .param("findString", "custom field")
                 )
-                .andExpect(jsonPath("[0].ContactCompany").value(testRequest.getCompany()))
-                .andExpect(jsonPath("[0].ContactCustomList5").value("contact custom list 5"))
-                .andExpect(jsonPath("[0].ContactPerson").value("First name Last name"))
+                .andExpect(jsonPath("content.[0].ContactCompany").value(testRequest.getCompany()))
+                .andExpect(jsonPath("content.[0].ContactCustomList5").value("contact custom list 5"))
+                .andExpect(jsonPath("content.[0].ContactPerson").value("First name Last name"))
                 .andExpect(status().isOk());
     }
 
@@ -131,7 +131,7 @@ class ContactControllerIT extends TestDependenciesContainer {
                         .param("isDeleted", String.valueOf(true))
                         .param("findString", "custom list")
                 )
-                .andExpect(jsonPath("[0].ContactCompany").value(testRequest.getCompany()))
+                .andExpect(jsonPath("content.[0].ContactCompany").value(testRequest.getCompany()))
                 .andExpect(status().isOk());
     }
 

@@ -22,7 +22,7 @@ public class ContactResponseMapper extends AbstractResponseMapper<ContactRespons
     protected boolean processSpecialField(String fieldCaption, ContactResponse contactResponse, Map<String, Object> responseMap, Set<String> fieldList) {
         if ("ContactPerson".equals(fieldCaption)) {
             String person = contactResponse.getPerson();
-            if (person != null && !person.isBlank()) {
+            if (person != null) {
                 responseMap.put("ContactPerson", person);
             }
             return true;

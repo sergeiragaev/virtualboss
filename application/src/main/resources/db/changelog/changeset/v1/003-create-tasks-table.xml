@@ -25,7 +25,9 @@
             <column name="duration" type="INT">
                 <constraints nullable="false"/>
             </column>
-            <column name="marked" type="BOOLEAN"/>
+            <column name="marked" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
             <column name="task_order" type="VARCHAR(255)"/>
             <column name="target_finish" type="date">
                 <constraints nullable="false"/>

@@ -5,8 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.querydsl.core.types.dsl.*;
 import net.virtualboss.common.annotation.EntityMapping;
 import net.virtualboss.common.exception.MappingException;
+import net.virtualboss.common.model.entity.QContact;
 import net.virtualboss.common.model.entity.QField;
 import net.virtualboss.common.model.entity.QFieldValue;
+import net.virtualboss.common.model.entity.QTask;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.ReflectionUtils;
@@ -23,10 +25,16 @@ public class QueryDslUtil {
 
     private static final Pattern CUSTOM_FIELD_PATTERN = Pattern.compile("(Task|Job|Contact)Custom(.*)");
     private static final Map<String, List<Field>> CUSTOM_FIELDS_CACHE = new HashMap<>();
-
+    private static final String CUSTOM_FIELDS_PREFIX = "customFields";
+    private static final String TASK_FOLLOWS_FIELD = "follows";
+    private static final String TASK_FOLLOWS_ALIAS = "task_follows_0";
+    private static final String CONTACT_PERSON_FIELD = "person";
+    private static final String NAME_CONCAT_TEMPLATE = "CONCAT({0}, ' ', {1})";
     private static final Set<Class<?>> SIMPLE_TYPES = Set.of(
             String.class, UUID.class, Boolean.class, Character.class
     );
+    private static final String FIELD_VALUE = "fieldValue";
+    private static final String FIELD = "field";
 
     private QueryDslUtil() {
         throw new IllegalStateException("Utility class");
@@ -35,12 +43,7 @@ public class QueryDslUtil {
     public static <T> Expression<T> buildProjection(Class<T> dtoClass, Object qEntity, List<String> fieldsList) {
         Map<String, Expression<?>> bindings = Arrays.stream(dtoClass.getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(EntityMapping.class))
-                .flatMap(field -> {
-                    Expression<?> expr = processField(field, qEntity, fieldsList);
-                    return expr != null
-                            ? Stream.of(new AbstractMap.SimpleEntry<>(field.getName(), expr))
-                            : Stream.empty();
-                })
+                .flatMap(field -> processFieldToExpression(field, qEntity, fieldsList))
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue
@@ -49,57 +52,107 @@ public class QueryDslUtil {
         return Projections.bean(dtoClass, bindings);
     }
 
-    private static Expression<?> processField(Field dtoField, Object qEntity, List<String> fieldsList) {
+    private static Stream<Map.Entry<String, Expression<?>>> processFieldToExpression(
+            Field dtoField,
+            Object qEntity,
+            List<String> fieldsList
+    ) {
         try {
-
-            EntityMapping annotation = dtoField.getAnnotation(EntityMapping.class);
-            String entityFieldName = getEntityFieldName(dtoField, annotation);
-            String dtoFieldName = getDtoFieldName(dtoField);
-
-            if (isSimpleType(dtoField.getType())) {
-                return handleSimpleField(dtoFieldName, qEntity, entityFieldName, fieldsList);
-            }
-
-            List<String> nestedFields = extractNestedFields(dtoFieldName, fieldsList);
-
-            if (dtoField.getType().equals(CustomFieldsAndLists.class)) {
-                Matcher matcher = CUSTOM_FIELD_PATTERN.matcher(dtoFieldName);
-                if (matcher.matches()) {
-                    String entityType = matcher.group(1); // Task, Job or Contact
-                    return processCustomField(nestedFields, entityType);
-                }
-            }
-
-            return handleNestedField(dtoField, dtoFieldName, qEntity, entityFieldName, fieldsList);
+            Expression<?> expr = processField(dtoField, qEntity, fieldsList);
+            return expr != null
+                    ? Stream.of(new AbstractMap.SimpleEntry<>(dtoField.getName(), expr))
+                    : Stream.empty();
         } catch (MappingException e) {
             throw e;
         } catch (Exception e) {
-            throw new MappingException("Error processing field: " + dtoField.getName());
+            throw new MappingException("Error processing field: " + dtoField.getName(), e);
         }
     }
-    
-    private static Expression<?> handleSimpleField(String dtoFieldName,
-                                                   Object qEntity,
-                                                   String entityFieldName,
-                                                   List<String> fieldsList) {
-        if (!fieldsList.contains(dtoFieldName)) return null;
-        return extractQEntityExpression(qEntity, entityFieldName);
+
+    private static Expression<?> processField(Field dtoField, Object qEntity, List<String> fieldsList) {
+        EntityMapping annotation = dtoField.getAnnotation(EntityMapping.class);
+        String entityFieldName = getEntityFieldName(dtoField, annotation);
+        String dtoFieldName = getDtoFieldName(dtoField);
+
+        if (TASK_FOLLOWS_FIELD.equals(entityFieldName)) {
+            return createTaskFollowsExpression();
+        }
+
+        if (CONTACT_PERSON_FIELD.equals(entityFieldName)) {
+            return createContactPersonExpression(qEntity);
+        }
+
+        if (isSimpleType(dtoField.getType())) {
+            return handleSimpleTypeField(dtoFieldName, qEntity, entityFieldName, fieldsList);
+        }
+
+        if (dtoField.getType().equals(CustomFieldsAndLists.class)) {
+            return handleCustomFields(dtoFieldName, extractNestedFields(dtoFieldName, fieldsList));
+        }
+
+        return handleComplexTypeField(dtoField, dtoFieldName, qEntity, entityFieldName, fieldsList);
     }
 
-    private static Expression<?> handleNestedField(Field dtoField,
-                                                   String dtoFieldName,
-                                                   Object qEntity,
-                                                   String entityFieldName,
-                                                   List<String> fieldsList) {
+    private static Expression<?> handleSimpleTypeField(
+            String dtoFieldName,
+            Object qEntity,
+            String entityFieldName,
+            List<String> fieldsList
+    ) {
+        return fieldsList.contains(dtoFieldName)
+                ? getQEntityExpression(qEntity, entityFieldName)
+                : null;
+    }
 
+    private static Expression<?> handleComplexTypeField(
+            Field dtoField,
+            String dtoFieldName,
+            Object qEntity,
+            String entityFieldName,
+            List<String> fieldsList
+    ) {
         List<String> nestedFields = extractNestedFields(dtoFieldName, fieldsList);
-        if (nestedFields.isEmpty() && !fieldsList.contains(dtoFieldName))
-            return null;
+        if (nestedFields.isEmpty() && !fieldsList.contains(dtoFieldName)) return null;
 
-        Object nestedQEntity = extractQEntityValue(qEntity, entityFieldName);
+        Object nestedQEntity = getQEntityValue(qEntity, entityFieldName);
         return buildProjection(dtoField.getType(), nestedQEntity, nestedFields);
     }
 
+    private static Expression<?> handleCustomFields(String dtoFieldName, List<String> nestedFields) {
+        Matcher matcher = CUSTOM_FIELD_PATTERN.matcher(dtoFieldName);
+        if (matcher.matches()) {
+            String entityType = matcher.group(1);
+            return createCustomFieldProjection(nestedFields, entityType);
+        }
+        return null;
+    }
+
+    private static Expression<?> createCustomFieldProjection(List<String> nestedFields, String entityType) {
+        if (nestedFields.isEmpty()) return null;
+
+        QFieldValue fieldValue = new QFieldValue(FIELD_VALUE + entityType);
+        QField field = new QField(FIELD + entityType);
+        Map<String, Expression<?>> bindings = new HashMap<>();
+
+        getCustomFields().forEach(f -> {
+            String jsonName = entityType + f.getAnnotation(JsonProperty.class).value();
+            if (nestedFields.contains(jsonName)) {
+                bindings.put(f.getName(), createFieldValueExpression(field, fieldValue, jsonName));
+            }
+        });
+
+        return bindings.isEmpty() ? null : Projections.bean(CustomFieldsAndLists.class, bindings);
+    }
+
+    private static Expression<String> createFieldValueExpression(QField field, QFieldValue fieldValue, String jsonName) {
+        return Expressions.cases()
+                .when(field.name.eq(jsonName))
+                .then(fieldValue.customValue)
+                .otherwise("")
+                .max();
+    }
+
+    // Common helper methods
     private static String getEntityFieldName(Field dtoField, EntityMapping annotation) {
         return annotation.path().isEmpty() ? dtoField.getName() : annotation.path();
     }
@@ -115,24 +168,33 @@ public class QueryDslUtil {
                type.isPrimitive() ||
                SIMPLE_TYPES.contains(type) ||
                Number.class.isAssignableFrom(type) ||
-               java.util.Date.class.isAssignableFrom(type) ||
+               Date.class.isAssignableFrom(type) ||
                java.time.temporal.Temporal.class.isAssignableFrom(type);
     }
 
-    private static Expression<?> extractQEntityExpression(Object qEntity, String fieldName) {
+    private static Expression<?> getQEntityExpression(Object qEntity, String fieldName) {
         try {
             Field qField = qEntity.getClass().getDeclaredField(fieldName);
             ReflectionUtils.makeAccessible(qField);
             return (Expression<?>) qField.get(qEntity);
         } catch (Exception e) {
-            throw createMappingException(fieldName, qEntity.getClass());
+            throw createMappingException(fieldName, qEntity.getClass(), e);
         }
     }
 
-    private static MappingException createMappingException(String fieldName, Class<?> qEntityClass) {
-        return new MappingException(
-                MessageFormat.format("Field {0} not found in {1}", fieldName, qEntityClass.getName())
-        );
+    private static Object getQEntityValue(Object qEntity, String fieldName) {
+        try {
+            Field qField = qEntity.getClass().getDeclaredField(fieldName);
+            ReflectionUtils.makeAccessible(qField);
+            return qField.get(qEntity);
+        } catch (Exception e) {
+            throw createMappingException(fieldName, qEntity.getClass(), e);
+        }
+    }
+
+    private static MappingException createMappingException(String fieldName, Class<?> qEntityClass, Exception cause) {
+        String message = MessageFormat.format("Field {0} not found in {1}", fieldName, qEntityClass.getName());
+        return new MappingException(message, cause);
     }
 
     private static List<String> extractNestedFields(String prefix, List<String> fieldsList) {
@@ -142,65 +204,98 @@ public class QueryDslUtil {
                 .toList();
     }
 
-    private static Object extractQEntityValue(Object qEntity, String fieldName) {
+    // Sorting related methods
+    public static <T> OrderSpecifier<Comparable<Object>>[] getOrderSpecifiers(
+            Sort sort,
+            Class<T> entityClass,
+            String alias
+    ) {
+        List<OrderSpecifier<?>> orders = new ArrayList<>();
+        PathBuilder<T> entityPath = new PathBuilder<>(entityClass, alias);
+
+        sort.forEach(order -> processSortOrder(order, entityPath, orders));
+
+        return orders.toArray(OrderSpecifier[]::new);
+    }
+
+    private static void processSortOrder(
+            Sort.Order order,
+            PathBuilder<?> entityPath,
+            List<OrderSpecifier<?>> orders
+    ) {
+        String property = order.getProperty();
+        Order direction = order.isAscending() ? Order.ASC : Order.DESC;
+
+        Expression<?> expr = switch (property) {
+            case TASK_FOLLOWS_FIELD -> createTaskFollowsExpression();
+            case "contact.person" -> createContactPersonExpression(QTask.task.contact);
+            case CONTACT_PERSON_FIELD -> createContactPersonExpression(QContact.contact);
+            case "taskOrder" -> createTaskOrderExpression();
+            default -> isCustomFieldPath(property)
+                    ? handleCustomFieldSort(property, entityPath)
+                    : entityPath.getComparable(property, Comparable.class);
+        };
+
+        orders.add(new OrderSpecifier<>(direction, (Expression<Comparable<Object>>) expr));
+    }
+
+    private static Expression<?> createTaskOrderExpression() {
         try {
-            Field qField = qEntity.getClass().getDeclaredField(fieldName);
-            ReflectionUtils.makeAccessible(qField);
-            return qField.get(qEntity);
+            Expression<?> taskOrder = getQEntityExpression(QTask.task, "taskOrder");
+            return Expressions.stringTemplate("try_cast({0}, 0)", taskOrder);
         } catch (Exception e) {
-            throw createMappingException(fieldName, qEntity.getClass());
+            throw new MappingException("Error creating contact person expression", e);
         }
     }
 
-    /**
-     * Converts a sort (Spring Data) to an array of OrderSpecifier (QueryDSL).
-     *
-     * @param sort  the Spring Data sort object
-     * @param alias the alias for the entity (e.g. "task")
-     * @param <T>   the entity type
-     * @return an array of OrderSpecifier for use in QueryDSL.orderBy(...)
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> OrderSpecifier<Comparable<Object>>[] getOrderSpecifiers(Sort sort, Class<T> entityClass, String alias) {
-        List<OrderSpecifier<Comparable<Object>>> orders = new ArrayList<>();
-        // Use PathBuilder to dynamically build paths
-        PathBuilder<T> entityPath = new PathBuilder<>(entityClass, alias);
-
-        sort.forEach(order -> {
-            Order querydslOrder = order.isAscending() ? Order.ASC : Order.DESC;
-            // Use getComparable to get an Expression that is compatible with the OrderSpecifier
-            OrderSpecifier<?> orderSpecifier = new OrderSpecifier<>(
-                    querydslOrder,
-                    entityPath.getComparable(order.getProperty(), Comparable.class)
-            );
-            orders.add((OrderSpecifier<Comparable<Object>>) orderSpecifier);
-        });
-
-        return orders.toArray(new OrderSpecifier[0]);
+    private static Expression<?> createTaskFollowsExpression() {
+        QTask taskFollows = new QTask(TASK_FOLLOWS_ALIAS);
+        Path<?> valuePath = Expressions.path(String.class, taskFollows, "number");
+        return Expressions.stringTemplate("string_agg(cast({0} as text), ',')", valuePath);
     }
 
-    private static Expression<?> processCustomField(List<String> nestedFields, String entityType) {
-        if (nestedFields.isEmpty()) return null;
+    private static Expression<String> createContactPersonExpression(Object qEntity) {
+        try {
+            Expression<?> firstName = getQEntityExpression(qEntity, "firstName");
+            Expression<?> lastName = getQEntityExpression(qEntity, "lastName");
+            return Expressions.stringTemplate(NAME_CONCAT_TEMPLATE, firstName, lastName);
+        } catch (Exception e) {
+            throw new MappingException("Error creating contact person expression", e);
+        }
+    }
 
-        QFieldValue fieldValue = new QFieldValue("fieldValue" + entityType);
-        QField field = new QField("field" + entityType);
-        Map<String, Expression<?>> bindings = new HashMap<>();
+    private static boolean isCustomFieldPath(String property) {
+        return property.contains(CUSTOM_FIELDS_PREFIX);
+    }
 
-        getCustomFields().forEach(f -> {
-            String jsonName = entityType + f.getAnnotation(JsonProperty.class).value();
-            if (nestedFields.contains(jsonName)) {
+    private static Expression<?> handleCustomFieldSort(String property, PathBuilder<?> entityPath) {
+        String[] parts = property.split("\\.");
 
-                Expression<String> expr = Expressions.cases()
-                        .when(field.name.eq(jsonName))
-                        .then(fieldValue.value)
-                        .otherwise("")
-                        .max();
+        if (parts.length >= 3 && CUSTOM_FIELDS_PREFIX.equals(parts[1])) {
+            String nestedEntity = parts[0];
+            String fieldName = parts[2];
+            return createCustomFieldExpression(nestedEntity, fieldName);
+        }
 
-                bindings.put(f.getName(), expr);
-            }
-        });
+        if (parts.length >= 2 && CUSTOM_FIELDS_PREFIX.equals(parts[0])) {
+            String fieldName = parts[1];
+            String entityType = entityPath.getType().getSimpleName();
+            return createCustomFieldExpression(entityType, fieldName);
+        }
 
-        return bindings.isEmpty() ? null : Projections.bean(CustomFieldsAndLists.class, bindings);
+        throw new IllegalArgumentException("Invalid custom field path: " + property);
+    }
+
+    private static Expression<?> createCustomFieldExpression(String entityPrefix, String customFieldName) {
+        entityPrefix = capitalize(entityPrefix);
+        QFieldValue fieldValue = new QFieldValue(FIELD_VALUE + entityPrefix);
+        QField field = new QField(FIELD + entityPrefix);
+        return createFieldValueExpression(field, fieldValue, entityPrefix + customFieldName);
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
     private static List<Field> getCustomFields() {

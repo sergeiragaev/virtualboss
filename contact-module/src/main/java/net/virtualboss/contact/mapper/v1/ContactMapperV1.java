@@ -33,5 +33,6 @@ public interface ContactMapperV1 {
     Contact addCustomFLAndGroups(Contact contact, CustomFieldsAndLists customFieldsAndLists, String jobGroups);
 
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
+    @Mapping(expression = "java(contact.getFirstName() + ' ' + contact.getLastName())", target = "person")
     ContactResponse contactToResponse(Contact contact);
 }

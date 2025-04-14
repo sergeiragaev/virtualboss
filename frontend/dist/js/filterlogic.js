@@ -83,7 +83,7 @@ $.ajax({
   msg += "</div>";
   msg += "<div class='input-group' style='margin-top:7px;'>";
   msg += "  <span class='input-group-btn'><button class='btn btn-default' type='button' onclick=\"$('#cFilter').val('');\" title='Reset Filter'><i class='fa fa-eraser'></i></button></span>";
-  msg += "  <select class='form-control' name='CustIds' id='cFilter'><option value=''>Choose " + names.ContactPerson + "</option></select>";
+  msg += "  <select class='form-control' name='ContactIds' id='cFilter'><option value=''>Choose " + names.ContactPerson + "</option></select>";
   msg += "</div>";
   msg += "  <div class='checkbox'>";
   msg += "    <label title='Can cause performance issues when dealing with thousands of records'>";
@@ -287,7 +287,7 @@ $.ajax({
       
     	      var options = "<option value=''>Choose " + names.ContactPerson + "</option>";
     	      
-    	      $.each(contacts, function(){
+    	      $.each(contacts.content, function(){
     	        if(this.ContactPerson.trim() == "" && this.ContactCompany.trim() == ""){}else{
     	          options += "<option value='" + this.ContactId + "'>" + this.ContactPerson + " (" + this.ContactCompany + ")</option>";
     	        }
@@ -319,7 +319,7 @@ $.ajax({
     	      
     	      var options = "<option value=''>Choose " + names.JobNumber + "</option>";
     	      
-    	      $.each(jobs, function(){
+    	      $.each(jobs.content, function(){
     	        if(this.JobNumber.trim() == ""){}else{
     	          options += "<option value='" + this.JobId + "'>" + this.JobNumber + "</option>";
     	        }
@@ -357,7 +357,7 @@ $.ajax({
 
                         var d = "";
         
-                        $.each(filteredContacts, function(){
+                        $.each(filteredContacts.content, function(){
                           d += "<option value='" + this.ContactId + "'>" + this.ContactPerson + " (" + this.ContactCompany + ")</option>";
                         });
                         
@@ -393,7 +393,7 @@ $.ajax({
                   
                         var d = "";
                         
-                        $.each(filteredJobs, function(){
+                        $.each(filteredJobs.content, function(){
                           d += "<option value='" + this.JobId + "'>" + this.JobNumber + "</option>";
                         });
                         
@@ -427,7 +427,7 @@ $.ajax({
 
                     var d = "";
                     
-                    $.each(filteredContacts, function(){
+                    $.each(filteredContacts.content, function(){
                       d += "<option value='" + this.ContactId + "'>" + this.ContactPerson + " (" + this.ContactCompany + ")</option>";
                     });
                     
@@ -459,7 +459,7 @@ $.ajax({
               
                     var d = "";
                     
-                    $.each(filteredJobs, function(){
+                    $.each(filteredJobs.content, function(){
                       d += "<option value='" + this.JobId + "'>" + this.JobNumber + "</option>";
                     });
                     
@@ -506,11 +506,11 @@ $.ajax({
                 //$("input[name=filtersContactSearch]").val(decodeURIComponent(filtersObj.filtersContactSearch).replace('+',' '));
               }
               
-              if(filtersObj.CustIds){
+              if(filtersObj.ContactIds){
                 if(Cookies.get("TaskFiltersContactAutoLoad") === "true"){
                   var dataUrl = '/api/v1/contact?fields=ContactId,ContactPerson,ContactCompany';
                 }else{
-                  var dataUrl = '/api/v1/contact/' + filtersObj.CustIds;
+                  var dataUrl = '/api/v1/contact/' + filtersObj.ContactIds;
                 }
                 
                 $.ajax({
@@ -524,8 +524,8 @@ $.ajax({
                     if(Cookies.get("TaskFiltersContactAutoLoad") === "true"){
                       var options = "";
                           options += "<option value=''>Choose " + names.ContactPerson + "</option>";
-                      $.each(c, function(){
-                        if(filtersObj.CustIds == this.ContactId){
+                      $.each(c.content, function(){
+                        if(filtersObj.ContactIds == this.ContactId){
                           options += "<option value='" + this.ContactId + "' selected='selected'>" + this.ContactPerson + " (" + this.ContactCompany + ")</option>";
                         }else{
                           options += "<option value='" + this.ContactId + "'>" + this.ContactPerson + " (" + this.ContactCompany + ")</option>";
@@ -571,7 +571,7 @@ $.ajax({
                     if(Cookies.get("TaskFiltersJobAutoLoad") === "true"){
                       var options = "";
                           options += "<option value=''>Choose " + names.JobNumber + "</option>";
-                      $.each(j, function(){
+                      $.each(j.content, function(){
                         if(filtersObj.JobIds == this.JobId){
                           options += "<option value='" + this.JobId + "' selected='selected'>" + this.JobNumber + "</option>";
                         }else{
@@ -990,7 +990,7 @@ function setFiltersMessage(filters, view){
         fMsg += Cookies.get("filterDateToGreg");
         if(i >= filtersArray.length - 1){}else{ fMsg += ", "; }
       break;
-      case "CustIds":
+      case "ContactIds":
         fMsg += "<i class='fa fa-user'></i> " + Cookies.get("filterContact");
         if(i >= filtersArray.length - 1){}else{ fMsg += ", "; }
       break;
@@ -1004,7 +1004,7 @@ function setFiltersMessage(filters, view){
   
   fMsg += "</a>";
   
-  if(Cookies.get('filterFindString') != ''){
+  if(Cookies.get('filterFindString') !== ''){
     fMsg += ", Search Phrase: <span style='color:#777;'>" + Cookies.get('filterFindString') + "</span>";
   }
   

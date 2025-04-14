@@ -65,7 +65,7 @@
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true"/>
             </column>
-            <column name="value" type="VARCHAR(255)">
+            <column name="custom_value" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="field_id" type="INTEGER"/>
@@ -105,6 +105,17 @@
             <column name="description" type="VARCHAR(255)"/>
             <column name="name" type="VARCHAR(255)"/>
             <column name="is_deleted" type="boolean"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="createSecondaryContactsTable" author="Sergei Ragaev">
+        <createTable tableName="secondary_contacts">
+            <column name="contact_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="task_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
     </changeSet>
 
@@ -189,5 +200,16 @@
                                  constraintName="fk_id" deferrable="false"
                                  initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
                                  referencedColumnNames="id" referencedTableName="groups" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKSecondaryContactsConstraintContactId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="contact_id" baseTableName="secondary_contacts"
+                                 constraintName="fk_contact_id" deferrable="false" initiallyDeferred="false"
+                                 onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id"
+                                 referencedTableName="contacts" validate="true"/>
+    </changeSet>
+    <changeSet id="addFKSecondaryContactsConstraintTaskId" author="Sergei Ragaev">
+        <addForeignKeyConstraint baseColumnNames="task_id" baseTableName="secondary_contacts" constraintName="fk_task_id"
+                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
     </changeSet>
 </databaseChangeLog>

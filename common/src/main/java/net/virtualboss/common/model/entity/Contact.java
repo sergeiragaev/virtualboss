@@ -108,7 +108,7 @@ public class Contact {
                 .filter(fieldValue -> fieldValue.getField().getName().equals(name))
                 .findAny().orElseThrow(() -> new EntityNotFoundException(
                         MessageFormat.format("Custom field with name {0} does not exist", name)
-                )).getValue();
+                )).getCustomValue();
     }
 
 }

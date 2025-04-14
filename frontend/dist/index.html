@@ -141,8 +141,8 @@
             </div>
         </form>
         <div class="row" style="margin-top:10px;">
-            <div class="col-xs-12">
-                <div class="btn-group">
+            <div class="col-xs-12" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: nowrap;">
+                <div class="btn-group" style="flex-shrink: 0;">
                     <button type="button" title="Add New Task" onclick="editNewTask('TaskManager');"
                             class="btn btn-primary"><i class="fa fa-file-text-o" style="margin-right:5px;"></i> New Task
                     </button>
@@ -163,7 +163,12 @@
                         <i class="fa fa-print"></i> Print
                     </button>
                 </div>
-                <div class="btn-group" style="float:right;">
+                <div style="display: flex; align-items: center; gap: 10px; margin: 0 auto;">
+                    <button id="tPrevPage" class="btn btn-primary"><i class="fa fa-chevron-left"></i> Previous</button>
+                    <span id="tPageInfo">Page 1 of 1</span>
+                    <button id="tNextPage" class="btn btn-primary">Next <i class="fa fa-chevron-right"></i></button>
+                </div>
+                <div class="btn-group" style="flex-shrink: 0; margin-left: auto;">
                     <button type="button" title="Filter Options" onclick="openBasicFilters('TaskManager');"
                             class="btn btn-primary">
                         <i class="fa fa-commonFilter"></i><span class=""><span class="hidden-xs"> Filters</span></span>

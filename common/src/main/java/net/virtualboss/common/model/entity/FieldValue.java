@@ -22,9 +22,9 @@ public class FieldValue {
     @JoinColumn(nullable = false, name = "field_id", referencedColumnName = "id")
     private Field field;
 
-    @Column(name = "\"value\"", nullable = false)
+    @Column(name = "custom_value", nullable = false)
     @Builder.Default
-    private String value = "";
+    private String customValue = "";
 
     @Override
     public boolean equals(Object o) {

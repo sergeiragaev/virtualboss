@@ -11,11 +11,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -139,9 +139,9 @@ class JobServiceTestIT extends TestDependenciesContainer {
         jobService.createJob(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
         CommonFilter filter = new CommonFilter();
         filter.setFindString("custom");
-        List<Map<String, Object>> result = jobService.findAll(null, filter);
+        Page<Map<String, Object>> result = jobService.findAll(null, filter);
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.getTotalElements());
     }
 
     @Test
@@ -150,9 +150,9 @@ class JobServiceTestIT extends TestDependenciesContainer {
     void searchAllJobs() {
         jobService.createJob(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
         CommonFilter filter = new CommonFilter();
-        List<Map<String, Object>> result = jobService.findAll(null, filter);
+        Page<Map<String, Object>> result = jobService.findAll(null, filter);
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.getTotalElements());
     }
 
     @Test
@@ -162,9 +162,9 @@ class JobServiceTestIT extends TestDependenciesContainer {
         jobService.createJob(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
         CommonFilter filter = new CommonFilter();
         filter.setFindString(" ");
-        List<Map<String, Object>> result = jobService.findAll(null, filter);
+        Page<Map<String, Object>> result = jobService.findAll(null, filter);
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.getTotalElements());
     }
 
     @Test
@@ -177,11 +177,11 @@ class JobServiceTestIT extends TestDependenciesContainer {
         String savedJobId = savedJobMap.get("JobId").toString();
         filter.setFindString(savedJobNumber);
         filter.setIsDeleted(false);
-        List<Map<String, Object>> result = jobService.findAll("JobId", filter);
+        Page<Map<String, Object>> result = jobService.findAll("JobId", filter);
         assertNotNull(result);
-        assertFalse(result.get(0).isEmpty());
-        assertEquals(1, result.size());
-        assertEquals(savedJobId, result.get(0).get("JobId").toString());
+        assertFalse(result.getContent().get(0).isEmpty());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(savedJobId, result.getContent().get(0).get("JobId").toString());
     }
 
     @Test
@@ -193,9 +193,9 @@ class JobServiceTestIT extends TestDependenciesContainer {
         String savedJobId = savedJobMap.get("JobId").toString();
         filter.setIsDeleted(false);
         filter.setFindString(savedJobId);
-        List<Map<String, Object>> result = jobService.findAll("JobId", filter);
+        Page<Map<String, Object>> result = jobService.findAll("JobId", filter);
         assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertTrue(result.getContent().isEmpty());
     }
 
     @Test

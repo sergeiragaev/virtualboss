@@ -1,11 +1,16 @@
 ﻿/***********************************************************************************************/
-var defaultContactFieldsToShow = "ContactPerson,ContactEmail,ContactCompany";
-var defaultContactFilters = "";
-var allContactFieldCaptionNames = ["ContactCompany","ContactPerson","ContactProfession","ContactFirstName","ContactLastName","ContactSupervisor","ContactSpouse","ContactTaxID","ContactWebSite","ContactEmail","ContactFax","ContactWorkersCompDate","ContactInsuranceDate","ContactComments","ContactNotes","ContactPhones","ContactCustomField1","ContactCustomField2","ContactCustomField3","ContactCustomField4","ContactCustomField5","ContactCustomField6","ContactCustomList1","ContactCustomList2","ContactCustomList3","ContactCustomList4","ContactCustomList5","ContactCustomList6"];
+const defaultContactFieldsToShow = "ContactPerson,ContactEmail,ContactCompany";
+const defaultContactFilters = "";
+const allContactFieldCaptionNames = ["ContactCompany", "ContactPerson", "ContactProfession", "ContactFirstName", "ContactLastName", "ContactSupervisor", "ContactSpouse", "ContactTaxID", "ContactWebSite", "ContactEmail", "ContactFax", "ContactWorkersCompDate", "ContactInsuranceDate", "ContactComments", "ContactNotes", "ContactPhones", "ContactCustomField1", "ContactCustomField2", "ContactCustomField3", "ContactCustomField4", "ContactCustomField5", "ContactCustomField6", "ContactCustomList1", "ContactCustomList2", "ContactCustomList3", "ContactCustomList4", "ContactCustomList5", "ContactCustomList6"];
+
+let contactsPerPage = 20;
+let cCurrentPage = 1;
+let cTotalPages = 1;
 /***********************************************************************************************/
 $(document).ready(function(){
   loadContactSettings();
   loadContactFilters();
+  setupEventHandlers();
   createContactList();
 });
 
@@ -20,7 +25,19 @@ function loadContactSettings(){
     setCookie("ContactListSort", "[[0,0]]");
   }
 
-  // set task custom field options
+  if (!Cookies.get("ShowAllContacts")) {
+    setCookie("ShowAllContacts", false);
+  }
+
+  if (!Cookies.get("ContactLimit")) {
+    setCookie("ContactLimit", contactsPerPage);
+  } else {
+    contactsPerPage = parseInt(Cookies.get("ContactLimit"), 10);
+  }
+
+  cCurrentPage = parseInt(Cookies.get('cCurrentPage')) || 1;
+
+  // set Contact custom field options
   
   if(!Cookies.get("ShowContactCustomField1")){
     setCookie("ShowContactCustomField1", false);
@@ -71,24 +88,26 @@ function loadContactSettings(){
   if(!Cookies.get("ShowContactCustomList6")){
     setCookie("ShowContactCustomList6", false);
   }
-      
-  $("form[name=contactListSearchForm]").submit(function(event){   
-    var phrase = $("#contactListSearchBox").val();
-    createContactList("/api/v1/contact?FindString=" + encodeURIComponent(phrase));
-    event.preventDefault();
-  });
 }
 
 function loadContactFilters(){
   if(!Cookies.get("ContactFilters")){
     setCookie("ContactFilters", defaultContactFilters);
   }
+
+  if (!Cookies.get("contactListFindString")) {
+    setCookie("contactListFindString", "");
+  }
+
+  $("#contactListSearchBox").val(Cookies.get('contactListFindString'));
 }
 
 function createContactList(customUrl){
-  var contactFieldsArray = getContactFieldsToShowArray();
-  var contactFieldsString = Cookies.get("ContactFieldsToShow");
-  var activeContactFilters = getActiveContactFilters();
+  let dataUrl;
+  const contactFieldsArray = getContactFieldsToShowArray();
+  const contactFieldsString = Cookies.get("ContactFieldsToShow");
+  const activeContactFilters = getActiveContactFilters();
+  const sortParams = getSortParams(contactFieldsArray);
 
   BootstrapDialog.show({
     title: "Loading Contacts, Please wait...",
@@ -97,13 +116,13 @@ function createContactList(customUrl){
 
   // START CONTACT LIST CREATION  
   if(!customUrl){
-    var dataUrl = "/api/v1/contact?fields=ContactId," + contactFieldsString;
-        dataUrl += "&" + activeContactFilters;
+    dataUrl = "/api/v1/contact?fields=ContactId," + contactFieldsString;
+    dataUrl += "&" + activeContactFilters;
   }else{
-    var dataUrl = customUrl + "&fields=ContactId," + contactFieldsString;
+    dataUrl = customUrl + "&fields=ContactId," + contactFieldsString;
   }
-  
-  var tblData = "";
+  let findString = Cookies.get('contactListFindString') || '';
+  dataUrl += '&page=' + cCurrentPage + '&limit=' + contactsPerPage + '&sort=' + sortParams + '&findString=' + findString;
 
   $.ajax({
     url: dataUrl,
@@ -113,7 +132,11 @@ function createContactList(customUrl){
         logout();
       }
 
-      if(!contacts.length){
+      cTotalPages = contacts.page.totalPages;
+
+      updatePagination();
+
+      if(!contacts.page.totalElements){
         BootstrapDialog.closeAll();
         BootstrapDialog.show({
           title: "No Results",
@@ -122,9 +145,9 @@ function createContactList(customUrl){
         
         return;
       }
-      
-      $("#cCount").html(contacts.length);
-      
+
+      updateContactCount(contacts.page.totalElements);
+
       var tbl = "<div class='table-responsive'>";
           tbl += "<table class='table table-bordered table-condensed table-striped tablesorter table-hover'>";
           tbl += "  <thead>";
@@ -146,11 +169,11 @@ function createContactList(customUrl){
           tbl += "  </thead>";
           tbl += "  <tbody>";
               
-          $.each(contacts, function(i){
+          $.each(contacts.content, function(i){
             var emptyContact = true;
             
             for(var n in contactFieldsArray){
-              if(contacts[i][contactFieldsArray[n]] != ""){
+              if(contacts.content[i][contactFieldsArray[n]] != ""){
                 emptyContact = false;
               }
             }
@@ -159,17 +182,17 @@ function createContactList(customUrl){
               return;
             }
             
-            tbl += "<tr onclick=\"editContact('" + contacts[i]['ContactId'] + "');\" style='cursor:pointer;'>";
+            tbl += "<tr onclick=\"editContact('" + contacts.content[i]['ContactId'] + "');\" style='cursor:pointer;'>";
             
             $.each(contactFieldsArray, function(j){             
               if(this == "ContactPerson"){
-                tbl += "<td><a href='#' onclick=\"return false;\">" + contacts[i][this] + "</a></td>";
+                tbl += "<td><a href='#' onclick=\"return false;\">" + contacts.content[i][this] + "</a></td>";
               }else if(this == "ContactNotes"){
-                tbl += "<td>" + contacts[i][this]; //.replace(/\\n/g, '<br />') + "</td>";
+                tbl += "<td>" + contacts.content[i][this]; //.replace(/\\n/g, '<br />') + "</td>";
               }else if(contactFieldsArray[j] == "ContactWorkersCompDate" || contactFieldsArray[j] == "ContactInsuranceDate"){
-                tbl += "<td>" + formatDate(contacts[i][contactFieldsArray[j]]) + "</td>";
+                tbl += "<td>" + formatDate(contacts.content[i][contactFieldsArray[j]]) + "</td>";
               }else {
-                tbl += "<td>" + contacts[i][this] + "</td>";
+                tbl += "<td>" + contacts.content[i][this] + "</td>";
               }
             });
                 
@@ -181,12 +204,7 @@ function createContactList(customUrl){
           tbl += "</div>";
           
           $("#cContactList").html(tbl);
-          $("#cContactList table").tablesorter({
-            sortList: eval(Cookies.get("ContactListSort"))
-          }).bind("sortStart",function(){
-          }).bind("sortEnd", function(data){
-            setCookie("ContactListSort", data.delegateTarget.config.sortList);
-          });
+          initTableSorting();
           
           BootstrapDialog.closeAll();
           postEffects();
@@ -454,3 +472,127 @@ function getContactListFieldsToShowArray(){
   return Cookies.get("ContactFieldsToShow").split(",");
 }
 
+function setupEventHandlers() {
+  $('#cPrevPage').click(() => changePage(-1));
+  $('#cNextPage').click(() => changePage(1));
+
+  $("form[name='contactListSearchForm']").submit(function (e) {
+    e.preventDefault();
+    cCurrentPage = 1;
+    const phrase = $("#contactListSearchBox").val().replace(/["'&?,;]/g, "");
+    Cookies.set('contactListFindString', phrase);
+    createContactList();
+  });
+}
+
+function changePage(delta) {
+  cCurrentPage = Math.max(1, cCurrentPage + delta);
+  createContactList();
+}
+
+function updateContactCount(total) {
+  if (!total) {
+    $("#cCount").html("0, <span style='font-style:italic; color:#ababab;'>nothing matched your search or current filters</span>");
+  } else if (eval(Cookies.get('ShowAllContacts'))) {
+    $("#cCount").html("<a href='#' onclick=\"editOptions(); return false;\">" + total + "</a>");
+  } else {
+    $("#cCount").html(total + " (<a href='#' title='Change number of contacts to show' onclick=\"editOptions(); return false;\">Showing</a> up to " + Cookies.get('ContactLimit') + ")");
+  }
+}
+
+function editOptions() {
+  var msg = "";
+  msg += "<form role='form' name='contactManagerOptionsForm'>";
+
+  msg += "<div class='checkbox'>";
+  msg += "  <label>";
+
+  if (eval(Cookies.get('ShowAllContacts'))) {
+    msg += "<input type='checkbox' onchange='contactLimitToggle();' name='ShowAllContacts' checked='checked' id='contactLimitOptionToggle'> Show All Contacts";
+  } else {
+    msg += "<input type='checkbox' onchange='contactLimitToggle();' name='ShowAllContacts' id='contactLimitOptionToggle'> Show All Contacts";
+  }
+
+  msg += "  </label>";
+  msg += "  <br />";
+  msg += "  <div style='margin-left:20px; margin-top:5px;'>";
+  msg += "    Show up to ";
+
+  if (eval(Cookies.get('ShowAllContacts'))) {
+    msg += "<input type='text' name='ContactLimit' class='form-control' disabled='true' id='contactLimitOption' value='" + Cookies.get('ContactLimit') + "' style='max-width:75px; display:inline-block;'>";
+  } else {
+    msg += "<input type='text' name='ContactLimit' id='contactLimitOption' class='form-control' value='" + Cookies.get('ContactLimit') + "' style='max-width:75px; display:inline-block;'>";
+  }
+
+  msg += "    Contacts";
+  msg += "  </div>";
+  msg += " </div>";
+  msg += "</form>";
+
+  BootstrapDialog.show({
+    title: "Contact Manager Options",
+    message: msg,
+    buttons: [{
+      label: "Cancel",
+      cssClass: "btn-default",
+      action: function (dialogRef) {
+        dialogRef.close();
+      }
+    }, {
+      label: "Save Changes",
+      cssClass: "btn-primary",
+      action: function (dialogRef) {
+
+        if ($("#contactLimitOptionToggle").prop("checked")) {
+          setCookie('ShowAllContacts', true);
+          cCurrentPage = 1;
+        } else {
+          setCookie('ShowAllContacts', false);
+          setCookie('ContactLimit', $("#contactLimitOption").val());
+          contactsPerPage = $("#contactLimitOption").val();
+          cCurrentPage = 1;
+        }
+
+        dialogRef.close();
+        createContactList();
+      }
+    }]
+  });
+}
+
+function contactLimitToggle() {
+  var state = $("#contactLimitOptionToggle").prop("checked");
+
+  if (state) {
+    $("#contactLimitOption").attr("disabled", true);
+  } else {
+    $("#contactLimitOption").attr("disabled", false);
+  }
+}
+
+function updatePagination() {
+  $('#cPageInfo').text(`Page ${cCurrentPage} of ${cTotalPages}`);
+  $('#cPrevPage').prop('disabled', cCurrentPage === 1);
+  $('#cNextPage').prop('disabled', cCurrentPage >= cTotalPages);
+  Cookies.set('cCurrentPage', cCurrentPage);
+}
+
+function getSortParams(contactFieldsArray) {
+  const savedSort = JSON.parse(Cookies.get("ContactListSort") || '[]');
+  return savedSort.map(([fieldIndex, direction]) => {
+    const field = contactFieldsArray[fieldIndex];
+    return `${field}:${direction === 0 ? 'asc' : 'desc'}`;
+  }).join(',');
+}
+
+function initTableSorting() {
+  $("#cContactList table").tablesorter({
+    sortList: eval(Cookies.get("ContactListSort"))
+  }).bind("sortStart", function () {
+
+  }).bind("sortEnd", function (data) {
+    setCookie("ContactListSort", data.delegateTarget.config.sortList);
+    cCurrentPage = 1;
+    createContactList();
+  });
+}

@@ -33,10 +33,10 @@ public class CustomFieldService {
             Field field = fieldRepository.findByName(caption)
                     .orElseThrow(() -> new EntityNotFoundException(
                             MessageFormat.format("Field with name {0} not found!", caption)));
-            FieldValue value = fieldValueRepository.findByFieldAndValue(field, fieldValue)
+            FieldValue value = fieldValueRepository.findByFieldAndCustomValue(field, fieldValue)
                     .orElse(FieldValue.builder()
                             .field(field)
-                            .value(fieldValue)
+                            .customValue(fieldValue)
                             .build());
             values.add(value);
         });

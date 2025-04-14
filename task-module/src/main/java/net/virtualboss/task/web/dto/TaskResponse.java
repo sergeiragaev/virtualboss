@@ -65,7 +65,7 @@ public class TaskResponse {
     @JsonProperty("TaskMarked")
     @Builder.Default
     @EntityMapping
-    private String marked = "False";
+    private Boolean marked = false;
 
     @JsonProperty("JobNumber")
     @Builder.Default
@@ -93,6 +93,7 @@ public class TaskResponse {
 
     @JsonProperty("TaskFollows")
     @Builder.Default
+    @EntityMapping
     private String follows = "";
 
     @JsonProperty("FinishPlus")

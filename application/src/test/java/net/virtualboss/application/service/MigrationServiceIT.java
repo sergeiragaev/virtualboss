@@ -1,6 +1,7 @@
 package net.virtualboss.application.service;
 
 import net.virtualboss.common.model.entity.Employee;
+import net.virtualboss.common.model.entity.Task;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +18,7 @@ class MigrationServiceIT extends BaseIntegrationTest {
     private String testDataPath;
 
     @Test
-    void testMigrateEmployees() {
+    void testMigrateData() {
         migrationService.migrate(testDataPath);
 
         List<Employee> employees = jdbcTemplate.query(
@@ -28,5 +29,13 @@ class MigrationServiceIT extends BaseIntegrationTest {
                         .build()
         );
         assertEquals(3, employees.size());
+        List<Task> tasks = jdbcTemplate.query(
+                "SELECT * FROM tasks",
+                (rs, rowNum) -> Task.builder()
+                        .id(UUID.fromString(rs.getString("id")))
+                        .description(rs.getString("description"))
+                        .build()
+        );
+        assertEquals(180, tasks.size());
     }
 }

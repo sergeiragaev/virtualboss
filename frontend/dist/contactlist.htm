@@ -110,7 +110,7 @@
             <div class="input-group">
               <input type="text" class="form-control" id="contactListSearchBox" placeholder="Search for...">
               <span class="input-group-btn">
-                <button class="btn btn-primary" type="button" onclick="$('#contactListSearchBox').val(''); createContactList();">Reset</button>
+                <button class="btn btn-primary" type="button" onclick="$('#contactListSearchBox').val(''); Cookies.set('contactListFindString', ''); createContactList();">Reset</button>
                 <button class="btn btn-primary" id="contactListSearchButton" type="submit"><i class="fa fa-search"></i><span class="hidden-xs"> Search</span></button>
               </span>
             </div>    
@@ -118,7 +118,7 @@
         </div>
       </form>
       <div class="row" style="margin-top:10px;">
-        <div class="col-xs-12">
+        <div class="col-xs-12" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: nowrap;">
           <div class="btn-group">
             <button type="button" title="Add New Contact" onclick="editNewContact();" class="btn btn-primary"><i class="fa fa-file-text-o" style="margin-right:5px;"></i> New Contact</button> 
           </div>
@@ -129,7 +129,13 @@
             <ul class="dropdown-menu">
               <li><a href="#" onclick="editContactListColumns();return false;">Contact List Fields</a></li>
               <li><a href="#" onclick="editContactFieldOrder(); return false;">Change Field Order</a></li>
+              <li><a href="#" onclick="editOptions(); return false;">Options...</a></li>
             </ul>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; margin: 0 auto;">
+            <button id="cPrevPage" class="btn btn-primary"><i class="fa fa-chevron-left"></i> Previous</button>
+            <span id="cPageInfo">Page 1 of 1</span>
+            <button id="cNextPage" class="btn btn-primary">Next <i class="fa fa-chevron-right"></i></button>
           </div>
         </div>
       </div>

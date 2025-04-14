@@ -2,7 +2,6 @@ package net.virtualboss.task.service;
 
 import com.querydsl.core.JoinType;
 import com.querydsl.core.types.Predicate;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.CircularLinkingException;
@@ -47,7 +46,15 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
     private final TaskScheduleService taskScheduleService;
     private final WorkingDaysCalculator workingDaysCalculator;
     private final TaskResponseMapper taskResponseMapper;
-    private final FieldRepository fieldRepository;
+    private final Map<String, String> customMappings = Map.of(
+            "TaskCustom", "customFields.",
+            "JobCustom", "job.customFields.",
+            "ContactCustom", "contact.customFields."
+    );
+    private final Map<String, String> nestedMappings = Map.of(
+            "Job", "job.",
+            "Contact", "contact."
+    );
 
     public TaskService(EntityManager entityManager,
                        MainService mainService,
@@ -59,7 +66,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
                        WorkingDaysCalculator workingDaysCalculator,
                        TaskResponseMapper taskResponseMapper,
                        FieldRepository fieldRepository) {
-        super(entityManager, mainService, UUID::fromString, taskRepository);
+        super(entityManager, mainService, UUID::fromString, taskRepository, fieldRepository);
         this.repository = taskRepository;
         this.jobRepository = jobRepository;
         this.contactRepository = contactRepository;
@@ -67,47 +74,17 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
         this.taskScheduleService = taskScheduleService;
         this.workingDaysCalculator = workingDaysCalculator;
         this.taskResponseMapper = taskResponseMapper;
-        this.fieldRepository = fieldRepository;
     }
 
-    @PostConstruct
-    private void setSortFieldMapping() {
-        fieldRepository.findAll().forEach(this::mapFieldToSorting);
+
+    @Override
+    protected Map<String, String> getCustomMappings() {
+        return customMappings;
     }
 
-    private void mapFieldToSorting(Field field) {
-        String fieldName = field.getName();
-        String path = field.getPath();
-
-        String mappedPath = determineMappedPath(fieldName, path);
-        sortFieldMapping.put(fieldName, mappedPath);
-    }
-
-    private String determineMappedPath(String fieldName, String path) {
-        Map<String, String> customMappings = Map.of(
-                "TaskCustom", "customFields.",
-                "JobCustom", "Job.customFields.",
-                "ContactCustom", "Contact.customFields."
-        );
-
-        Optional<String> customPrefix = customMappings.entrySet().stream()
-                .filter(entry -> fieldName.startsWith(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .findFirst();
-
-        if (customPrefix.isPresent()) {
-            return customPrefix.get() + path;
-        }
-
-        if (fieldName.startsWith("Job")) {
-            return "job." + path;
-        }
-
-        if (fieldName.startsWith("Contact")) {
-            return "contact." + path;
-        }
-
-        return path;
+    @Override
+    protected Map<String, String> getNestedMappings() {
+        return nestedMappings;
     }
 
     @Override
@@ -416,6 +393,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
             TaskReferencesRequest referenceRequest) {
         Task task = mapper.requestToTask(request, customFieldsAndLists, referenceRequest);
         task.setNumber(getNextTaskNumberSequenceValue());
+        task.setMarked(false);
         LocalDate validTargetStart =
                 workingDaysCalculator.addWorkDays(
                         request.getTargetStart().minusDays(1), 1, "US");

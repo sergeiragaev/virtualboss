@@ -58,7 +58,7 @@ public class ContactFilterCriteria {
         Optional.ofNullable(showUnassigned).ifPresent(flag -> {
             BooleanExpression unassignedCondition = flag ?
                     contact.company.equalsIgnoreCase(UNASSIGNED_COMPANY) :
-                    contact.company.ne(UNASSIGNED_COMPANY);
+                    contact.company.toLowerCase().ne(UNASSIGNED_COMPANY);
 
             builder.and(unassignedCondition);
         });

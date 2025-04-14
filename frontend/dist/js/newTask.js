@@ -590,7 +590,7 @@ function showNewTaskEditScreen(body, view){
       });
       
       var jobSearch = $.inArray("JobIds", filtersArrayNames);
-      var contactSearch = $.inArray("CustIds", filtersArrayNames);
+      var contactSearch = $.inArray("ContactIds", filtersArrayNames);
       
       if(jobSearch != -1){
         jobFilterIsActive = true;

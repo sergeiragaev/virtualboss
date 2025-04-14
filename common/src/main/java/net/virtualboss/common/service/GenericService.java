@@ -5,8 +5,11 @@ import com.querydsl.core.types.*;
 import com.querydsl.core.types.dsl.EntityPathBase;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import net.virtualboss.common.exception.EntityNotFoundException;
+import net.virtualboss.common.model.entity.Field;
+import net.virtualboss.common.repository.FieldRepository;
 import net.virtualboss.common.util.DtoFlattener;
 import net.virtualboss.common.util.QueryDslUtil;
 import net.virtualboss.common.web.dto.filter.CommonFilter;
@@ -32,15 +35,23 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
     private final JPAQueryFactory queryFactory;
     protected Map<String, String> sortFieldMapping = new HashMap<>();
 
+    protected abstract Map<String, String> getCustomMappings();
+
+    protected abstract Map<String, String> getNestedMappings();
+
+    protected final FieldRepository fieldRepository;
+
     protected GenericService(EntityManager entityManager,
                              MainService mainService,
                              Function<String, K> idConverter,
-                             JpaRepository<E, K> repository) {
+                             JpaRepository<E, K> repository,
+                             FieldRepository fieldRepository) {
         this.entityManager = entityManager;
         this.mainService = mainService;
         this.idConverter = idConverter;
         this.repository = repository;
         this.queryFactory = new JPAQueryFactory(entityManager);
+        this.fieldRepository = fieldRepository;
     }
 
     protected abstract Q getQEntity();
@@ -141,7 +152,7 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
         List<Map<String, Object>> data = responses.stream()
                 .map(response -> DtoFlattener.flatten(response, comdinedFieldsList))
                 .toList();
-        
+
         return new PageImpl<>(data, pageRequest, totalCount);
     }
 
@@ -244,5 +255,36 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
         applyGroupBy((JPAQuery<R>) countQuery);
 
         return countQuery.fetch().size();
+    }
+
+    @PostConstruct
+    public void initSortFieldMapping() {
+        fieldRepository.findAll().forEach(this::mapFieldToSorting);
+    }
+
+    private void mapFieldToSorting(Field field) {
+        String fieldName = field.getName();
+        String path = field.getPath();
+        String mappedPath = determineMappedPath(fieldName, path);
+        if (mappedPath.equals(path)) {
+            mappedPath = determineNestedPath(fieldName, path);
+        }
+        sortFieldMapping.put(fieldName, mappedPath);
+    }
+
+    private String determineMappedPath(String fieldName, String path) {
+        return getCustomMappings().entrySet().stream()
+                .filter(entry -> fieldName.startsWith(entry.getKey()))
+                .findFirst()
+                .map(entry -> entry.getValue() + path)
+                .orElse(path);
+    }
+
+    private String determineNestedPath(String fieldName, String path) {
+        return getNestedMappings().entrySet().stream()
+                .filter(entry -> fieldName.startsWith(entry.getKey()))
+                .findFirst()
+                .map(entry -> entry.getValue() + path)
+                .orElse(path);
     }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.querydsl.core.types.dsl.*;
 import net.virtualboss.common.annotation.EntityMapping;
 import net.virtualboss.common.exception.MappingException;
+import net.virtualboss.common.model.entity.QContact;
 import net.virtualboss.common.model.entity.QField;
 import net.virtualboss.common.model.entity.QFieldValue;
 import net.virtualboss.common.model.entity.QTask;
@@ -228,12 +229,23 @@ public class QueryDslUtil {
         Expression<?> expr = switch (property) {
             case TASK_FOLLOWS_FIELD -> createTaskFollowsExpression();
             case "contact.person" -> createContactPersonExpression(QTask.task.contact);
+            case CONTACT_PERSON_FIELD -> createContactPersonExpression(QContact.contact);
+            case "taskOrder" -> createTaskOrderExpression();
             default -> isCustomFieldPath(property)
                     ? handleCustomFieldSort(property, entityPath)
                     : entityPath.getComparable(property, Comparable.class);
         };
 
         orders.add(new OrderSpecifier<>(direction, (Expression<Comparable<Object>>) expr));
+    }
+
+    private static Expression<?> createTaskOrderExpression() {
+        try {
+            Expression<?> taskOrder = getQEntityExpression(QTask.task, "taskOrder");
+            return Expressions.stringTemplate("try_cast({0}, 0)", taskOrder);
+        } catch (Exception e) {
+            throw new MappingException("Error creating contact person expression", e);
+        }
     }
 
     private static Expression<?> createTaskFollowsExpression() {
@@ -275,9 +287,15 @@ public class QueryDslUtil {
     }
 
     private static Expression<?> createCustomFieldExpression(String entityPrefix, String customFieldName) {
+        entityPrefix = capitalize(entityPrefix);
         QFieldValue fieldValue = new QFieldValue(FIELD_VALUE + entityPrefix);
         QField field = new QField(FIELD + entityPrefix);
         return createFieldValueExpression(field, fieldValue, entityPrefix + customFieldName);
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
     private static List<Field> getCustomFields() {

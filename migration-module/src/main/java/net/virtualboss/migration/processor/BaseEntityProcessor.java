@@ -80,6 +80,7 @@ public abstract class BaseEntityProcessor implements EntityProcessor {
         return switch (column.getType().toUpperCase()) {
             case "STRING" -> processString(rawValue, column.getProcessor());
             case "INTEGER" -> Integer.parseInt(rawValue.toString());
+            case "BOOLEAN" -> Boolean.getBoolean(rawValue == null ? "FALSE" : rawValue.toString());
             default -> rawValue;
         };
     }

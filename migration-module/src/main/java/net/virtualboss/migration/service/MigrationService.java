@@ -84,9 +84,10 @@ public class MigrationService {
     private void updateFields(DBFReader reader) {
         DBFRow row;
         while ((row = reader.nextRow()) != null) {
+            String name = row.getString("FI_VARNAME");
             try {
                 FieldDto fieldDto = FieldDto.builder()
-                        .name(row.getString("FI_VARNAME"))
+                        .name(name)
                         .defaultValue(row.getString("FI_NAME"))
                         .alias(row.getString("FI_ALIAS"))
                         .enabled(row.getBoolean("FI_RVBLIST"))
@@ -94,7 +95,7 @@ public class MigrationService {
                         .build();
                 fieldService.updateField(fieldDto);
             } catch (Exception e) {
-                log.error("There is error occurred while parsing fields info: {}", e.getLocalizedMessage());
+                log.error("There is error occurred while parsing fields info for field {}: {}", name, e.getLocalizedMessage());
             }
         }
     }

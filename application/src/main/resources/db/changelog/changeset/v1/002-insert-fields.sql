@@ -57,7 +57,7 @@ insert into fields (id, name, default_value, alias, enabled, field_order, path) 
 insert into fields (id, name, default_value, alias, enabled, field_order, path) values (37, 'ContactSupervisor', 'Supervisor', 'Supervisor', true, 6, 'supervisor');
 insert into fields (id, name, default_value, alias, enabled, field_order, path) values (38, 'ContactSpouse', 'Spouse', 'Spouse', true, 7, 'spouse');
 insert into fields (id, name, default_value, alias, enabled, field_order, path) values (39, 'ContactTaxID', 'Tax ID', 'Tax ID', true, 8, 'taxId');
-insert into fields (id, name, default_value, alias, enabled, field_order, path) values (40, 'ContactWebSite', 'Web Site', 'Web Site', true, 9, 'website');
+insert into fields (id, name, default_value, alias, enabled, field_order, path) values (40, 'ContactWebSite', 'Web Site', 'Web Site', true, 9, 'webSite');
 insert into fields (id, name, default_value, alias, enabled, field_order, path) values (41, 'ContactWorkersCompDate', 'Workers Comp good through', 'Workers Comp good through', true, 10, 'workersCompDate');
 insert into fields (id, name, default_value, alias, enabled, field_order, path) values (42, 'ContactInsuranceDate', 'Insurance good through', 'Insurance good through', true, 11, 'insuranceDate');
 insert into fields (id, name, default_value, alias, enabled, field_order, path) values (43, 'ContactComments', 'Comments', 'Comments', true, 12, 'comments');
@@ -105,5 +105,8 @@ insert into fields (id, name, default_value, alias, enabled, field_order, path) 
 insert into fields (id, name, default_value, alias, enabled, field_order, path) values (82, 'ContactCustomList5', list_5, list_5, false, 27, 'CustomList5');
 insert into fields (id, name, default_value, alias, enabled, field_order, path) values (83, 'ContactCustomList6', list_6, list_6, false, 28, 'CustomList6');
 
-ALTER SEQUENCE fields_id_seq restart with 84 ;
+insert into fields (id, name, default_value, alias, enabled, field_order, path) values (84, 'TaskAttachments', 'Files', 'Files', false, 25, 'files');
+insert into fields (id, name, default_value, alias, enabled, field_order, path) values (85, 'TaskSecondaryContacts', 'Secondary Contacts', 'Secondary Contacts', false, 26, 'secondaryContacts');
+
+ALTER SEQUENCE fields_id_seq restart with 86 ;
 END $$;

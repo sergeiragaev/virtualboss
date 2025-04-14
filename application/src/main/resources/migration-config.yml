@@ -309,12 +309,13 @@ migration:
         - name: legacy_id
           source: TA_CODE
           type: STRING
-        - name: task_order
-          source: TA_ORDER
-          type: STRING
         - name: finish_plus
           source: TA_DELAY
           type: INTEGER
+        - name: files
+          source: TA_FILES
+          type: STRING
+          processor: sanitizeMemo
         - name: is_deleted
           type: BOOLEAN
 

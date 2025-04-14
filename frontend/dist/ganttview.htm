@@ -123,7 +123,7 @@
             <div class="input-group">
               <input type="text" class="form-control" id="ganttChartSearchBox" placeholder="Search for...">
               <span class="input-group-btn">
-                <button class="btn btn-primary" type="button" onclick="$('#ganttChartSearchBox').val(''); setCookie('filterFindString', ''); loadGanttChart();">Reset</button>              
+                <button class="btn btn-primary" type="button" onclick="$('#ganttChartSearchBox').val(''); setCookie('filterFindString', ''); loadGanttChart();">Reset</button>
                 <button class="btn btn-primary" id="ganttChartSearchButton" type="submit"><i class="fa fa-search"></i><span class="hidden-xs"> Search</span></button>
               </span>
             </div>   
@@ -131,8 +131,8 @@
         </div>
       </form>
       <div class="row" style="margin-top:10px;">
-        <div class="col-xs-12">
-          <div class="btn-group">
+        <div class="col-xs-12" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: nowrap;">
+          <div class="btn-group" style="flex-shrink: 0;">
             <button type="button" title="Add New Task" onclick="editNewTask('GanttChart');" class="btn btn-primary"><i class="fa fa-file-text-o" style="margin-right:5px;"></i> New Task</button> 
           </div>
 
@@ -151,7 +151,12 @@
           <div class="btn-group">
             <button type="button" class="btn btn-primary" style="display:none;" onclick="printSection('Gantt');"><i class="fa fa-print"></i> Print</button>
           </div>
-          <div class="btn-group" style="float:right;">
+          <div style="display: flex; align-items: center; gap: 10px; margin: 0 auto;">
+            <button id="prevPage" class="btn btn-primary"><i class="fa fa-chevron-left"></i> Previous</button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button id="nextPage" class="btn btn-primary">Next <i class="fa fa-chevron-right"></i></button>
+          </div>
+          <div class="btn-group" style="flex-shrink: 0; margin-left: auto;">
             <button type="button" title="Filter Options" onclick="openBasicFilters('GanttChart');" class="btn btn-primary">
               <i class="fa fa-commonFilter hidden-xs"></i> Filters
             </button>

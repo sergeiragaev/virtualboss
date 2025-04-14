@@ -541,7 +541,7 @@ function showEditScreen(data, names, view){
           
                 var currentlyLinkedArray = [];
                 
-                $.each(tasks, function(){
+                $.each(tasks.content, function(){
                   body += "<li style='font-size:12px;'><a href='#' onclick=\"editTask('" + this.TaskId + "');return false;\">" + this.TaskDescription + "</a> - Finishes on " + moment(this.TaskTargetFinish, 'YYYY-MM-DD').format('MM/DD/YYYY (dddd)') + "</li>";
                   currentlyLinkedArray.push(this.TaskNumber);
                 });
@@ -944,10 +944,10 @@ function editTaskLinks(taskId, jobId, linkedTasks){
             logout();
           }
           
-          if(jobs.length < 1){
+          if(jobs.content.length < 1){
             msg += "<option value=''>No Jobs</option>";
           }else{
-            $.each(jobs, function(){
+            $.each(jobs.content, function(){
               if(this.JobId == jobId){
                 msg += "<option value='" + this.JobId + "' selected='selected'>" + this.JobNumber + "</option>";
               }else{
@@ -975,14 +975,14 @@ function editTaskLinks(taskId, jobId, linkedTasks){
           msg += "    </thead>";
           msg += "    <tbody>";        
 
-          if(taskData.length < 1){
+          if(taskData.content.length < 1){
             msg += "<tr>";
             msg += "  <td></td>";
             msg += "  <td>No Tasks Found For This Search</td>";
             msg += "  <td></td>";
             msg += "</tr>";
           }else{
-            $.each(taskData, function(){
+            $.each(taskData.content, function(){
               if($.inArray(this.TaskNumber.toString(), currentlyLinkedArray) == -1){
                 msg += "<tr>";
                 msg += "  <td>";
@@ -1061,7 +1061,7 @@ function editTaskLinks(taskId, jobId, linkedTasks){
                     
                     var pendingArray = [];
                     
-                    $.each(tasks, function(){
+                    $.each(tasks.content, function(){
                       output += "<li style='font-size:12px;'><a href='#'>" + this.TaskDescription + "</a> - Finishes on " + moment(this.TaskTargetFinish,'YYYY-MM-DD').format('MM/DD/YYYY (dddd)') + "</li>";
                       pendingArray.push(this.TaskNumber);
                     });
@@ -1326,7 +1326,7 @@ function chooseFromJobList(){
         logout();
       }
 
-      $.each(jobs, function(){
+      $.each(jobs.content, function(){
         if(this['JobNumber'].trim() == ""){
         
         }else{
@@ -1430,7 +1430,7 @@ function chooseFromContactList(){
         logout();
       }
 
-      $.each(contacts, function(){
+      $.each(contacts.content, function(){
         if(this['ContactPerson'].trim() == "" && this['ContactCompany'].trim() == ""){
         
         }else{
@@ -1533,7 +1533,7 @@ function chooseJobShowAll(){
 
       var text = "";
       
-      $.each(jobs, function(){
+      $.each(jobs.content, function(){
         text += "<tr>";
         text += " <td>" + this['JobNumber'] + "</td>";
         text += " <td><button class='btn btn-primary btn-xs'>Assign to task</button></td>";
@@ -1740,7 +1740,7 @@ function applyTaskLinkingFilter(linkedTasks){
 
       var output = "";
 
-      $.each(tasks, function(){
+      $.each(tasks.content, function(){
         if($.inArray(this.TaskId, currentlyLinked) == -1){
           output += "<tr>";
           output += " <td>";

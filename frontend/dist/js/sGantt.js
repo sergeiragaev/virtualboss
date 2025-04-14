@@ -281,7 +281,11 @@
 			/*************************************************************/	
         	
       var formattedStart = g.dateRange.start.replace(/\//g,"-"); // have to do this because firefox couldn't parse the date perfectly like everyone else!
-			var sourceURL = g.eventSource + "&end=" + Date.parse(g.dateRange.end) / 1000 + "&_=" + g.time + "&Sort1=" + g.primarySort + "&Sort2=" + g.secondarySort;
+
+			const sortParams = getSortParams(g.columnOrder.split(','));
+
+			// var sourceURL = g.eventSource + "&end=" + Date.parse(g.dateRange.end) / 1000 + "&_=" + g.time + "&Sort1=" + g.primarySort + "&Sort2=" + g.secondarySort;
+			var sourceURL = g.eventSource + "&end=" + Date.parse(g.dateRange.end) / 1000 + "&_=" + g.time + "&sort=" + sortParams;
 
 			if(g.eventSource != ""){
 				$.ajax({
@@ -299,7 +303,7 @@
 					    logout();
 					  }
 					
-						var t = e;
+						var t = e.content;
 						var loadConfirm = true;
 						
 						if(t.length > 5000){
@@ -389,16 +393,18 @@
 							if(Cookies.get("GanttChartSort")){
 							  
 							}else{
-							  setCookie("GanttChartSort", "[[1,0]]");
+							  setCookie("GanttChartSort", "[[1,0],[2,0]]");
 							}
-							
-              $("#sGanttMain").tablesorter({
-                sortList: eval(Cookies.get("GanttChartSort"))
-              }).bind("sortStart",function(){
-              
-              }).bind("sortEnd", function(data){            
-                setCookie("GanttChartSort", data.delegateTarget.config.sortList);
-              });
+
+							initGanttChartSorting();
+
+              // $("#sGanttMain").tablesorter({
+              //   sortList: eval(Cookies.get("GanttChartSort"))
+              // }).bind("sortStart",function(){
+              //
+              // }).bind("sortEnd", function(data){
+              //   setCookie("GanttChartSort", data.delegateTarget.config.sortList);
+              // });
 							
               	
 							$(".dtDays").css("width",g.dayWidth+"px");
@@ -412,16 +418,18 @@
 							}else{
 							  custom_length = "100";
 							}
-							
-							// get number of tasks to show from task manager setting.
-							if(eval(Cookies.get('ShowAllTasks'))){
-							  $("#tCount").html("<a href='#' onclick=\"editOptions(); return false;\">" + t.length + "</a>");
-							}else{
-							  custom_length = Cookies.get('TaskLimit');
-							  $("#tCount").html("<a href='#' onclick=\"editOptions(); return false;\">Showing</a> " + custom_length + " out of " + t.length);	
-							}
-							
-							//$("#tCount").html("Showing " + custom_length + " out of " + t.length);
+
+							updateTaskCount(e.page.totalElements);
+
+							// // get number of tasks to show from task manager setting.
+							// if(eval(Cookies.get('ShowAllTasks'))){
+							//   $("#tCount").html("<a href='#' onclick=\"editOptions(); return false;\">" + t.length + "</a>");
+							// }else{
+							//   custom_length = Cookies.get('TaskLimit');
+							//   $("#tCount").html("<a href='#' onclick=\"editOptions(); return false;\">Showing</a> " + custom_length + " out of " + t.length);
+							// }
+							//
+							// //$("#tCount").html("Showing " + custom_length + " out of " + t.length);
 							
 							if(g.makeScrollable){
 							  applyScrollableHeader(g);
@@ -815,8 +823,8 @@
 							method: 'PUT',
 							dataType: 'json',
 							url: '/api/v1/task?taskId=' + id + '&Start=' + nStartDate + "&End=" + nEndDate,
-							success: function(e){
-							  if(e == 'InvalidLogin'){
+							success: function(response){
+							  if(response === 'InvalidLogin'){
 							    logout();
 							  }
 							  
@@ -824,6 +832,7 @@
 								end = "",
 								tid = "",
 								duration = "";
+								e = response.content;
 								
 								for(var i in e){
 									start = e[i].TaskTargetStart;
@@ -926,16 +935,17 @@
 							method: 'PUT',
 							url: updateURL,
 							dataType: 'json',
-							success: function(e){
-							  if(e == 'InvalidLogin'){
+							success: function(response){
+							  if(response === 'InvalidLogin'){
 							    logout();
 							  }
-							
+
 								var start = "";
 								var end = "";
 								var tid = "";
 								var duration = "";
-								
+								e = response.content;
+
 								for(var i in e){
 									start = e[i].TaskTargetStart;
 									end = e[i].TaskTargetFinish;
@@ -1431,7 +1441,7 @@ function openGanttChartSettings(){
             setCookie('showInnerText', false);
             setCookie('showBarText', true);
             setCookie('GanttChartFieldsToShow', defaultGanttChartFields);
-            setCookie('GanttChartSort', '[[1,0]]');
+            setCookie('GanttChartSort', '[[1,0],[2,0]]');
             setCookie('UseTaskColor', false);
             setCookie('BarTextFields', defaultBarTextFields.join(','));
             
@@ -1678,6 +1688,27 @@ function editBarTextOptions(){
   });
 }
 
+function updateTaskCount(total) {
+	if (!total) {
+		$("#tCount").html("0, <span style='font-style:italic; color:#ababab;'>nothing matched your search or current filters</span>");
+	} else if (eval(Cookies.get('ShowAllTasks'))) {
+		$("#tCount").html("<a href='#' onclick=\"editOptions(); return false;\">" + total + "</a>");
+	} else {
+		$("#tCount").html(total + " (<a href='#' title='Change number of tasks to show' onclick=\"editOptions(); return false;\">Showing</a> up to " + Cookies.get('TaskLimit') + ")");
+	}
+}
+
+function initGanttChartSorting() {
+	$("#sGanttMain").tablesorter({
+		sortList: eval(Cookies.get("GanttChartSort"))
+	}).bind("sortStart", function () {
+
+	}).bind("sortEnd", function (data) {
+		setCookie("GanttChartSort", data.delegateTarget.config.sortList);
+		CurrentPage = 1;
+		loadGanttChart();
+	});
+}
 
 
 

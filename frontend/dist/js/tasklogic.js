@@ -1,8 +1,8 @@
 ﻿/***********************************************************************************************/
-const defaultTaskListFields= ["TaskOrder,TaskDescription,JobNumber,TaskTargetStart,TaskDuration,TaskTargetFinish,TaskStatus"];
-const itemsPerPage = 20;
-let currentPage = 1;
-let totalPages = 1;
+const defaultTaskListFields = ["TaskOrder,TaskDescription,JobNumber,TaskTargetStart,TaskDuration,TaskTargetFinish,TaskStatus"];
+let tasksPerPage = 20;
+let tCurrentPage = 1;
+let tTotalPages = 1;
 
 const defaultTaskFilters = "IsActive=on";
 
@@ -31,9 +31,11 @@ function createTaskList(customUrl) {
 
   showLoadingModal();
 
+  if (eval(Cookies.get('ShowAllTasks'))) tasksPerPage = 10000;
+
   const requestParams = {
-    page: currentPage,
-    limit: itemsPerPage,
+    page: tCurrentPage,
+    limit: tasksPerPage,
     fields: taskFieldsArray.join(','),
     findString: Cookies.get('filterFindString') || '',
     sort: sortParams
@@ -47,6 +49,8 @@ function createTaskList(customUrl) {
     success: (response) => handleSuccess(response, taskFieldsArray),
     error: handleRequestError
   });
+
+  setFiltersMessage(activeTaskFilters, 'TaskManager');
 
   BootstrapDialog.closeAll();
   postEffects();
@@ -73,7 +77,7 @@ function handleSuccess(response, taskFieldsArray) {
   if (response === 'InvalidLogin') return logout();
 
   const tasks = response.content || [];
-  totalPages = response.page.totalPages;
+  tTotalPages = response.page.totalPages;
 
   updatePagination();
 
@@ -94,7 +98,7 @@ function handleSuccess(response, taskFieldsArray) {
 
 /***********************************************************************************************/
 function loadCookies() {
-  currentPage = parseInt(Cookies.get('currentPage')) || 1;
+  tCurrentPage = parseInt(Cookies.get('tCurrentPage')) || 1;
 }
 
 function getSortParams(taskFieldsArray) {
@@ -106,19 +110,19 @@ function getSortParams(taskFieldsArray) {
 }
 
 function updatePagination() {
-  $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
-  $('#prevPage').prop('disabled', currentPage === 1);
-  $('#nextPage').prop('disabled', currentPage >= totalPages);
-  Cookies.set('currentPage', currentPage);
+  $('#tPageInfo').text(`Page ${tCurrentPage} of ${tTotalPages}`);
+  $('#tPrevPage').prop('disabled', tCurrentPage === 1);
+  $('#tNextPage').prop('disabled', tCurrentPage >= tTotalPages);
+  Cookies.set('tCurrentPage', tCurrentPage);
 }
 
 function setupEventHandlers() {
-  $('#prevPage').click(() => changePage(-1));
-  $('#nextPage').click(() => changePage(1));
+  $('#tPrevPage').click(() => changePage(-1));
+  $('#tNextPage').click(() => changePage(1));
 
   $("form[name='taskListSearchForm']").submit(function (e) {
     e.preventDefault();
-    currentPage = 1;
+    tCurrentPage = 1;
     const phrase = $("#taskListSearchBox").val().replace(/["'&?,;]/g, "");
     Cookies.set('filterFindString', phrase);
     createTaskList();
@@ -126,13 +130,10 @@ function setupEventHandlers() {
 }
 
 function changePage(delta) {
-  currentPage = Math.max(1, currentPage + delta);
+  tCurrentPage = Math.max(1, tCurrentPage + delta);
   createTaskList();
 }
 
-function saveSortState(sortList) {
-  Cookies.set("TaskListSort", JSON.stringify(sortList));
-}
 
 /***********************************************************************************************/
 function renderTaskTable(tasks, taskFieldsArray, names) {
@@ -167,7 +168,7 @@ function initTableSorting() {
 
   }).bind("sortEnd", function (data) {
     setCookie("TaskListSort", data.delegateTarget.config.sortList);
-    currentPage = 1;
+    tCurrentPage = 1;
     createTaskList();
   });
 }
@@ -181,8 +182,13 @@ function showLoadingModal() {
 }
 
 function updateTaskCount(total) {
-  $('#tCount').text(total);
-  $('#activeFiltersMessage').text(getActiveFiltersMessage());
+  if (!total) {
+    $("#tCount").html("0, <span style='font-style:italic; color:#ababab;'>nothing matched your search or current filters</span>");
+  } else if (eval(Cookies.get('ShowAllTasks'))) {
+    $("#tCount").html("<a href='#' onclick=\"editOptions(); return false;\">" + total + "</a>");
+  } else {
+    $("#tCount").html(total + " (<a href='#' title='Change number of tasks to show' onclick=\"editOptions(); return false;\">Showing</a> up to " + Cookies.get('TaskLimit') + ")");
+  }
 }
 
 /***********************************************************************************************/
@@ -239,6 +245,13 @@ function handleRequestError(jqXhr) {
 }
 
 function loadTaskSettings() {
+
+  if (!Cookies.get("TaskLimit")) {
+    setCookie("TaskLimit", tasksPerPage);
+  } else {
+    tasksPerPage = parseInt(Cookies.get("TaskLimit"), 10);
+  }
+
   if (!Cookies.get("TaskListFieldsToShow")) {
     setCookie("TaskListFieldsToShow", defaultTaskListFields.join(','));
   }
@@ -251,12 +264,9 @@ function loadTaskSettings() {
     setCookie("TaskFiltersJobAutoLoad", true);
   }
 
-  if (!Cookies.get("TaskLimit")) {
-    setCookie("TaskLimit", 100);
-  }
 
   if (!Cookies.get("ShowAllTasks")) {
-    setCookie("ShowAllTasks", true);
+    setCookie("ShowAllTasks", false);
   }
 
   if (!Cookies.get("TaskFiltersContactAutoLoad")) {
@@ -333,13 +343,13 @@ function loadTaskSettings() {
     setCookie("wordWrapForHeaderText", false);
   }
 
-  $("form[name=taskListSearchForm]").submit(function (event) {
-    event.preventDefault();
-    var phrase = $("#taskListSearchBox").val().replace(/["'&?,;]/g, "");
-
-    setCookie("filterFindString", phrase);
-    createTaskList("/api/v1/task?FindString=" + encodeURIComponent(phrase));
-  });
+  // $("form[name=taskListSearchForm]").submit(function (event) {
+  //   event.preventDefault();
+  //   var phrase = $("#taskListSearchBox").val().replace(/["'&?,;]/g, "");
+  //
+  //   setCookie("taskListFindString", phrase);
+  //   createTaskList("/api/v1/task?FindString=" + encodeURIComponent(phrase));
+  // });
 }
 
 function loadTaskFilters() {
@@ -370,7 +380,7 @@ function activateMarkedTriggers() {
   const taskFieldsArray = getTaskListFieldsToShowArray();
   const sortParams = getSortParams(taskFieldsArray);
 
-  $(document).off('change', 'input[name=tmkd]').on('change', 'input[name=tmkd]', function() {
+  $(document).off('change', 'input[name=tmkd]').on('change', 'input[name=tmkd]', function () {
     if (isUpdateInProgress) return;
 
     const $checkbox = $(this);
@@ -389,19 +399,19 @@ function activateMarkedTriggers() {
     $.ajax({
       url: `/api/v1/task/${id}?Marked=${status}`,
       method: 'PUT',
-      success: function(response) {
+      success: function (response) {
         console.log('Update successful:', response);
-        if (sortParams.indexOf("TaskMarked") === -1 ) {
+        if (sortParams.indexOf("TaskMarked") === -1) {
           $checkbox.prop('checked', status);
         } else {
           createTaskList();
         }
       },
-      error: function(jqXHR) {
+      error: function (jqXHR) {
         console.error('Update failed:', jqXHR.responseText);
         $checkbox.prop('checked', !status);
       },
-      complete: function() {
+      complete: function () {
         isUpdateInProgress = false;
       }
     });
@@ -759,9 +769,12 @@ function editOptions() {
 
         if ($("#taskLimitOptionToggle").prop("checked")) {
           setCookie('ShowAllTasks', true);
+          tCurrentPage = 1;
         } else {
           setCookie('ShowAllTasks', false);
           setCookie('TaskLimit', $("#taskLimitOption").val());
+          tasksPerPage = $("#taskLimitOption").val();
+          tCurrentPage = 1;
         }
 
         setCookie('wordWrapForHeaderText', $("#wordWrapForHeaderText").prop("checked"));

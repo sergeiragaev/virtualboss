@@ -90,7 +90,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .param("dateCriteria", String.valueOf(DateCriteria.EXACT.getValue()))
                         .param("jobIds", String.valueOf(
                                 jobRepository.findByNumberIgnoreCaseAndIsDeleted(testTaskReference.getJobNumber(), false).orElseThrow().getId()))
-                        .param("custIds", String.valueOf(testTaskReference.getContactId()))
+                        .param("contactIds", String.valueOf(testTaskReference.getContactId()))
                         .param("findString", "Subdivision")
                 )
                 .andExpect(jsonPath("content.[0].TaskDescription").value(testTaskRequest.getDescription()))
@@ -216,6 +216,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                         .description("Test Task to update")
                         .actualFinish(LocalDate.now())
                         .status(TaskStatus.DONE)
+                        .marked(false)
                         .build(),
                 generateTestTaskCustomFieldsRequest(),
                 generateTestTaskReferenceRequest());

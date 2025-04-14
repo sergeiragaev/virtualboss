@@ -45,7 +45,7 @@ public class TaskController {
     }
 
     @PutMapping("/task")
-    public ResponseEntity<Object> updateTask(
+    public ResponseEntity<Page<Map<String, Object>>> updateTask(
             @RequestParam(value = "taskId") String id,
             @RequestParam(value = "Start", required = false) LocalDate targetStart,
             @RequestParam(value = "End", required = false) LocalDate targetFinish) {

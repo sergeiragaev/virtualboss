@@ -129,6 +129,14 @@ public class Task implements Comparable<Task> {
     @Builder.Default
     private Integer finishPlus = 1;
 
+    @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
+    @JoinTable(name = "secondary_contacts",
+            joinColumns = @JoinColumn(name = "contact_id"),
+            inverseJoinColumns = @JoinColumn(name = "task_id")
+    )
+    private Set<Contact> secondaryContacts = new HashSet<>();
+
+
     public String getCustomValueByName(String name) {
         return customFieldsAndListsValues.stream()
                 .filter(fieldValue -> fieldValue.getField().getName().equals(name))

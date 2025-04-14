@@ -4,25 +4,27 @@
 
 /***********************************************************************************************/
 // use array.join(',') to convert an array to comma separated string.
-var defaultTaskListFields        = ["TaskDescription,TaskTargetStart,TaskDuration,TaskTargetFinish,TaskActualFinish,TaskOrder,TaskStatus,JobNumber"];
-var defaultGanttChartFields      = "TaskDescription,JobNumber,TaskTargetStart";
-var defaultBarTextFields         = ["TaskDescription", "TaskTargetStart"];
-var defaultBarTextFieldOrder     = ["TaskDescription", "TaskTargetStart"];
-var allTaskFieldCaptionNames     = ["TaskDescription","TaskTargetStart","TaskDuration","TaskTargetFinish","TaskActualFinish","TaskOrder","TaskStatus","TaskNumber","TaskFollows","FinishPlus","TaskRequested","TaskMarked","TaskNotes","TaskCustomField1","TaskCustomField2","TaskCustomField3","TaskCustomField4","TaskCustomField5","TaskCustomField6","TaskCustomList1","TaskCustomList2","TaskCustomList3","TaskCustomList4","TaskCustomList5","TaskCustomList6"];
-var allJobFieldCaptionNames      = ["JobNumber","JobLot","JobOwnerName","JobSubdivision","JobLockBox","JobAddress","JobAddress2","JobCity","JobState","JobPostal","JobCountry","JobHomePhone","JobWorkPhone","JobCellPhone","JobFax","JobCompany","JobEmail","JobNotes","JobDirections","JobCustomField1","JobCustomField2","JobCustomField3","JobCustomField4","JobCustomField5","JobCustomField6","JobCustomList1","JobCustomList2","JobCustomList3","JobCustomList4","JobCustomList5","JobCustomList6"];
-var allContactFieldCaptionNames  = ["ContactCompany","ContactPerson","ContactProfession","ContactFirstName","ContactLastName","ContactSupervisor","ContactSpouse","ContactTaxID","ContactWebSite","ContactEmail","ContactFax","ContactWorkersCompDate","ContactInsuranceDate","ContactComments","ContactNotes","ContactPhones","ContactCustomField1","ContactCustomField2","ContactCustomField3","ContactCustomField4","ContactCustomField5","ContactCustomField6","ContactCustomList1","ContactCustomList2","ContactCustomList3","ContactCustomList4","ContactCustomList5","ContactCustomList6"];
-var defaultTaskFilters = "IsActive=on"; 
+const defaultGanttChartFields = "TaskDescription,JobNumber,TaskTargetStart";
+const defaultBarTextFields = ["TaskDescription", "TaskTargetStart"];
+const allTaskFieldCaptionNames = ["TaskDescription", "TaskTargetStart", "TaskDuration", "TaskTargetFinish", "TaskActualFinish", "TaskOrder", "TaskStatus", "TaskNumber", "TaskFollows", "FinishPlus", "TaskRequested", "TaskMarked", "TaskNotes", "TaskCustomField1", "TaskCustomField2", "TaskCustomField3", "TaskCustomField4", "TaskCustomField5", "TaskCustomField6", "TaskCustomList1", "TaskCustomList2", "TaskCustomList3", "TaskCustomList4", "TaskCustomList5", "TaskCustomList6"];
+const allJobFieldCaptionNames = ["JobNumber", "JobLot", "JobOwnerName", "JobSubdivision", "JobLockBox", "JobAddress", "JobAddress2", "JobCity", "JobState", "JobPostal", "JobCountry", "JobHomePhone", "JobWorkPhone", "JobCellPhone", "JobFax", "JobCompany", "JobEmail", "JobNotes", "JobDirections", "JobCustomField1", "JobCustomField2", "JobCustomField3", "JobCustomField4", "JobCustomField5", "JobCustomField6", "JobCustomList1", "JobCustomList2", "JobCustomList3", "JobCustomList4", "JobCustomList5", "JobCustomList6"];
+const allContactFieldCaptionNames = ["ContactCompany", "ContactPerson", "ContactProfession", "ContactFirstName", "ContactLastName", "ContactSupervisor", "ContactSpouse", "ContactTaxID", "ContactWebSite", "ContactEmail", "ContactFax", "ContactWorkersCompDate", "ContactInsuranceDate", "ContactComments", "ContactNotes", "ContactPhones", "ContactCustomField1", "ContactCustomField2", "ContactCustomField3", "ContactCustomField4", "ContactCustomField5", "ContactCustomField6", "ContactCustomList1", "ContactCustomList2", "ContactCustomList3", "ContactCustomList4", "ContactCustomList5", "ContactCustomList6"];
+const defaultTaskFilters = "IsActive=on";
 var globalNames = [];
+let itemsPerPage = 20;
+let currentPage = 1;
+let totalPages = 1;
 /***********************************************************************************************/
 
 $(document).ready(function(){
-  loadTaskSettings();  
-  loadGanttChart();  
+  loadTaskSettings();
+  setupEventHandlers();
+  loadGanttChart();
 });
 
 function loadGanttChart(customUrl){
-  var ganttFieldsArray = getGanttChartFieldsToShowArray();
-  var activeTaskFilters = getActiveTaskFilters();
+  let ganttFieldsArray = getGanttChartFieldsToShowArray();
+  const activeTaskFilters = getActiveTaskFilters();
 
   if(ganttFieldsArray[0].length <= 0){
     ganttFieldsArray = ["TaskDescription"]; // There should always be at least one field.
@@ -52,7 +54,7 @@ function loadGanttChart(customUrl){
       if(eval(Cookies.get('showBarText'))){
         dataUrl += "/api/v1/task?fields=TaskId," + ganttFieldsArray.join(',') + ",TaskColor," + Cookies.get('BarTextFields') + "&" + activeTaskFilters + "&FindString=" + Cookies.get('filterFindString');
       }else{
-        dataUrl += "/api/v1/task?fields=TaskId," + ganttFieldsArray.join(',') + ",TaskColor" + "&" + activeTaskFilters + "&FindString=" + Cookies.get('filterFindString');
+        dataUrl += "/api/v1/task?fields=TaskId," + ganttFieldsArray.join(',') + ",TaskColor&" + activeTaskFilters + "&FindString=" + Cookies.get('filterFindString');
       }
     }else{
       if(eval(Cookies.get('showBarText'))){
@@ -66,6 +68,9 @@ function loadGanttChart(customUrl){
     var dataUrl = customUrl + "&fields=TaskId," + ganttFieldsArray.join(',');
   }
 
+  if (eval(Cookies.get('ShowAllTasks'))) itemsPerPage = 10000;
+  dataUrl += '&page=' + currentPage + '&limit=' + itemsPerPage;
+
   $.ajax({
     url: '/api/v1/fieldcaptions?fields=' + allTaskFieldCaptionNames.join(',') + ',' + allJobFieldCaptionNames.join(',') + ',' + allContactFieldCaptionNames.join(','),
     dataType:'json',
@@ -75,19 +80,25 @@ function loadGanttChart(customUrl){
       }
 
       globalNames = names;
+      const sortParams = getSortParams(ganttFieldsArray);
 
       $.ajax({
-        url: '/api/v1/task?fields=TaskTargetStart,TaskTargetFinish&' + activeTaskFilters + '&FindString=' + Cookies.get('filterFindString'),
+        url: '/api/v1/task?fields=TaskTargetStart,TaskTargetFinish&' +
+          activeTaskFilters + '&FindString=' + Cookies.get('filterFindString') +
+          '&page=' + currentPage + '&limit=' + itemsPerPage + `&sort=${sortParams}`,
         dataType:'json',
         success: function(tasks){
-          if(tasks == 'InvalidLogin'){
+          if(tasks === 'InvalidLogin'){
             logout();
           }
+
+          totalPages = tasks.page.totalPages;
+          updatePagination();
 
           var startDatesArray = [];
           var endDatesArray = [];
           
-          $.each(tasks, function(){
+          $.each(tasks.content, function(){
             startDatesArray.push(this.TaskTargetStart);
             endDatesArray.push(this.TaskTargetFinish);
           });
@@ -95,7 +106,7 @@ function loadGanttChart(customUrl){
           startDatesArray.sort();
           endDatesArray.sort();
           
-          if(tasks.length == 0){
+          if(tasks.content.length == 0){
             var trueStart = moment().format('YYYY-MM-DD');
             var trueEnd = moment().add(4, 'months').format('YYYY-MM-DD');
           }else{
@@ -148,11 +159,11 @@ function loadGanttChart(customUrl){
 function loadTaskSettings(){
   if(!Cookies.get("GanttChartFieldsToShow")){
     setCookie("GanttChartFieldsToShow", defaultGanttChartFields);
-    setCookie("GanttChartSort", "[[1,0]]");
+    setCookie("GanttChartSort", "[[1,0],[2,0]]");
   }
 
   if(!Cookies.get("GanttChartSort")){
-    setCookie("GanttChartSort", "[[1,0]]");
+    setCookie("GanttChartSort", "[[1,0],[2,0]]");
   }
 
   if(!Cookies.get("mobileOptimized")){
@@ -174,15 +185,6 @@ function loadTaskSettings(){
   if(!Cookies.get("BarTextFields")){
     setCookie("BarTextFields", defaultBarTextFields.join(','));
   }
-    
-  $("form[name=ganttChartSearchForm]").submit(function(event){   
-    event.preventDefault();
-    var phrase = $("#ganttChartSearchBox").val().replace(/["'&?,;]/g, "");
-
-    setCookie("filterFindString", phrase);
-    
-    loadGanttChart("/api/v1/task?FindString=" + encodeURIComponent(phrase));
-  });
 
   if(!Cookies.get("filterFindString")){
     setCookie("filterFindString", "");
@@ -191,23 +193,10 @@ function loadTaskSettings(){
   $("#ganttChartSearchBox").val(Cookies.get('filterFindString'));
 }
 
-function loadTaskFilters(){
-  if(!Cookies.get("TaskFilters")){
-    setCookie("TaskFilters", defaultTaskFilters);
-  }
-
-  if(!Cookies.get("filterFindString")){
-    setCookie("filterFindString", "");
-  }  
-}
-
 function getActiveTaskFilters(){
   return Cookies.get("TaskFilters");
 }
 
-function getGanttChartFieldsToShowArray(){
-  return Cookies.get("GanttChartFieldsToShow").split(",");
-}
 
 function setCookie(name, value){
   Cookies.set(name, value, {
@@ -352,7 +341,7 @@ function editGanttChartColumns(){
                     if(inputList.Length == 1){
                       setCookie("GanttChartSort", "[[0,0]]"); // resets table sort (solves issues when someone removes the sorted list)
                     }else{
-                      setCookie("GanttChartSort", "[[1,0]]");                    
+                      setCookie("GanttChartSort", "[[1,0],[2,0]]");
                     }
                     
                     loadGanttChart();
@@ -580,11 +569,14 @@ function editOptions(){
         
         if($("#taskLimitOptionToggle").prop("checked")){
           setCookie('ShowAllTasks', true);
+          currentPage = 1;
         }else{
           setCookie('ShowAllTasks', false);
           setCookie('TaskLimit', $("#taskLimitOption").val());
+          itemsPerPage = parseInt(Cookies.get("TaskLimit"), 10);
+          currentPage = 1;
         }
-        
+
         setCookie('wordWrapForHeaderText', $("#wordWrapForHeaderText").prop("checked"));
         setCookie('wordWrapForColumnText', $("#wordWrapForColumnText").prop("checked"));
         
@@ -615,4 +607,37 @@ function printSection(section){
     pageTitle: "Remote VirtualBoss Gantt Chart",
     removeScripts: true
   });
+}
+
+function updatePagination() {
+  $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
+  $('#prevPage').prop('disabled', currentPage === 1);
+  $('#nextPage').prop('disabled', currentPage >= totalPages);
+  Cookies.set('currentPage', currentPage);
+}
+
+function setupEventHandlers() {
+  $('#prevPage').click(() => changePage(-1));
+  $('#nextPage').click(() => changePage(1));
+
+  $("form[name='ganttChartSearchForm']").submit(function (e) {
+    e.preventDefault();
+    currentPage = 1;
+    const phrase = $("#ganttChartSearchBox").val().replace(/["'&?,;]/g, "");
+    Cookies.set('filterFindString', phrase);
+    loadGanttChart();
+  });
+}
+
+function changePage(delta) {
+  currentPage = Math.max(1, currentPage + delta);
+  loadGanttChart();
+}
+
+function getSortParams(ganttFieldsArray) {
+  const savedSort = JSON.parse(Cookies.get("GanttChartSort") || '[]');
+  return savedSort.map(([fieldIndex, direction]) => {
+    const field = ganttFieldsArray[fieldIndex];
+    return `${field}:${direction === 0 ? 'asc' : 'desc'}`;
+  }).join(',');
 }

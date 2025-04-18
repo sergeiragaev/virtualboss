@@ -2,6 +2,7 @@ package net.virtualboss.application.service;
 
 import net.virtualboss.common.exception.CircularLinkingException;
 import net.virtualboss.common.exception.EntityNotFoundException;
+import net.virtualboss.common.model.entity.FieldValue;
 import net.virtualboss.common.model.entity.Holiday;
 import net.virtualboss.common.model.entity.Task;
 import net.virtualboss.common.model.enums.DateCriteria;
@@ -82,12 +83,20 @@ class TaskServiceTestIT extends TestDependenciesContainer {
                 .build();
         taskService.saveTask(
                 taskId, updatedTaskRequest,
-                CustomFieldsAndLists.builder().build(),
+                CustomFieldsAndLists.builder()
+                        .customField1("updated field 1")
+                        .customList1("updated list 1")
+                        .build(),
                 referenceRequest
         );
         Task updatedTask = taskRepository.findById(UUID.fromString(taskId)).orElseThrow();
         assertEquals("Updated task description", updatedTask.getDescription());
         assertEquals(contactRepository.getUnassigned().orElseThrow(), updatedTask.getContact());
+        assertEquals("updated field 1",
+                updatedTask.getCustomFieldsAndListsValues().stream()
+                .map(FieldValue::getCustomValue)
+                .sorted(String::compareTo)
+                .toArray()[0]);
         assertNull(updatedTask.getJob());
     }
 

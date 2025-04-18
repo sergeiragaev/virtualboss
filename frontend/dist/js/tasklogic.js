@@ -85,7 +85,7 @@ function handleSuccess(response, taskFieldsArray) {
     url: '/api/v1/fieldcaptions?fields=' + taskFieldsArray.join(',').replace('TaskId', 'TaskNumber'),
     dataType: 'json',
     success: function (names) {
-      if (names == 'InvalidLogin') {
+      if (names === 'InvalidLogin') {
         logout();
       }
       renderTaskTable(tasks, taskFieldsArray, names);
@@ -149,7 +149,7 @@ function renderTaskTable(tasks, taskFieldsArray, names) {
 
   html += '<tbody>';
   tasks.forEach(task => {
-    html += '<tr>';
+    html += "<tr onclick=\"editTask(\'" + task['TaskId'] + "\','TaskManager');\" style='cursor:pointer;'>";
     taskFieldsArray.forEach(field => {
       html += `${formatTaskCell(task, field)}`;
     });
@@ -213,7 +213,7 @@ function formatTaskCell(task, field) {
   switch (field) {
     case 'TaskDescription':
       let caption = task[field] || '<i>(No Description)</i>';
-      return "<td><a href='#' onclick=\"editTask('" + task['TaskId'] + "','TaskManager');return false;\">" + caption.replace(/&/g, '&#38').replace(/</g, '&lt').replace(/>/g, '&gt') + "</a></td>";
+      return "<td><a href='#' onclick=\"return false;\">" + caption.replace(/&/g, '&#38').replace(/</g, '&lt').replace(/>/g, '&gt') + "</a></td>";
     case 'TaskTargetStart':
     case 'TaskTargetFinish':
       return "<td>" + formatDate(task[field]) + "</td>";

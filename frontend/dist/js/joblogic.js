@@ -133,6 +133,8 @@ function createJobList(customUrl){
     dataUrl = customUrl + "&fields=JobId," + jobFieldsArray.join(',');
   }
 
+  if (eval(Cookies.get('ShowAllJobs'))) jobsPerPage = 10000;
+
   let findString = Cookies.get('jobListFindString') || '';
   dataUrl += '&page=' + jCurrentPage + '&limit=' + jobsPerPage + '&sort=' + sortParams + '&findString=' + findString;
 
@@ -412,7 +414,7 @@ function editJobFieldOrder(){
       });
 
       $.each(fields, function(i){
-        msg += "<li data-field-name='" + this + "'>" + names[0][this] + "</li>";
+        msg += "<li data-field-name='" + this + "'>" + names[this] + "</li>";
       });
       
       msg += "</ul>";

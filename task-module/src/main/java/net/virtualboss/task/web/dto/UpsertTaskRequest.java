@@ -21,4 +21,5 @@ public class UpsertTaskRequest {
     private String notes;
     private Boolean marked;
     private Integer finishPlus;
+    private String files;
 }

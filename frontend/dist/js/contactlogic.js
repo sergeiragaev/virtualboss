@@ -121,6 +121,9 @@ function createContactList(customUrl){
   }else{
     dataUrl = customUrl + "&fields=ContactId," + contactFieldsString;
   }
+
+  if (eval(Cookies.get('ShowAllContacts'))) contactsPerPage = 10000;
+
   let findString = Cookies.get('contactListFindString') || '';
   dataUrl += '&page=' + cCurrentPage + '&limit=' + contactsPerPage + '&sort=' + sortParams + '&findString=' + findString;
 

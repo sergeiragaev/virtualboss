@@ -337,7 +337,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
         Task task = mapper.requestToTask(id, request, customFieldsAndLists, referenceRequest);
         Task taskFromDb = findById(id);
         checkIfFollowsAlreadyPending(task, taskFromDb);
-        task.getCustomFieldsAndListsValues().addAll(taskFromDb.getCustomFieldsAndListsValues());
+        taskFromDb.getCustomFieldsAndListsValues().addAll(task.getCustomFieldsAndListsValues());
         removeTasksFromJobAndContact(taskFromDb);
         BeanUtils.copyNonNullProperties(task, taskFromDb);
         taskFromDb.setJob(task.getJob());

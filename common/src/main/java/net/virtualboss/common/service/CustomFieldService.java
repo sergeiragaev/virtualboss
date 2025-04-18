@@ -50,7 +50,18 @@ public class CustomFieldService {
     }
 
     private String formatPrefix(String typeName) {
-        // Преобразует, например, "ORDER" в "Order"
         return typeName.charAt(0) + typeName.substring(1).toLowerCase();
+    }
+
+
+    public List<String> getValuesByListName(String listName) {
+        Field field = fieldRepository.findByName(listName)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        MessageFormat.format("Field with name {0} not found!", listName)));
+        return fieldValueRepository
+                .findAllByFieldIs(field).stream()
+                .map(FieldValue::getCustomValue)
+                .sorted(String::compareTo)
+                .toList();
     }
 }

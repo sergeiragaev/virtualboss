@@ -8,6 +8,7 @@ import net.virtualboss.common.exception.CircularLinkingException;
 import net.virtualboss.common.model.entity.*;
 import net.virtualboss.common.model.enums.*;
 import net.virtualboss.common.repository.FieldRepository;
+import net.virtualboss.common.service.AttachmentService;
 import net.virtualboss.common.service.GenericService;
 import net.virtualboss.common.service.MainService;
 import net.virtualboss.common.util.*;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 @Service
 @Log4j2
 public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask> {
+    private final AttachmentService attachmentService;
     private final TaskRepository repository;
     private final JobRepository jobRepository;
     private final ContactRepository contactRepository;
@@ -65,7 +67,8 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
                        TaskScheduleService taskScheduleService,
                        WorkingDaysCalculator workingDaysCalculator,
                        TaskResponseMapper taskResponseMapper,
-                       FieldRepository fieldRepository) {
+                       FieldRepository fieldRepository,
+                       AttachmentService attachmentService) {
         super(entityManager, mainService, UUID::fromString, taskRepository, fieldRepository);
         this.repository = taskRepository;
         this.jobRepository = jobRepository;
@@ -74,6 +77,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
         this.taskScheduleService = taskScheduleService;
         this.workingDaysCalculator = workingDaysCalculator;
         this.taskResponseMapper = taskResponseMapper;
+        this.attachmentService = attachmentService;
     }
 
 
@@ -401,6 +405,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
         task.setTargetFinish(
                 workingDaysCalculator.addWorkDays(validTargetStart, task.getDuration() - 1, "US"));
         entityManager.persist(task);
+        task.setFiles(attachmentService.createAttachments(request.getFiles(), task));
         return taskResponseMapper.map(
                 mapper.taskToResponse(
                         repository.save(task)), null);

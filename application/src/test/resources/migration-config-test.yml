@@ -447,14 +447,14 @@ migration:
         sourceField: ME_NAME
         type: STRING
         column: group_id
-    - name: task_contacts
+    - name: secondary_contacts
       type: many-to-many
-      joinTable: contacts_tasks
+      joinTable: secondary_contacts
       from:
         entity: task
         sourceField: TA_CUSTIDS
         separator: \r
-        column: tasks_id
+        column: task_id
         type: STRING
       to:
         entity: contact

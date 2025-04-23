@@ -34,6 +34,7 @@ public interface TaskMapperV1 {
     Task setCFLAndReferencesToTask(Task task, CustomFieldsAndLists customFieldsAndLists, TaskReferencesRequest request);
 
     @Mapping(source = "order", target = "taskOrder")
+    @Mapping(target = "files", ignore = true)
     Task requestToTask(UpsertTaskRequest request);
 
     default Task requestToTask(String id,
@@ -63,5 +64,4 @@ public interface TaskMapperV1 {
         return tasks.stream().sorted().map(task -> task.getNumber().toString())
                 .collect(Collectors.joining(","));
     }
-
 }

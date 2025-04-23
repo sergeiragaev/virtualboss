@@ -1,11 +1,14 @@
 package net.virtualboss.task.service;
 
+import net.virtualboss.common.model.entity.TaskAttachment;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class LinkFilter {
 
@@ -22,8 +25,18 @@ public class LinkFilter {
             "(?i)\\.(jpg|png|gif)$"
     );
 
-    public static String filterLinks(String text, boolean isFilesField, boolean jsonFormat) {
-        if (text == null || text.isEmpty()) return "";
+    public static String filterLinks(Set<TaskAttachment> attachments, boolean isFilesField, boolean jsonFormat) {
+
+        if (attachments == null) return "";
+
+        String text = attachments.stream().map(attachment -> {
+                    String allFullPath = attachment.getResource().getAllFullPath();
+                    String uncPath = attachment.getResource().getUncFullPath();
+                    return allFullPath + " " + uncPath;
+                }
+        ).collect(Collectors.joining("\r"));
+
+        if (text.isBlank()) return "";
 
         List<String> links = extractLinks(text);
         if (links.isEmpty()) return "";

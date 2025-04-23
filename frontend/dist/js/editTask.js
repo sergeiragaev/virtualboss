@@ -204,12 +204,9 @@ function showEditScreen(data, names, view) {
 
       // CUSTOM TASK FIELDS
       body += " <div class='row'>";
-
       body += createCustomFields(data, names);
-
       // CUSTOM LISTS
       body += createCustomLists(data, names);
-
       body += " </div>";
       body += "</div>";
 
@@ -1017,6 +1014,8 @@ function showTaskEditScreen(data, body, view) {
               logout();
             }
 
+            showSuccessNotification('Task saved!');
+
             switch (view) {
               case "Calendar":
                 loadCalendarView();
@@ -1574,37 +1573,29 @@ function createCustomListSelect(customListName, data) {
 }
 
 function createCustomFields(data, names) {
-  return `
-        <div class="col-xs-12 col-sm-6">
-            ${[1,2,3,4,5,6].map(i =>
-    createCustomField(i, data, names, 'TaskCustomField')).join('')}
-        </div>
-    `;
+  return `<div class="col-xs-12 col-sm-6">
+            ${[1, 2, 3, 4, 5, 6].map(i =>
+    createCustomField(i, data, names, 'TaskCustomField'))
+    .join('')} 
+            </div>`.trim().replace(/\n\s+/g, '');
 }
 
 function createCustomField(index, data, names, prefix) {
   const cookieName = `Show${prefix}${index}`;
   const isVisible = Cookies.get(cookieName) === 'true';
 
-  return `
-        <div class="input-group form-group ${!isVisible ? 'hidden' : ''}" 
-             id="${prefix}${index}Wrap">
-            <div class="input-group-btn">
-                <button class="btn btn-default" type="button">${names[`${prefix}${index}`]}</button>
-            </div>
-            <input type="text" 
-                   name="CustomField${index}"
-                   id="${prefix}${index}" 
-                   value="${escapeHtml(data[`${prefix}${index}`])}"
-                   class="form-control"
-                   ${!isVisible ? 'disabled' : ''}>
+  return `<div class="input-group form-group ${!isVisible ? 'hidden' : ''}" id="${prefix}${index}Wrap">
+        <div class="input-group-btn">
+            <button class="btn btn-default" type="button">${names[`${prefix}${index}`]}</button>
         </div>
-    `;
+        <input type="text" name="CustomField${index}" id="${prefix}${index}" value="${escapeHtml(data[`${prefix}${index}`] || '')}" class="form-control" ${!isVisible ? 'disabled' : ''}>
+    </div>`.trim().replace(/\n\s+/g, '');
 }
 
 function escapeHtml(str) {
-  if (str === undefined) return;
-  return str.replace(/&/g, '&amp;')
+  if (str === undefined || str === null) return '';
+  return str.toString()
+    .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
@@ -1612,12 +1603,10 @@ function escapeHtml(str) {
 }
 
 function createCustomLists(data, names) {
-  return `
-        <div class='col-xs-12 col-lg-6'>
-            ${[1,2,3,4,5,6].map(i =>
+  return `<div class='col-xs-12 col-lg-6'>
+            ${[1, 2, 3, 4, 5, 6].map(i =>
     createCustomList(i, data, names, 'TaskCustomList')).join('')}
-        </div>
-    `;
+        </div>`.trim().replace(/\n\s+/g, '');
 }
 
 function createCustomList(index, data, names, prefix) {
@@ -1625,13 +1614,205 @@ function createCustomList(index, data, names, prefix) {
   const isVisible = Cookies.get(cookieName) === 'true';
 
   return `
-        <div class="input-group form-group ${!isVisible ? 'hidden' : ''}" 
-             id="${prefix}${index}Wrap">
+        <div class="input-group form-group ${!isVisible ? 'hidden' : ''}" id="${prefix}${index}Wrap">
             <div class="input-group-btn">
                 <button class="btn btn-default" type="button">${names[`${prefix}${index}`]}</button>
             </div>
             ${createCustomListSelect("CustomList" + index, data)}
         </div>
-    `;
+    `.trim().replace(/\n\s+/g, '');
 }
 
+function handleRequestError(jqXhr) {
+  BootstrapDialog.closeAll();
+  console.error('Request failed:', jqXhr.responseText);
+  BootstrapDialog.alert({
+    title: 'Error',
+    message: 'Failed to load tasks. Please try again later.'
+  });
+}
+
+function showSuccessNotification(message, options = {}) {
+  const config = {
+    duration: 3000, // Время показа в миллисекундах
+    position: 'top-right', // Варианты: top-right, top-left, bottom-right, bottom-left
+    showIcon: true,
+    showClose: true,
+    escapeHtml: true,
+    ...options
+  };
+
+  // Создаем контейнер если его нет
+  const containerId = `notification-container-${config.position}`;
+  let container = document.getElementById(containerId);
+
+  if (!container) {
+    container = document.createElement('div');
+    container.id = containerId;
+    container.className = `notification-container ${config.position}`;
+    document.body.appendChild(container);
+  }
+
+  // Создаем элемент уведомления
+  const notification = document.createElement('div');
+  notification.className = 'success-notification';
+
+  // Экранирование HTML
+  const safeMessage = config.escapeHtml ? escapeHtml(message) : message;
+
+  // Иконка успеха
+  const icon = config.showIcon ?
+    '<div class="notification-icon"><i class="fa fa-check-circle"></i></div>' : '';
+
+  // Кнопка закрытия
+  const closeButton = config.showClose ?
+    `<div class="notification-close" onclick="this.parentElement.remove()">&times;</div>` : '';
+
+  notification.innerHTML = `
+        ${icon}
+        <div class="notification-content">${safeMessage}</div>
+        ${closeButton}
+    `;
+
+  // Добавляем в DOM
+  container.appendChild(notification);
+
+  // Анимация появления
+  setTimeout(() => notification.classList.add('show'), 10);
+
+  // Автоматическое закрытие
+  if (config.duration > 0) {
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => notification.remove(), 300);
+    }, config.duration);
+  }
+}
+
+// Стили для CSS
+const notificationStyles = `
+    .notification-container {
+        position: fixed;
+        z-index: 9999;
+        max-width: 350px;
+        width: 100%;
+        padding: 15px;
+    }
+
+    .notification-container.top-right {
+        top: 20px;
+        right: 20px;
+    }
+
+    .notification-container.top-left {
+        top: 20px;
+        left: 20px;
+    }
+
+    .notification-container.bottom-right {
+        bottom: 20px;
+        right: 20px;
+    }
+
+    .notification-container.bottom-left {
+        bottom: 20px;
+        left: 20px;
+    }
+
+    .success-notification {
+        background: #d4edda;
+        color: #155724;
+        padding: 15px 20px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transform: translateY(-20px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .success-notification.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .notification-icon {
+        margin-right: 12px;
+        font-size: 1.2em;
+    }
+
+    .notification-content {
+        flex-grow: 1;
+    }
+
+    .notification-close {
+        margin-left: 15px;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+
+    .notification-close:hover {
+        opacity: 1;
+    }
+`;
+
+// Добавляем стили в документ
+const styleSheet = document.createElement('style');
+styleSheet.textContent = notificationStyles;
+document.head.appendChild(styleSheet);
+
+function buildRequestedBySection(data, names) {
+  let body = '';
+
+  // Создаем обертку для асинхронной операции
+  const employeeRequest = new Promise((resolve, reject) => {
+    $.ajax({
+      async: false,
+      url: '/api/v1/employee?Id=_',
+      dataType: 'json',
+      success: resolve,
+      error: reject
+    });
+  });
+
+  // Обрабатываем получение данных
+  return employeeRequest
+    .then(requestedByList => {
+      if (requestedByList === 'InvalidLogin') {
+        logout();
+        return '';
+      }
+
+      return formatEmployeeSelect(requestedByList, data, names);
+    })
+    .catch(error => {
+      console.error('Employee load error:', error);
+      return '';
+    });
+}
+
+function formatEmployeeSelect(employees, data, names) {
+  let html = '';
+
+  html += "<br class='hidden-lg' />";
+  html += escapeHtml(names.TaskRequested);
+  html += " <select name='Requested' class='form-control'>";
+  html += "   <option value=''></option>";
+
+  employees.forEach(employee => {
+    const name = employee.Name.trim();
+    const selected = name === data.TaskRequested ? 'selected' : '';
+    html += `
+            <option value="${escapeHtml(name)}" ${selected}>
+                ${escapeHtml(name)}
+            </option>
+        `;
+  });
+
+  html += "</select>";
+
+  return html;
+}

@@ -80,9 +80,8 @@ public class Task implements Comparable<Task> {
     @ToString.Exclude
     private String notesRtf;
 
-    @Column(columnDefinition = "TEXT")
-    @ToString.Exclude
-    private String files;
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TaskAttachment> files = new HashSet<>();
 
     private Boolean marked;
 

@@ -23,8 +23,8 @@
  	var daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
 	var events = new Array();	
  	var defaultStart = '';
- 	var defaultEnd = '';	
- 		
+ 	var defaultEnd = '';
+
 	/*************************************************************
 	/	DEFAULT GANTT CHART SETTINGS
 	/*************************************************************/
@@ -1101,7 +1101,7 @@
           row += "<td class='taskDescription'>";
           row += "  <div class='" + this + "'>";
           row += "    <a href='#" + task.TaskId + "' class='scrollRight' title='Scroll over to view this task'><i class='fa fa-chevron-right'></i> ";
-          row += "    <a href='#' onclick=\"editTask('" + task.TaskId + "','GanttChart'); return false;\">" + task.TaskDescription + "</a>";
+          row += "    <a href='#' onclick=\"editTask(\'" + task['TaskId'] + "\',\'GanttChart\');\">" + task['TaskDescription'] + "</a>";
           row += "  </div>";
           row += "</td>";
         }else if(this == "TaskTargetStart" || this == "TaskTargetFinish"){
@@ -1705,7 +1705,7 @@ function initGanttChartSorting() {
 
 	}).bind("sortEnd", function (data) {
 		setCookie("GanttChartSort", data.delegateTarget.config.sortList);
-		CurrentPage = 1;
+		currentPage = 1;
 		loadGanttChart();
 	});
 }

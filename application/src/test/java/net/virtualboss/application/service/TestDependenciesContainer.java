@@ -162,6 +162,8 @@ public class TestDependenciesContainer {
                 .targetFinish(LocalDate.now().plusDays(duration))
                 .actualFinish(status == TaskStatus.ACTIVE ? null : LocalDate.now().plusDays(duration))
                 .finishPlus(finishPlus)
+                .files("File://c:/virtualboss/program/vbicon.ico File:////rsn/c/virtualboss/program/vbicon.ico T\n" +
+                       "File://c:/virtualboss/program/ud7007ownersmanualinenglish.pdf File:////rsn/c/virtualboss/program/ud7007ownersmanualinenglish.pdf T")
                 .build();
     }
 

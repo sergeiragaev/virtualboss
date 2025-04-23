@@ -36,8 +36,6 @@ public class MigrationService {
             dataPath = testDataPath;
         }
 
-
-
         migrateFields(dataPath);
 
         databaseSaver.preloadCaches();

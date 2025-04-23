@@ -265,23 +265,15 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
     private void mapFieldToSorting(Field field) {
         String fieldName = field.getName();
         String path = field.getPath();
-        String mappedPath = determineMappedPath(fieldName, path);
+        String mappedPath = determinePath(getCustomMappings(), fieldName, path);
         if (mappedPath.equals(path)) {
-            mappedPath = determineNestedPath(fieldName, path);
+            mappedPath = determinePath(getNestedMappings(), fieldName, path);
         }
         sortFieldMapping.put(fieldName, mappedPath);
     }
 
-    private String determineMappedPath(String fieldName, String path) {
-        return getCustomMappings().entrySet().stream()
-                .filter(entry -> fieldName.startsWith(entry.getKey()))
-                .findFirst()
-                .map(entry -> entry.getValue() + path)
-                .orElse(path);
-    }
-
-    private String determineNestedPath(String fieldName, String path) {
-        return getNestedMappings().entrySet().stream()
+    private String determinePath(Map<String, String> mappings, String fieldName, String path) {
+        return mappings.entrySet().stream()
                 .filter(entry -> fieldName.startsWith(entry.getKey()))
                 .findFirst()
                 .map(entry -> entry.getValue() + path)

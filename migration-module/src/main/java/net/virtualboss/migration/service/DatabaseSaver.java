@@ -36,6 +36,11 @@ public class DatabaseSaver {
     private final Map<String, Field> fieldCache = new ConcurrentHashMap<>();
     private final Map<String, Long> fieldValueCache = new ConcurrentHashMap<>();
 
+    private final Map<String, List<Map<String, Object>>> attachmentsBuffer = new HashMap<>();
+    private final Map<String, Long> resourceCache = new ConcurrentHashMap<>();
+
+    private static final String FLUSHING_BUFFER_MESSAGE = "Flushing buffer for {} ({} records)";
+
     public DatabaseSaver(JdbcTemplate jdbcTemplate, MigrationConfig migrationConfig) {
         this.jdbcTemplate = jdbcTemplate;
         this.migrationConfig = migrationConfig;
@@ -71,7 +76,7 @@ public class DatabaseSaver {
 
         String sql = buildInsertSQL(tableName, buffer.get(0).keySet());
 
-        log.info("Flushing buffer for {} ({} records)", entityName, buffer.size());
+        log.info(FLUSHING_BUFFER_MESSAGE, entityName, buffer.size());
 
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -141,6 +146,7 @@ public class DatabaseSaver {
     public void flushAll() {
         batchBuffer.keySet().forEach(this::flushBuffer);
         flushCustomFields();
+        flushAttachments();
     }
 
     @Transactional
@@ -192,7 +198,7 @@ public class DatabaseSaver {
                 }
         );
 
-        log.info("Flushing buffer for {} ({} records)", "Custom fields", customFieldBuffer.size());
+        log.info(FLUSHING_BUFFER_MESSAGE, "Custom fields", customFieldBuffer.size());
 
         customFieldBuffer.clear();
     }
@@ -258,5 +264,97 @@ public class DatabaseSaver {
                 v.getFieldId() + ":" + v.getFieldValue(),
                 v.getId()
         ));
+    }
+
+    @Transactional
+    public void addAttachments(String entityId, String fullPath, String uncPath, Boolean clip) {
+        if (fullPath.isBlank()) return;
+        Map<String, Object> attachment = new HashMap<>();
+        attachment.put("fullPath", fullPath);
+        attachment.put("uncPath", uncPath);
+        attachment.put("clip", clip);
+
+        attachmentsBuffer
+                .computeIfAbsent(entityId, k -> new ArrayList<>())
+                .add(attachment);
+
+        if (attachmentsBuffer.size() >= migrationConfig.getBatchSize()) {
+            flushAttachments();
+        }
+    }
+
+    private Long getOrCacheResourceId(String fullPath, String uncPath) {
+        return resourceCache.computeIfAbsent(fullPath, path -> {
+                    List<Long> existingIds = jdbcTemplate.query(connection -> {
+                                PreparedStatement ps = connection.prepareStatement(
+                                        "SELECT id FROM resources WHERE all_full_path = ?"
+                                );
+                                ps.setString(1, fullPath);
+                                return ps;
+                            },
+                            (rs, rowNum) -> rs.getLong("id")
+                    );
+                    if (!existingIds.isEmpty()) {
+                        return existingIds.get(0);
+                    }
+
+                    KeyHolder keyHolder = new GeneratedKeyHolder();
+                    jdbcTemplate.update(connection -> {
+                        PreparedStatement ps = connection.prepareStatement(
+                                "INSERT INTO resources (all_full_path, unc_full_path) VALUES (?, ?)",
+                                new String[]{"id"}
+                        );
+                        ps.setString(1, fullPath);
+                        ps.setString(2, uncPath);
+                        return ps;
+                    }, keyHolder);
+
+                    log.debug("New resource inserted: {}", fullPath);
+
+                    return Objects.requireNonNull(keyHolder.getKey()).longValue();
+                }
+        );
+    }
+
+    public void flushAttachments() {
+        if (attachmentsBuffer.isEmpty()) return;
+
+        List<Object[]> batchArgs = new ArrayList<>();
+
+        attachmentsBuffer.forEach((entityId, paths) ->
+                paths.forEach(
+                        path -> {
+                            String fullPath = path.get("fullPath").toString();
+                            String uncPath = path.get("uncPath").toString();
+                            Boolean clip = (Boolean) path.get("clip");
+
+                            Long resourceId = getOrCacheResourceId(fullPath, uncPath);
+
+                            batchArgs.add(new Object[]{entityId, resourceId, clip});
+                        }
+                )
+        );
+
+        jdbcTemplate.batchUpdate(
+                "INSERT INTO task_attachments (task_id, resource_id, is_clip) VALUES (?, ?, ?)",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        Object[] args = batchArgs.get(i);
+                        ps.setObject(1, UUID.fromString(args[0].toString()), Types.OTHER);
+                        ps.setLong(2, (Long) args[1]);
+                        ps.setBoolean(3, Boolean.parseBoolean(args[2].toString()));
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return batchArgs.size();
+                    }
+                }
+        );
+
+        log.info(FLUSHING_BUFFER_MESSAGE, "Attachments", attachmentsBuffer.size());
+
+        attachmentsBuffer.clear();
     }
 }

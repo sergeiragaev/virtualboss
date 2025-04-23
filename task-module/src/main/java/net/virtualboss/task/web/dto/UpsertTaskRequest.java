@@ -21,4 +21,6 @@ public class UpsertTaskRequest {
     private String notes;
     private Boolean marked;
     private Integer finishPlus;
+    @Builder.Default
+    private String files = "";
 }

@@ -16,17 +16,6 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="createContactsTasksTable" author="Sergei Ragaev">
-        <createTable tableName="contacts_tasks">
-            <column name="contact_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-            <column name="tasks_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
-
     <changeSet id="createTasksEmployeesTable" author="Sergei Ragaev">
         <createTable tableName="tasks_employees">
             <column name="employee_id" type="UUID">
@@ -119,6 +108,35 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="createResourcesTable" author="Sergei Ragaev">
+        <createTable tableName="resources">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="all_full_path" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unc_full_path" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="createTaskAttachmentsTable" author="Sergei Ragaev">
+        <createTable tableName="task_attachments">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="resource_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="task_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_clip" type="boolean"/>
+        </createTable>
+    </changeSet>
+
     <changeSet id="addFKTasksConstraint" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="tasks" constraintName="fk_job_id"
                                  deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
@@ -166,17 +184,6 @@
     <changeSet id="addFKEmployeesTasksConstraintEmployeeId" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="employee_id" baseTableName="employees_tasks"
                                  constraintName="fk_employee_id" deferrable="false" initiallyDeferred="false"
-                                 onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id"
-                                 referencedTableName="contacts" validate="true"/>
-    </changeSet>
-    <changeSet id="addFKContactsTasksConstraintTasksId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="contacts_tasks" constraintName="fk_tasks_id"
-                                 deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
-                                 referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
-    </changeSet>
-    <changeSet id="addFKContactsTasksConstraintContactId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="contact_id" baseTableName="contacts_tasks"
-                                 constraintName="fk_contact_id" deferrable="false" initiallyDeferred="false"
                                  onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id"
                                  referencedTableName="contacts" validate="true"/>
     </changeSet>

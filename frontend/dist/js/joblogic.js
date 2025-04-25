@@ -99,6 +99,9 @@ function loadJobSettings(){
   //
   //   event.preventDefault();
   // });
+  if (!Cookies.get("UseJobColor")) {
+    setCookie("UseJobColor", false);
+  }
 }
 
 function loadJobFilters(){
@@ -114,8 +117,8 @@ function loadJobFilters(){
 
 function createJobList(customUrl){
   let dataUrl;
-  var jobFieldsArray = getJobFieldsToShowArray();
-  var activeJobFilters = getActiveJobFilters();
+  const jobFieldsArray = getJobFieldsToShowArray();
+  const activeJobFilters = getActiveJobFilters();
   const sortParams = getSortParams(jobFieldsArray);
 
   BootstrapDialog.show({
@@ -123,6 +126,10 @@ function createJobList(customUrl){
     message: "<i class='fa fa-circle-o-notch fa-spin'></i> Loading Job List..."
   });
 
+  if(eval(Cookies.get('UseJobColor'))) {
+    jobFieldsArray.push("Color");
+  }
+  
   // START JOB LIST CREATION  
   if(!customUrl){
     dataUrl = "/api/v1/job?fields=JobId," + jobFieldsArray.join(',');
@@ -180,7 +187,12 @@ function createJobList(customUrl){
           if(names == 'InvalidLogin'){
             logout();
           }
-    
+
+          if(eval(Cookies.get('UseJobColor'))) {
+            jobFieldsArray.pop();
+          }
+          
+          
           $.each(jobFieldsArray, function(i){
             tbl += "<th>" + names[this] + "</th>";
           });
@@ -190,11 +202,19 @@ function createJobList(customUrl){
           tbl += "  <tbody>";
 
           $.each(jobs.content, function(i){
-            tbl += "<tr onclick=\"editJob('" + jobs.content[i]['JobId'] + "');\" style='cursor:pointer;'>";
+            if(eval(Cookies.get('UseJobColor'))) {
+              tbl += "<tr onclick=\"editJob('" + jobs.content[i]['JobId'] + "');\" style='cursor:pointer; color:" + jobs.content[i]['Color'] + ";'>";
+            } else {
+              tbl += "<tr onclick=\"editJob('" + jobs.content[i]['JobId'] + "');\" style='cursor:pointer;'>";
+            }
 
             $.each(jobFieldsArray, function(j){
               if(this == "JobNumber"){
-                tbl += "<td><a href='#' onclick=\"return false;\">" + jobs.content[i][this] + "</a></td>";
+                if(eval(Cookies.get('UseJobColor'))) {
+                  tbl += "<td>" + jobs.content[i][this] + "</td>";
+                } else {
+                  tbl += "<td><a href='#' onclick=\"return false;\">" + jobs.content[i][this] + "</a></td>";
+                }
               }else if(this == "JobNotes"){
                 tbl += "<td>" + jobs.content[i][this]; //.replace(/\\n/g, '<br />') + "</td>";
               // }else if(this == "JobAddress1"){
@@ -495,6 +515,19 @@ function editOptions() {
   let msg = "";
   msg += "<form role='form' name='jobManagerOptionsForm'>";
 
+  msg += " <div class='checkbox'>";
+  msg += "  <label>";
+
+  if (eval(Cookies.get('UseJobColor'))) {
+    msg += "<input id='jobColorOption' name='UseJobColor' type='checkbox' checked='checked'> Use Active Color Profile For Jobs";
+  } else {
+    msg += "<input id='jobColorOption' name='UseJobColor' type='checkbox'> Use Active Color Profile For Jobs";
+  }
+
+  msg += "  </label>";
+  msg += "</div>";
+
+
   msg += "<div class='checkbox'>";
   msg += "  <label>";
 
@@ -534,6 +567,8 @@ function editOptions() {
       cssClass: "btn-primary",
       action: function (dialogRef) {
 
+        setCookie('UseJobColor', $("#jobColorOption").prop("checked"));
+        
         if ($("#jobLimitOptionToggle").prop("checked")) {
           setCookie('ShowAllJobs', true);
           jCurrentPage = 1;

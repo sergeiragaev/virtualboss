@@ -76,7 +76,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                 testTaskReference);
         mockMvc.perform(get("/task")
                         .param("fields", "TaskId,TaskDescription,TaskCustomField1,TaskStatus," +
-                                         "JobCustomList1,ContactCustomField4,JobNumber,ContactCompany")
+                                         "JobCustomList1,ContactCustomField4,JobNumber,ContactCompany,Color")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("sort", "TaskNumber:asc,ContactCustomField4:desc,TaskCustomField1:asc")

@@ -23,7 +23,8 @@ migration:
           processor: sanitizeMemo
         - name: color
           source: EM_COLOR
-          type: INTEGER
+          type: STRING
+          processor: convertColor
         - name: role
           source: EM_RIGHTS
           type: INTEGER
@@ -99,6 +100,10 @@ migration:
           type: STRING
         - name: is_deleted
           type: BOOLEAN
+        - name: color
+          processor: convertColor
+          source: CU_COLOR
+          type: STRING
 #        - name: employee_id
 #          source: CU_ENTERED
 #          type: UUID
@@ -213,6 +218,10 @@ migration:
         - name: legacy_id
           source: JO_CODE
           type: STRING
+        - name: color
+          source: JO_COLOR
+          type: STRING
+          processor: convertColor
         - name: is_deleted
           type: BOOLEAN
 
@@ -376,6 +385,10 @@ migration:
           source: GR_TYPE
           type: STRING
           processor: assignGroupType
+        - name: color
+          source: GR_COLOR
+          processor: convertColor
+          type: STRING
 
     contactGroup:
       name: contactGroup
@@ -403,6 +416,51 @@ migration:
           type: STRING
           assigned: true
           processor: assignGroupType
+
+    phoneType:
+      name: phoneType
+      table: phone_types
+      dbf-file: ctpholst.dbf
+      id-field: legacy_id
+      id-field-source: PH_ID
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: description
+          source: PH_DESC
+          type: STRING
+        - name: legacy_id
+          source: PH_ID
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+    phone:
+      name: phone
+      table: contact_phones
+      dbf-file: ctphone.dbf
+      id-field: legacy_id
+      id-field-source: PH_CODE
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: contact_id
+          source: PH_CUSTID
+          type: UUID
+          reference: contact
+        - name: type_id
+          source: PH_PHTYPE
+          type: UUID
+          reference: phoneType
+        - name: phone_number
+          source: PH_PHONE
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+        - name: legacy_id
+          source: PH_CODE
+          type: STRING
 
   relations:
     - name: contact_group_members

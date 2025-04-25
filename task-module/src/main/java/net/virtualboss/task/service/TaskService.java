@@ -32,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.*;
@@ -57,6 +58,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
             "Job", "job.",
             "Contact", "contact."
     );
+    private final SecureRandom random = new SecureRandom();
 
     public TaskService(EntityManager entityManager,
                        MainService mainService,
@@ -139,9 +141,15 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
                     if (field.contains("ContactCustom")) return "contact.ContactCustomFieldsAndLists." + field;
                     if (field.startsWith("Job")) return "job." + field;
                     if (field.startsWith("Contact")) return "contact." + field;
+                    if (field.equals("Color")) return setColorPath();
                     return field;
                 })
                 .collect(Collectors.toSet());
+    }
+
+    private String setColorPath() {
+        String[] colors = new String[]{"job.Color", "contact.Color", "statusColor"};
+        return colors[random.nextInt(3)];
     }
 
     @Override
@@ -176,6 +184,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
         QField fieldJob = new QField("fieldJob");
         QField fieldContact = new QField("fieldContact");
         QTask taskFollows = new QTask("task_follows_0");
+        QTaskStatusColor taskStatusColor = QTaskStatusColor.taskStatusColor;
         return List.of(
                 new CollectionJoin<>(task.customFieldsAndListsValues, fieldValueTask, JoinType.LEFTJOIN),
                 new EntityJoin<>(fieldValueTask.field, fieldTask, JoinType.LEFTJOIN),
@@ -183,17 +192,21 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
                 new EntityJoin<>(fieldValueContact.field, fieldContact, JoinType.LEFTJOIN),
                 new CollectionJoin<>(job.customFieldsAndListsValues, fieldValueJob, JoinType.LEFTJOIN),
                 new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN),
-                new CollectionJoin<>(QTask.task.follows, taskFollows, JoinType.LEFTJOIN)
+                new CollectionJoin<>(QTask.task.follows, taskFollows, JoinType.LEFTJOIN),
+                new EntityJoinWithCondition<>(
+                        taskStatusColor, task.status.eq(taskStatusColor.status), JoinType.LEFTJOIN)
         );
     }
 
     @Override
     protected List<GroupByExpression> getGroupBy() {
         QTask task = QTask.task;
+        QTaskStatusColor taskStatusColor = QTaskStatusColor.taskStatusColor;
         return List.of(
                 new GroupByExpression(task.id),
                 new GroupByExpression(task.job),
-                new GroupByExpression(task.contact));
+                new GroupByExpression(task.contact),
+                new GroupByExpression(taskStatusColor.status));
     }
 
     @Override

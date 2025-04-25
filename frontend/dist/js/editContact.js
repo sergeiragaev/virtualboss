@@ -95,7 +95,7 @@ function showEditScreen(data, names){
       
       // NOTES      
       body += " <div class='form-group'>";
-      body += "   <label>" + names['ContactNotes'] + "</label>";
+      body += names['ContactNotes'];
       body += "   <textarea name='Notes' class='form-control' style='min-height:150px; height:auto; white-space:pre-wrap;'>" + data.ContactNotes.replace(/(?:\r\n |\r |\n )/g, '&#10;') + "</textarea>";
       body += " </div>";
       

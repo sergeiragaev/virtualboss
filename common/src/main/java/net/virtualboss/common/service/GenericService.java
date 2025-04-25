@@ -104,6 +104,21 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
         }
     }
 
+    public record EntityJoinWithCondition<E>(
+            EntityPath<E> source,
+            Predicate condition,
+            JoinType type
+    ) implements JoinExpression {
+        @Override
+        public void apply(JPAQuery<?> query) {
+            switch (type) {
+                case LEFTJOIN -> query.leftJoin(source).on(condition);
+                case INNERJOIN -> query.innerJoin(source).on(condition);
+                case RIGHTJOIN -> query.rightJoin(source).on(condition);
+                default -> query.join(source).on(condition);
+            }
+        }
+    }
     public record GroupByExpression(Expression<?> expression) {
     }
 

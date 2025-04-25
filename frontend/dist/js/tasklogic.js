@@ -33,7 +33,11 @@ function createTaskList(customUrl) {
 
   if (eval(Cookies.get('ShowAllTasks'))) tasksPerPage = 10000;
 
-  const requestParams = {
+    if(eval(Cookies.get('UseTaskColor'))) {
+      taskFieldsArray.push("Color");
+    }
+
+    const requestParams = {
     page: tCurrentPage,
     limit: tasksPerPage,
     fields: taskFieldsArray.join(','),
@@ -80,6 +84,10 @@ function handleSuccess(response, taskFieldsArray) {
   tTotalPages = response.page.totalPages;
 
   updatePagination();
+
+  if(eval(Cookies.get('UseTaskColor'))) {
+    taskFieldsArray.pop();
+  }
 
   $.ajax({
     url: '/api/v1/fieldcaptions?fields=' + taskFieldsArray.join(',').replace('TaskId', 'TaskNumber'),
@@ -149,7 +157,11 @@ function renderTaskTable(tasks, taskFieldsArray, names) {
 
   html += '<tbody>';
   tasks.forEach(task => {
-    html += "<tr onclick=\"editTask(\'" + task['TaskId'] + "\','TaskManager');\" style='cursor:pointer;'>";
+    if(eval(Cookies.get('UseTaskColor'))){
+      html += "<tr onclick=\"editTask(\'" + task['TaskId'] + "\','TaskManager');\" style='cursor:pointer; color:" + task['Color'] + ";'>";
+    }else{
+      html += "<tr onclick=\"editTask(\'" + task['TaskId'] + "\','TaskManager');\" style='cursor:pointer;'>";
+    }
     taskFieldsArray.forEach(field => {
       html += `${formatTaskCell(task, field)}`;
     });
@@ -213,7 +225,11 @@ function formatTaskCell(task, field) {
   switch (field) {
     case 'TaskDescription':
       let caption = task[field] || '<i>(No Description)</i>';
-      return "<td><a href='#' onclick=\"return false;\">" + caption.replace(/&/g, '&#38').replace(/</g, '&lt').replace(/>/g, '&gt') + "</a></td>";
+      if (eval(Cookies.get('UseTaskColor'))) {
+        return "<td>" + caption.replace(/&/g, '&#38').replace(/</g, '&lt').replace(/>/g, '&gt') + "</td>";
+      } else {
+        return "<td><a href='#' onclick=\"return false;\">" + caption.replace(/&/g, '&#38').replace(/</g, '&lt').replace(/>/g, '&gt') + "</a></td>";
+      }
     case 'TaskTargetStart':
     case 'TaskTargetFinish':
       return "<td>" + formatDate(task[field]) + "</td>";

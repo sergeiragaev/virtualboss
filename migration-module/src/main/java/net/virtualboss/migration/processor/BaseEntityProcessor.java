@@ -91,6 +91,7 @@ public abstract class BaseEntityProcessor implements EntityProcessor {
             case "sanitizeMemo" -> sanitizeMemo(value.toString());
             case "hashPassword" -> hashPassword(value.toString());
             case "assignGroupType" -> assignGroupType(value.toString());
+            case "convertColor" -> convertColor(value.toString());
             default -> value.toString();
         };
     }
@@ -110,5 +111,34 @@ public abstract class BaseEntityProcessor implements EntityProcessor {
 
     private String sanitizeMemo(String input) {
         return input.replace("\u0000", "").trim();
+    }
+
+    private String convertColor(String cColor) {
+        try {
+            int color = Integer.parseInt(cColor);
+            int red = getRed(color);
+            int green = getGreen(color);
+            int blue = getBlue(color);
+
+            String redHex = String.format("%02X", red);
+            String greenHex = String.format("%02X", green);
+            String blueHex = String.format("%02X", blue);
+
+            return "#" + redHex + greenHex + blueHex;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid color value: " + cColor, e);
+        }
+    }
+
+    private static int getRed(int color) {
+        return (color & 0xFF);
+    }
+
+    private static int getGreen(int color) {
+        return (color >> 8 & 0xFF);
+    }
+
+    private static int getBlue(int color) {
+        return (color >> 16 & 0xFF);
     }
 }

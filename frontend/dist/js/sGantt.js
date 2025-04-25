@@ -360,7 +360,7 @@
 										startMonth : parseInt(date[1],10),
 										startYear  : parseInt(date[0],10)%100,
 										year       : date[0],
-										//color      : this.TaskColor,
+										color      : this.Color,
 										job        : this.JobNumber,
 										duration   : this.TaskDuration,
 										taskNum    : this.TaskOrder,
@@ -645,7 +645,8 @@
 			newRow += " <div class='barWrap'>";
 			
 			if(eval(Cookies.get('UseTaskColor'))){
-  			newRow += "<div class='bar' id='" + t.taskID + "' style='width:" + bWidth + "px; left:" + lPos + "px; background:" + task.TaskColor + "; border:1px " + task.TaskColor + " solid;'>";
+  			// newRow += "<div class='bar' id='" + t.taskID + "' style='width:" + bWidth + "px; left:" + lPos + "px; background:" + task.Color + "; border:1px " + task.Color + " solid;'>";
+				newRow += "<div class='bar' id='" + t.taskID + "' style='width:" + bWidth + "px; left:" + lPos + "px; background:" + task.Color + "; border:1px #000000 solid;'>";
 			}else{
 			  newRow += "<div class='bar' id='" + t.taskID + "' style='width:" + bWidth + "px; left:" + lPos + "px;'>";
 			}
@@ -666,7 +667,7 @@
 			newRow += " <div class='barWrap'>";
 
 			if(eval(Cookies.get('UseTaskColor'))){
-  			newRow += "<div class='bar' id='" + t.taskID + "' style='width:" + bWidth + "px; left:" + lPos + "px; background:" + task.TaskColor + "; border:1px " + task.TaskColor + " solid;'>";
+  			newRow += "<div class='bar' id='" + t.taskID + "' style='width:" + bWidth + "px; left:" + lPos + "px; background:" + task.Color + "; border:1px " + task.Color + " solid;'>";
 			}else{
 			  newRow += "<div class='bar' id='" + t.taskID + "' style='width:" + bWidth + "px; left:" + lPos + "px;'>";
 			}

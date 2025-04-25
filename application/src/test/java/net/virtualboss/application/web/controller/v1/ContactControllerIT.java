@@ -108,7 +108,7 @@ class ContactControllerIT extends TestDependenciesContainer {
         UpsertContactRequest testRequest = generateTestContactRequest();
         saveContactInDbAndGet(testRequest, generateTestContactCustomFieldsRequest());
         mockMvc.perform(get("/contact")
-                        .param("fields", "ContactId,ContactCompany,ContactCustomList5,ContactPerson")
+                        .param("fields", "ContactId,ContactCompany,ContactCustomList5,ContactPerson,Color")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("sort", "firstName:asc,lastName:asc,company:asc")

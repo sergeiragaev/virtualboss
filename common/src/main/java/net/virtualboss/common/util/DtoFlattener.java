@@ -28,7 +28,7 @@ public class DtoFlattener {
             ReflectionUtils.makeAccessible(field);
             try {
                 Object value = field.get(obj);
-                if (value == null) value = "";
+                if (value == null) continue;
 
                 Flatten flattenAnnotation = field.getAnnotation(Flatten.class);
                 if (flattenAnnotation != null) {

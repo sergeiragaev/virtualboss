@@ -108,7 +108,7 @@ class JobControllerIT extends TestDependenciesContainer {
         UpsertJobRequest testRequest = generateTestJobRequest();
         saveJobInDbAndGet(testRequest, generateTestJobCustomFieldsRequest());
         mockMvc.perform(get("/job")
-                        .param("fields", "JobId,JobNumber,JobCustomField2")
+                        .param("fields", "JobId,JobNumber,JobCustomField2,Color")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("sort", "number:asc")

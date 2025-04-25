@@ -124,6 +124,10 @@ public class JobResponse {
     @Builder.Default
     private String groups = "";
 
+    @JsonProperty("Color")
+    @EntityMapping
+    private String color;
+
     @JsonProperty("JobDeleted")
     @Builder.Default
     private Boolean isDeleted = false;

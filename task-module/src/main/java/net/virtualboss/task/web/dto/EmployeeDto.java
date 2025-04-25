@@ -19,7 +19,7 @@ public class EmployeeDto implements Serializable {
     private String email = "";
 
     @Builder.Default
-    private Integer color = 0;
+    private String color = "";
 
     @Builder.Default
     private String notes = "";

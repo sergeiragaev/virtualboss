@@ -113,9 +113,10 @@ public class ContactResponse {
     @Builder.Default
     private String groups = "";
 
-    /**
-     * Вычисляемое поле "ContactPerson", объединяющее имя и фамилию.
-     */
+    @JsonProperty("Color")
+    @EntityMapping
+    private String color;
+
     public String getPerson() {
         String fullName = firstName;
         if (!firstName.isBlank() && !lastName.isBlank()) {

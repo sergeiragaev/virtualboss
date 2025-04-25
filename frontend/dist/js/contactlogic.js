@@ -88,6 +88,10 @@ function loadContactSettings(){
   if(!Cookies.get("ShowContactCustomList6")){
     setCookie("ShowContactCustomList6", false);
   }
+
+  if (!Cookies.get("UseContactColor")) {
+    setCookie("UseContactColor", false);
+  }
 }
 
 function loadContactFilters(){
@@ -105,7 +109,7 @@ function loadContactFilters(){
 function createContactList(customUrl){
   let dataUrl;
   const contactFieldsArray = getContactFieldsToShowArray();
-  const contactFieldsString = Cookies.get("ContactFieldsToShow");
+  let contactFieldsString = Cookies.get("ContactFieldsToShow");
   const activeContactFilters = getActiveContactFilters();
   const sortParams = getSortParams(contactFieldsArray);
 
@@ -113,6 +117,10 @@ function createContactList(customUrl){
     title: "Loading Contacts, Please wait...",
     message: "<i class='fa fa-circle-o-notch fa-spin'></i> Loading Contacts..."
   });
+
+  if(eval(Cookies.get('UseContactColor'))) {
+    contactFieldsString += ",Color";
+  }
 
   // START CONTACT LIST CREATION  
   if(!customUrl){
@@ -184,12 +192,19 @@ function createContactList(customUrl){
             if(emptyContact){
               return;
             }
-            
-            tbl += "<tr onclick=\"editContact('" + contacts.content[i]['ContactId'] + "');\" style='cursor:pointer;'>";
-            
+
+            if(eval(Cookies.get('UseContactColor'))) {
+              tbl += "<tr onclick=\"editContact('" + contacts.content[i]['ContactId'] + "');\" style='cursor:pointer; color:" + contacts.content[i]['Color'] + ";'>";
+            } else {
+              tbl += "<tr onclick=\"editContact('" + contacts.content[i]['ContactId'] + "');\" style='cursor:pointer;'>";
+            }
             $.each(contactFieldsArray, function(j){             
               if(this == "ContactPerson"){
-                tbl += "<td><a href='#' onclick=\"return false;\">" + contacts.content[i][this] + "</a></td>";
+                if(eval(Cookies.get('UseContactColor'))) {
+                  tbl += "<td>" + contacts.content[i][this] + "</td>";
+                } else {
+                  tbl += "<td><a href='#' onclick=\"return false;\">" + contacts.content[i][this] + "</a></td>";
+                }
               }else if(this == "ContactNotes"){
                 tbl += "<td>" + contacts.content[i][this]; //.replace(/\\n/g, '<br />') + "</td>";
               }else if(contactFieldsArray[j] == "ContactWorkersCompDate" || contactFieldsArray[j] == "ContactInsuranceDate"){
@@ -507,6 +522,18 @@ function editOptions() {
   var msg = "";
   msg += "<form role='form' name='contactManagerOptionsForm'>";
 
+  msg += " <div class='checkbox'>";
+  msg += "  <label>";
+
+  if (eval(Cookies.get('UseContactColor'))) {
+    msg += "<input id='contactColorOption' name='UseContactColor' type='checkbox' checked='checked'> Use Active Color Profile For Contacts";
+  } else {
+    msg += "<input id='contactColorOption' name='UseContactColor' type='checkbox'> Use Active Color Profile For Contacts";
+  }
+
+  msg += "  </label>";
+  msg += "</div>";
+  
   msg += "<div class='checkbox'>";
   msg += "  <label>";
 
@@ -545,6 +572,8 @@ function editOptions() {
       label: "Save Changes",
       cssClass: "btn-primary",
       action: function (dialogRef) {
+
+        setCookie('UseContactColor', $("#contactColorOption").prop("checked"));
 
         if ($("#contactLimitOptionToggle").prop("checked")) {
           setCookie('ShowAllContacts', true);

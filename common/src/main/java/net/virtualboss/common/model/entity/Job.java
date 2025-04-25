@@ -83,6 +83,8 @@ public class Job {
     @Builder.Default
     private Boolean isDeleted = false;
 
+    private String color;
+
     @OneToMany(cascade = DETACH)
     @Builder.Default
     private Set<Task> tasks = new HashSet<>();

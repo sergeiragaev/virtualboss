@@ -5,10 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.querydsl.core.types.dsl.*;
 import net.virtualboss.common.annotation.EntityMapping;
 import net.virtualboss.common.exception.MappingException;
-import net.virtualboss.common.model.entity.QContact;
-import net.virtualboss.common.model.entity.QField;
-import net.virtualboss.common.model.entity.QFieldValue;
-import net.virtualboss.common.model.entity.QTask;
+import net.virtualboss.common.model.entity.*;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.ReflectionUtils;
@@ -20,6 +17,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static net.virtualboss.common.model.entity.QTask.task;
 
 public class QueryDslUtil {
 
@@ -82,6 +81,10 @@ public class QueryDslUtil {
             return createContactPersonExpression(qEntity);
         }
 
+        if ("statusColor".equals(entityFieldName)) {
+            return createTaskStatusColorExpression();
+        }
+
         if (isSimpleType(dtoField.getType())) {
             return handleSimpleTypeField(dtoFieldName, qEntity, entityFieldName, fieldsList);
         }
@@ -91,6 +94,15 @@ public class QueryDslUtil {
         }
 
         return handleComplexTypeField(dtoField, dtoFieldName, qEntity, entityFieldName, fieldsList);
+    }
+
+    private static Expression<String> createTaskStatusColorExpression() {
+        QTaskStatusColor taskStatusColor = QTaskStatusColor.taskStatusColor;
+
+        return Expressions.stringTemplate(
+                "COALESCE({0}, '#FFFFFF')",
+                taskStatusColor.color
+        );
     }
 
     private static Expression<?> handleSimpleTypeField(
@@ -228,7 +240,7 @@ public class QueryDslUtil {
 
         Expression<?> expr = switch (property) {
             case TASK_FOLLOWS_FIELD -> createTaskFollowsExpression();
-            case "contact.person" -> createContactPersonExpression(QTask.task.contact);
+            case "contact.person" -> createContactPersonExpression(task.contact);
             case CONTACT_PERSON_FIELD -> createContactPersonExpression(QContact.contact);
             case "taskOrder" -> createTaskOrderExpression();
             default -> isCustomFieldPath(property)
@@ -241,7 +253,7 @@ public class QueryDslUtil {
 
     private static Expression<?> createTaskOrderExpression() {
         try {
-            Expression<?> taskOrder = getQEntityExpression(QTask.task, "taskOrder");
+            Expression<?> taskOrder = getQEntityExpression(task, "taskOrder");
             return Expressions.stringTemplate("try_cast({0}, 0)", taskOrder);
         } catch (Exception e) {
             throw new MappingException("Error creating contact person expression", e);

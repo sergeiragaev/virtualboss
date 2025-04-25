@@ -42,7 +42,7 @@
             <column name="notes" type="TEXT"/>
             <column name="notes_rtf" type="TEXT"/>
             <column name="files" type="TEXT"/>
-            <column name="status" type="VARCHAR(255)">
+            <column name="status" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
             <column name="contact_id" type="UUID"/>
@@ -55,6 +55,24 @@
     </changeSet>
     <changeSet id="createSequenceOfTasksTable" author="Sergei Ragaev">
         <sql dbms="postgresql" endDelimiter=";">CREATE SEQUENCE IF NOT EXISTS tasks_number_seq;</sql>
+    </changeSet>
+
+    <changeSet id="createTaskStatusColorTable" author="Sergei Ragaev">
+        <createTable tableName="task_status_color">
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="task_status_color_pkey"/>
+            </column>
+            <column name="color" type="VARCHAR(7)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="insertIntoTaskStatusColorTable" author="Sergei Ragaev">
+        <sql dbms="postgresql" endDelimiter=";">
+            INSERT INTO task_status_color
+            VALUES ('Done', '#0066FF'),
+                   ('Active', '#CC0000');
+        </sql>
     </changeSet>
 
 </databaseChangeLog>

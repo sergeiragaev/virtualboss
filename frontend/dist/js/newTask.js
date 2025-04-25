@@ -863,7 +863,7 @@ function chooseFromNewContactList(){
         logout();
       }
     
-      $.each(contacts, function(){
+      $.each(contacts.content, function(){
         if(this['ContactPerson'].trim() == "" && this['ContactCompany'].trim() == ""){
         
         }else{
@@ -901,7 +901,7 @@ function chooseFromNewContactList(){
                     
                     var d = "";
                     
-                    $.each(filteredContacts, function(){
+                    $.each(filteredContacts.content, function(){
                       d += "<option value='" + this.ContactId + "'>" + this.ContactPerson + " (" + this.ContactCompany + ")</option>";
                     });
                     

@@ -52,9 +52,9 @@ function loadGanttChart(customUrl){
     
     if(eval(Cookies.get('UseTaskColor'))){
       if(eval(Cookies.get('showBarText'))){
-        dataUrl += "/api/v1/task?fields=TaskId," + ganttFieldsArray.join(',') + ",TaskColor," + Cookies.get('BarTextFields') + "&" + activeTaskFilters + "&FindString=" + Cookies.get('filterFindString');
+        dataUrl += "/api/v1/task?fields=TaskId," + ganttFieldsArray.join(',') + ",Color," + Cookies.get('BarTextFields') + "&" + activeTaskFilters + "&FindString=" + Cookies.get('filterFindString');
       }else{
-        dataUrl += "/api/v1/task?fields=TaskId," + ganttFieldsArray.join(',') + ",TaskColor&" + activeTaskFilters + "&FindString=" + Cookies.get('filterFindString');
+        dataUrl += "/api/v1/task?fields=TaskId," + ganttFieldsArray.join(',') + ",Color&" + activeTaskFilters + "&FindString=" + Cookies.get('filterFindString');
       }
     }else{
       if(eval(Cookies.get('showBarText'))){

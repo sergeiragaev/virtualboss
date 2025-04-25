@@ -77,7 +77,7 @@ public class Contact {
 
     private String email;
 
-    private String phones;
+    private String color;
 
     @Column(name = "is_deleted")
     @Builder.Default
@@ -87,6 +87,11 @@ public class Contact {
     @Builder.Default
     @JsonIgnore
     private Set<Task> tasks = new HashSet<>();
+
+    @OneToMany(cascade = DETACH, mappedBy = "contact")
+    @Builder.Default
+    @JsonIgnore
+    private Set<Phone> phones = new HashSet<>();
 
     @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
     @JoinTable(

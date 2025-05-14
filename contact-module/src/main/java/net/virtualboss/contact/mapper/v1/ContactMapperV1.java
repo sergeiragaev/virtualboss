@@ -1,7 +1,8 @@
 package net.virtualboss.contact.mapper.v1;
 
 import net.virtualboss.common.mapper.v1.GroupMapperV1;
-import net.virtualboss.common.model.entity.Phone;
+import net.virtualboss.common.model.entity.Address;
+import net.virtualboss.common.model.entity.Communication;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.contact.web.dto.ContactResponse;
 import net.virtualboss.common.model.entity.Contact;
@@ -20,6 +21,8 @@ public interface ContactMapperV1 {
 
     @Mapping(target = "groups", ignore = true)
     @Mapping(target = "phones", ignore = true)
+    @Mapping(target = "company", ignore = true)
+    @Mapping(target = "profession", ignore = true)
     Contact requestToContact(UpsertContactRequest request);
 
     default Contact requestToContact(UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
@@ -39,13 +42,27 @@ public interface ContactMapperV1 {
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
     ContactResponse contactToResponse(Contact contact);
 
-    default String mapPhones(Set<Phone> phones) {
+    default String mapPhones(Set<Communication> phones) {
         if (phones == null || phones.isEmpty()) {
             return "";
         }
         return phones.stream()
+                .filter(phone -> !phone.getTitle().isBlank())
                 .map(phone ->
-                    phone.getPhoneType().getDescription() + ": " + phone.getPhoneNumber()
+                        phone.getType().getCaption() + ": " + phone.getTitle()
                 ).collect(Collectors.joining(","));
+    }
+
+    default String mapAddresses(Set<Address> addresses) {
+        if (addresses == null || addresses.isEmpty()) {
+            return "";
+        }
+        return addresses.stream()
+                .filter(address -> !address.getAddress1().isBlank())
+                .map(address ->
+                        address.getType().getCaption() + ": " +
+                                address.getAddress1() + (address.getAddress2().isBlank() ? "" : ", " + address.getAddress2()) + ", " +
+                                address.getCity() + ", " + address.getState() + ", " + address.getPostal()
+                ).collect(Collectors.joining(";"));
     }
 }

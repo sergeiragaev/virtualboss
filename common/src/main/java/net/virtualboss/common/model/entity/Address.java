@@ -6,14 +6,14 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "contact_phones")
+@Table(name = "addresses")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"contact", "phoneType"})
+@ToString(exclude = {"entityId", "type"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Phone {
+public class Address {
 
     @Id
     @GeneratedValue
@@ -22,14 +22,22 @@ public class Phone {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "type_id")
-    private PhoneType phoneType;
+    private CommunicationType type;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, name = "contact_id")
-    private Contact contact;
+    @Column(nullable = false, name = "entity_id")
+    private UUID entityId;
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
+    private String address1;
+
+    private String address2;
+
+    private String city;
+
+    private String state;
+
+    private String postal;
+
+    private String country;
 
     @Column(name = "is_deleted")
     @Builder.Default

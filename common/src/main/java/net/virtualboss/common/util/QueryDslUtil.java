@@ -3,6 +3,7 @@ package net.virtualboss.common.util;
 import com.querydsl.core.types.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.querydsl.core.types.dsl.*;
+import com.querydsl.jpa.JPAExpressions;
 import net.virtualboss.common.annotation.EntityMapping;
 import net.virtualboss.common.exception.MappingException;
 import net.virtualboss.common.model.entity.*;
@@ -18,6 +19,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static net.virtualboss.common.model.entity.QJob.job;
 import static net.virtualboss.common.model.entity.QTask.task;
 
 public class QueryDslUtil {
@@ -77,12 +79,20 @@ public class QueryDslUtil {
             return createTaskFollowsExpression();
         }
 
-        if (CONTACT_PERSON_FIELD.equals(entityFieldName)) {
+        if (CONTACT_PERSON_FIELD.equals(entityFieldName) && fieldsList.contains(dtoFieldName)) {
             return createContactPersonExpression(qEntity);
         }
 
         if ("statusColor".equals(entityFieldName)) {
             return createTaskStatusColorExpression();
+        }
+
+        if ("addresses".equals(entityFieldName) && fieldsList.contains(dtoFieldName)) {
+            return createAddressesExpression(qEntity);
+        }
+
+        if ("phones".equals(entityFieldName) && fieldsList.contains(dtoFieldName)) {
+            return createPhonesExpression(qEntity);
         }
 
         if (isSimpleType(dtoField.getType())) {
@@ -164,7 +174,6 @@ public class QueryDslUtil {
                 .max();
     }
 
-    // Common helper methods
     private static String getEntityFieldName(Field dtoField, EntityMapping annotation) {
         return annotation.path().isEmpty() ? dtoField.getName() : annotation.path();
     }
@@ -177,11 +186,11 @@ public class QueryDslUtil {
 
     private static boolean isSimpleType(Class<?> type) {
         return type.isEnum() ||
-               type.isPrimitive() ||
-               SIMPLE_TYPES.contains(type) ||
-               Number.class.isAssignableFrom(type) ||
-               Date.class.isAssignableFrom(type) ||
-               java.time.temporal.Temporal.class.isAssignableFrom(type);
+                type.isPrimitive() ||
+                SIMPLE_TYPES.contains(type) ||
+                Number.class.isAssignableFrom(type) ||
+                Date.class.isAssignableFrom(type) ||
+                java.time.temporal.Temporal.class.isAssignableFrom(type);
     }
 
     private static Expression<?> getQEntityExpression(Object qEntity, String fieldName) {
@@ -216,7 +225,6 @@ public class QueryDslUtil {
                 .toList();
     }
 
-    // Sorting related methods
     public static <T> OrderSpecifier<Comparable<Object>>[] getOrderSpecifiers(
             Sort sort,
             Class<T> entityClass,
@@ -241,8 +249,15 @@ public class QueryDslUtil {
         Expression<?> expr = switch (property) {
             case TASK_FOLLOWS_FIELD -> createTaskFollowsExpression();
             case "contact.person" -> createContactPersonExpression(task.contact);
+            case "owner.person" -> createContactPersonExpression(job.owner);
             case CONTACT_PERSON_FIELD -> createContactPersonExpression(QContact.contact);
             case "taskOrder" -> createTaskOrderExpression();
+            case "addresses" -> createAddressesExpression(QContact.contact);
+            case "contact.addresses" -> createAddressesExpression(task.contact);
+            case "owner.addresses" -> createAddressesExpression(job.owner);
+            case "phones" -> createPhonesExpression(QContact.contact);
+            case "contact.phones" -> createPhonesExpression(task.contact);
+            case "owner.phones" -> createPhonesExpression(job.owner);
             default -> isCustomFieldPath(property)
                     ? handleCustomFieldSort(property, entityPath)
                     : entityPath.getComparable(property, Comparable.class);
@@ -256,7 +271,7 @@ public class QueryDslUtil {
             Expression<?> taskOrder = getQEntityExpression(task, "taskOrder");
             return Expressions.stringTemplate("try_cast({0}, 0)", taskOrder);
         } catch (Exception e) {
-            throw new MappingException("Error creating contact person expression", e);
+            throw new MappingException("Error creating order expression", e);
         }
     }
 
@@ -264,6 +279,50 @@ public class QueryDslUtil {
         QTask taskFollows = new QTask(TASK_FOLLOWS_ALIAS);
         Path<?> valuePath = Expressions.path(String.class, taskFollows, "number");
         return Expressions.stringTemplate("string_agg(cast({0} as text), ',')", valuePath);
+    }
+
+    private static Expression<String> createAddressesExpression(Object qEntity) {
+        QAddress address = new QAddress("addresses");
+        QCommunicationType type = QCommunicationType.communicationType;
+
+        return JPAExpressions.select(
+                        Expressions.stringTemplate(
+                                "string_agg( cast(coalesce(CONCAT_WS(', ', " +
+                                        "CONCAT({0}, ': ', {1}, " +
+                                        "CASE WHEN {2} IS NOT NULL AND {2} <> '' THEN CONCAT(', ', {2}) ELSE '' END), " +
+                                        "{3}, {4}, {5}), '') as text), {6})",
+                                type.caption,
+                                address.address1,
+                                address.address2,
+                                address.city,
+                                address.state,
+                                address.postal,
+                                ConstantImpl.create(";")
+                        )
+                )
+                .from(address)
+                .leftJoin(address.type, type)
+                .where(address.address1.isNotEmpty())
+                .where(address.entityId.eq(((QContact) qEntity).id))  // Пример условия
+                .groupBy(address.entityId);
+    }
+
+    private static Expression<String> createPhonesExpression(Object qEntity) {
+        QCommunication comm = new QCommunication("phones");
+        QCommunicationType type = QCommunicationType.communicationType;
+
+        return JPAExpressions.select(
+                        Expressions.stringTemplate(
+                                "string_agg( cast(coalesce(case when {0} is not null and {0} <> '' then {1} || ': ' || {0} else null end, '') as text), {2})",
+                                comm.title,
+                                type.caption,
+                                ConstantImpl.create(",")
+                        )
+                )
+                .from(comm)
+                .leftJoin(comm.type, type)
+                .where(comm.entityId.eq(((QContact) qEntity).id))
+                .groupBy(comm.entityId);
     }
 
     private static Expression<String> createContactPersonExpression(Object qEntity) {

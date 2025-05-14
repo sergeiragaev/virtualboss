@@ -140,6 +140,8 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
                     if (field.contains("JobCustom")) return "job.JobCustomFieldsAndLists." + field;
                     if (field.contains("ContactCustom")) return "contact.ContactCustomFieldsAndLists." + field;
                     if (field.startsWith("Job")) return "job." + field;
+                    if (field.startsWith("ContactCompany")) return "contact.company." + field;
+                    if (field.startsWith("ContactProfession")) return "contact.profession." + field;
                     if (field.startsWith("Contact")) return "contact." + field;
                     if (field.equals("Color")) return setColorPath();
                     return field;
@@ -185,6 +187,9 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
         QField fieldContact = new QField("fieldContact");
         QTask taskFollows = new QTask("task_follows_0");
         QTaskStatusColor taskStatusColor = QTaskStatusColor.taskStatusColor;
+        QCompany company = QCompany.company;
+        QProfession profession = QProfession.profession;
+
         return List.of(
                 new CollectionJoin<>(task.customFieldsAndListsValues, fieldValueTask, JoinType.LEFTJOIN),
                 new EntityJoin<>(fieldValueTask.field, fieldTask, JoinType.LEFTJOIN),
@@ -194,7 +199,10 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
                 new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN),
                 new CollectionJoin<>(QTask.task.follows, taskFollows, JoinType.LEFTJOIN),
                 new EntityJoinWithCondition<>(
-                        taskStatusColor, task.status.eq(taskStatusColor.status), JoinType.LEFTJOIN)
+                        taskStatusColor, task.status.eq(taskStatusColor.status), JoinType.LEFTJOIN),
+                new EntityJoin<>(task.contact, QContact.contact, JoinType.LEFTJOIN),
+                new EntityJoin<>(QContact.contact.company, company, JoinType.LEFTJOIN),
+                new EntityJoin<>(QContact.contact.profession, profession, JoinType.LEFTJOIN)
         );
     }
 
@@ -205,7 +213,9 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
         return List.of(
                 new GroupByExpression(task.id),
                 new GroupByExpression(task.job),
-                new GroupByExpression(task.contact),
+                new GroupByExpression(QContact.contact.id),
+                new GroupByExpression(QCompany.company.id),
+                new GroupByExpression(QProfession.profession.id),
                 new GroupByExpression(taskStatusColor.status));
     }
 
@@ -454,7 +464,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
             if (taskIds.contains(parent.getId())) throw new CircularLinkingException(
                     MessageFormat.format(
                             "Cannot make {0} pending {1}, " +
-                            "because {1} follows {0}",
+                                    "because {1} follows {0}",
                             taskFromDb, parent)
             );
         });

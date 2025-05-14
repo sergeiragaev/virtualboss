@@ -25,7 +25,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -34,6 +36,7 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
     private final ContactMapperV1 mapper;
     private final ContactResponseMapper contactResponseMapper;
     private final Map<String, String> customMappings = Map.of("ContactCustom", "customFields.");
+    private final SecureRandom random = new SecureRandom();
 
     public ContactService(EntityManager entityManager,
                           MainService mainService,
@@ -112,18 +115,44 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
         QContact contact = QContact.contact;
         QFieldValue fieldValueContact = new QFieldValue("fieldValueContact");
         QField fieldContact = new QField("fieldContact");
+        QCompany company = QCompany.company;
+        QProfession profession = QProfession.profession;
+        QAddress address = new QAddress("addresses");
+        QCommunication phones = new QCommunication("phones");
+        QCommunicationType phoneType = new QCommunicationType("phoneType");
+        QCommunicationType addType = new QCommunicationType("addType");
 
         return List.of(
                 new CollectionJoin<>(contact.customFieldsAndListsValues, fieldValueContact, JoinType.LEFTJOIN),
-                new EntityJoin<>(fieldValueContact.field, fieldContact, JoinType.LEFTJOIN)
+                new EntityJoin<>(fieldValueContact.field, fieldContact, JoinType.LEFTJOIN),
+                new EntityJoin<>(company, company, JoinType.LEFTJOIN),
+                new EntityJoin<>(profession, profession, JoinType.LEFTJOIN),
+//                new CollectionJoin<>(contact.addresses, address, JoinType.LEFTJOIN),
+//                new CollectionJoin<>(contact.phones, phones, JoinType.LEFTJOIN),
+                new EntityJoinWithCondition<>(
+                        address, address.entityId.eq(contact.id), JoinType.LEFTJOIN),
+                new EntityJoinWithCondition<>(
+                        phones, phones.entityId.eq(contact.id), JoinType.LEFTJOIN)
+//                new EntityJoinWithCondition<>(
+//                        addType, addType.eq(phones.type), JoinType.LEFTJOIN),
+//                new EntityJoinWithCondition<>(
+//                        phoneType, phoneType.eq(contact.phones.any().type), JoinType.LEFTJOIN)
+//                new EntityJoinWithCondition<>(
+//                        address, addType.eq(address.type), JoinType.LEFTJOIN)
+//                new EntityJoin<>(comm.type, type, JoinType.LEFTJOIN)
         );
     }
 
     @Override
     protected List<GroupByExpression> getGroupBy() {
-        QContact contact = QContact.contact;
+        QAddress address = new QAddress("addresses");
+        QCommunication communication = new QCommunication("phones");
         return List.of(
-                new GroupByExpression(contact.id)
+                new GroupByExpression(QContact.contact.id),
+                new GroupByExpression(QCompany.company.id),
+                new GroupByExpression(QProfession.profession.id)
+//                new GroupByExpression(address.id),
+//                new GroupByExpression(communication.id)
         );
     }
 
@@ -153,6 +182,18 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
     public Map<String, Object> createContact(UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
         Contact contact = mapper.requestToContact(request, customFieldsAndLists);
         return contactResponseMapper.map(mapper.contactToResponse(repository.save(contact)), null);
+    }
+
+    @Override
+    protected Set<String> parseFields(String fields) {
+        return Arrays.stream(fields.split(","))
+                .map(field -> {
+                    if (field.contains(getCustomFieldPrefix())) return getCustomFieldsAndListsPrefix() + "." + field;
+                    if (field.startsWith("ContactCompany")) return "company." + field;
+                    if (field.startsWith("ContactProfession")) return "profession." + field;
+                    return field;
+                })
+                .collect(Collectors.toSet());
     }
 
 }

@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -34,7 +35,10 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
     private final JobRepository repository;
     private final JobMapperV1 mapper;
     private final JobResponseMapper jobResponseMapper;
-    private final Map<String, String> customMappings = Map.of("JobCustom", "customFields.");
+    private final Map<String, String> customMappings = Map.of(
+            "JobCustom", "customFields.",
+            "ContactCustom", "owner.customFields."
+    );
 
     public JobService(EntityManager entityManager,
                       MainService mainService,
@@ -55,7 +59,9 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
 
     @Override
     protected Map<String, String> getNestedMappings() {
-        return Map.of();
+        return Map.of(
+                "Contact", "owner."
+        );
     }
 
     @Override
@@ -107,18 +113,22 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
         QJob job = QJob.job;
         QFieldValue fieldValueJob = new QFieldValue("fieldValueJob");
         QField fieldJob = new QField("fieldJob");
+        QCompany company = QCompany.company;
 
         return List.of(
                 new CollectionJoin<>(job.customFieldsAndListsValues, fieldValueJob, JoinType.LEFTJOIN),
-                new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN)
+                new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN),
+                new EntityJoin<>(job.owner, QContact.contact, JoinType.LEFTJOIN),
+                new EntityJoin<>(QContact.contact.company, company, JoinType.LEFTJOIN)
         );
     }
 
     @Override
     protected List<GroupByExpression> getGroupBy() {
-        QJob job = QJob.job;
         return List.of(
-                new GroupByExpression(job.id)
+                new GroupByExpression(QJob.job.id),
+                new GroupByExpression(QCompany.company.id),
+                new GroupByExpression(QContact.contact.id)
         );
     }
 
@@ -162,4 +172,18 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
         if (optionalJob.isPresent() && !optionalJob.get().getId().equals(uuid))
             throw new AlreadyExistsException(MessageFormat.format("Job with number <b>{0}</b> already exists!", jobNumber));
     }
+
+    @Override
+    protected Set<String> parseFields(String fields) {
+        return Arrays.stream(fields.split(","))
+                .map(field -> {
+                    if (field.contains(getCustomFieldPrefix())) return getCustomFieldsAndListsPrefix() + "." + field;
+                    if (field.contains("ContactCustom")) return "owner.ContactCustomFieldsAndLists." + field;
+                    if (field.equals("ContactCompany")) return "owner.company." + field;
+                    if (field.startsWith("Contact")) return "owner." + field;
+                    return field;
+                })
+                .collect(Collectors.toSet());
+    }
+
 }

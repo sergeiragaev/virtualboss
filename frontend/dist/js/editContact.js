@@ -80,11 +80,14 @@ function showEditScreen(data, names){
       body += "     <input name='Email' class='form-control' value='" + data.ContactEmail.replace(/&/g, '&#38').replace(/'/g, '&#39').replace(/</g, '&#60').replace(/>/g, '&#62').replace(/"/g, '&#34') + "'>";
       body += "   </div>";
       body += " </div>";
-      
+
+      //Communications
+      body += " <div class='row form-group'>";
       // PHONE
       var phoneArr = data['ContactPhones'].split(",");
       
-      body += " <div class='form-group'>";
+//      body += " <div class='form-group'>";
+      body += "   <div class='col-xs-6'>";
       body += "   <strong>" + names['ContactPhones'] + "</strong>";
       
       $.each(phoneArr, function(){
@@ -92,7 +95,21 @@ function showEditScreen(data, names){
       });
       
       body += " </div>";
-      
+
+      // ADDRESSES
+      var addressArr = data['ContactAddresses'].split(";");
+
+//      body += " <div class='form-group'>";
+      body += "   <div class='col-xs-6'>";
+      body += "   <strong>" + names['ContactAddresses'] + "</strong>";
+
+      $.each(addressArr, function(){
+        body += "<div>" + this + "</div>";
+      });
+
+      body += " </div>";
+      body += " </div>";
+
       // NOTES      
       body += " <div class='form-group'>";
       body += names['ContactNotes'];

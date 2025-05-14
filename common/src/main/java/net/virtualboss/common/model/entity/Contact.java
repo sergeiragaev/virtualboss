@@ -37,8 +37,13 @@ public class Contact {
     @Column(name = "modified_time")
     private LocalDateTime modifiedTime;
 
-    private String company;
-    private String profession;
+    @ManyToOne
+    @JoinColumn(name = "company_id")
+    private Company company;
+
+    @ManyToOne
+    @JoinColumn(name = "profession_id")
+    private Profession profession;
 
     public String getPerson() {
         return firstName + " " + lastName;
@@ -73,8 +78,6 @@ public class Contact {
     @Column(columnDefinition = "TEXT", name = "notes_rtf")
     private String notesRtf;
 
-    private String fax;
-
     private String email;
 
     private String color;
@@ -88,10 +91,15 @@ public class Contact {
     @JsonIgnore
     private Set<Task> tasks = new HashSet<>();
 
-    @OneToMany(cascade = DETACH, mappedBy = "contact")
+    @OneToMany(cascade = DETACH, mappedBy = "entityId")
     @Builder.Default
     @JsonIgnore
-    private Set<Phone> phones = new HashSet<>();
+    private Set<Communication> phones = new HashSet<>();
+
+    @OneToMany(cascade = DETACH, mappedBy = "entityId")
+    @Builder.Default
+    @JsonIgnore
+    private Set<Address> addresses = new HashSet<>();
 
     @ManyToMany(cascade = {DETACH, MERGE, PERSIST, REFRESH})
     @JoinTable(

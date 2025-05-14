@@ -3,12 +3,12 @@ package net.virtualboss.migration.processor;
 import com.linuxense.javadbf.DBFRow;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import net.virtualboss.common.exception.DataMigrationException;
 import net.virtualboss.common.model.enums.EntityType;
 import net.virtualboss.migration.config.MigrationConfig;
 import net.virtualboss.migration.service.DatabaseSaver;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -34,8 +34,8 @@ public abstract class BaseEntityProcessor implements EntityProcessor {
                 try {
                     value = processColumn(row, column);
                 } catch (Exception e) {
-                    throw new DataMigrationException(
-                            "Error parsing column: " + column, e);
+                    log.error("Error parsing column: " + column.getName(), e);
+                    return new HashMap<>();
                 }
                 values.put(column.getName(), value);
             }
@@ -74,7 +74,16 @@ public abstract class BaseEntityProcessor implements EntityProcessor {
 
         if (column.getReference() != null) {
             EntityCache cache = cashes.get(column.getReference() + "Cache");
-            rawValue = cache.get(rawValue.toString());
+            UUID referenceValue = cache.get(rawValue.toString());
+            if (referenceValue == null && !rawValue.toString().isBlank()) {
+                log.info(
+                        MessageFormat.format(
+                                "Could not find value {0} in {1} for column {2}!",
+                                rawValue, column.getReference() + "Cache", column.getName())
+                );
+
+            }
+            rawValue = referenceValue;
         }
 
         return switch (column.getType().toUpperCase()) {

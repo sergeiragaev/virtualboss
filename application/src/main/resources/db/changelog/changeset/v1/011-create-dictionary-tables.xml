@@ -5,32 +5,30 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet id="createPhoneTypesTable" author="Sergei Ragaev">
-        <createTable tableName="phone_types">
+    <changeSet id="createCompaniesTable" author="Sergei Ragaev">
+        <createTable tableName="companies">
             <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="phone_types_pkey"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="companies_pkey"/>
             </column>
-            <column name="description" type="VARCHAR(255)">
+            <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
+            <column name="description" type="TEXT"/>
+            <column name="color" type="VARCHAR(7)"/>
             <column name="is_deleted" type="boolean"/>
         </createTable>
     </changeSet>
 
-    <changeSet id="createContactPhonesTable" author="Sergei Ragaev">
-        <createTable tableName="contact_phones">
+    <changeSet id="createProfessionsTable" author="Sergei Ragaev">
+        <createTable tableName="professions">
             <column name="id" type="UUID">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="phones_pkey"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="professions_pkey"/>
             </column>
-            <column name="type_id" type="UUID">
+            <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="contact_id" type="UUID">
-                <constraints nullable="false"/>
-            </column>
-            <column name="phone_number" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="description" type="TEXT"/>
+            <column name="color" type="VARCHAR(7)"/>
             <column name="is_deleted" type="boolean"/>
         </createTable>
     </changeSet>

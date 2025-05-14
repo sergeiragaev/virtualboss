@@ -6,18 +6,21 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "phone_types")
+@Table(name = "professions")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class PhoneType {
+public class Profession {
+
     @Id
     @GeneratedValue
     private UUID id;
 
     @EqualsAndHashCode.Include
+    private String name;
+
     private String description;
 
     @Column(name = "is_deleted")

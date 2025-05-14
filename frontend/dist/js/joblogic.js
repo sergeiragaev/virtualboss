@@ -1,9 +1,9 @@
 ﻿/***********************************************************************************************/
-const defaultJobFieldsToShow = "JobNumber,JobOwnerName,JobEmail,JobNotes";
+const defaultJobFieldsToShow = "JobNumber,ContactPerson,JobEmail,JobNotes";
 const defaultJobFilters = ""; // empty is all active jobs
 /***********************************************************************************************/
 // use array.join(',') to convert an array to comma separated string.
-const allJobFieldCaptionNames = ["JobNumber", "JobLot", "JobOwnerName", "JobSubdivision", "JobLockBox", "JobAddress1", "JobAddress2", "JobCity", "JobState", "JobPostal", "JobCountry", "JobHomePhone", "JobWorkPhone", "JobCellPhone", "JobFax", "JobCompany", "JobEmail", "JobNotes", "JobDirections", "JobCustomField1", "JobCustomField2", "JobCustomField3", "JobCustomField4", "JobCustomField5", "JobCustomField6", "JobCustomList1", "JobCustomList2", "JobCustomList3", "JobCustomList4", "JobCustomList5", "JobCustomList6"];
+const allJobFieldCaptionNames = ["JobNumber", "JobLot", "ContactPerson", "JobSubdivision", "JobLockBox", "ContactAddresses", "ContactPhones", "ContactCompany", "JobEmail", "JobNotes", "JobDirections", "JobCustomField1", "JobCustomField2", "JobCustomField3", "JobCustomField4", "JobCustomField5", "JobCustomField6", "JobCustomList1", "JobCustomList2", "JobCustomList3", "JobCustomList4", "JobCustomList5", "JobCustomList6"];
 /***********************************************************************************************/
 let jobsPerPage = 20;
 let jCurrentPage = 1;

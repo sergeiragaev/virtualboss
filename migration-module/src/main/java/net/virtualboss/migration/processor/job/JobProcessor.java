@@ -30,6 +30,25 @@ public class JobProcessor extends BaseEntityProcessor {
 
         cashes.get("jobCache").add(values.get("number").toString(), UUID.fromString(values.get("id").toString()));
 
+        values.put("owner", values.get("owner_id"));
+        UUID contactId = databaseSaver.addJobContact(values);
+        values.remove("owner");
+        values.put("owner_id", contactId);
+
+        values.remove("company");
+
+        values.remove("homePhone");
+        values.remove("workPhone");
+        values.remove("cellPhone");
+        values.remove("fax");
+
+        values.remove("address1");
+        values.remove("address2");
+        values.remove("city");
+        values.remove("state");
+        values.remove("postal");
+        values.remove("country");
+
         databaseSaver.saveToDatabase(config.getName(), values);
 
     }

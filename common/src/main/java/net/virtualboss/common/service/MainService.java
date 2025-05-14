@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.EntityNotFoundException;
 import net.virtualboss.common.model.entity.Job;
+import net.virtualboss.common.repository.CompanyRepository;
 import net.virtualboss.common.repository.ContactRepository;
 import net.virtualboss.common.repository.JobRepository;
 import net.virtualboss.common.model.entity.*;
@@ -21,6 +22,7 @@ public class MainService {
     private final TaskRepository taskRepository;
     private final JobRepository jobRepository;
     private final ContactRepository contactRepository;
+    private final CompanyRepository companyRepository;
 
     public void eraseJobFromTasks(Job job) {
         taskRepository.findAllByJob(job)
@@ -55,8 +57,14 @@ public class MainService {
 
     private Contact createUnassigned() {
         Contact contact = new Contact();
-        contact.setCompany("Unassigned");
+        contact.setCompany(companyRepository.getUnassigned().orElseGet(this::createUnassignedCompany));
         return contactRepository.save(contact);
+    }
+
+    private Company createUnassignedCompany() {
+        Company company = new Company();
+        company.setName("Unassigned");
+        return companyRepository.save(company);
     }
 
     public Job getJobByNumber(String jobNumber) {

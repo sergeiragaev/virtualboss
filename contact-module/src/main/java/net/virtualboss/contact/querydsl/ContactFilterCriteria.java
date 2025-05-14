@@ -43,22 +43,22 @@ public class ContactFilterCriteria {
     }
 
     private BooleanExpression createSearchPredicate(QContact contact, String searchStr) {
-        return contact.profession.containsIgnoreCase(searchStr)
+        return contact.profession.name.containsIgnoreCase(searchStr)
                 .or(contact.firstName.containsIgnoreCase(searchStr))
                 .or(contact.lastName.containsIgnoreCase(searchStr))
                 .or(contact.notes.containsIgnoreCase(searchStr))
                 .or(contact.comments.containsIgnoreCase(searchStr))
                 .or(contact.supervisor.containsIgnoreCase(searchStr))
                 .or(contact.spouse.containsIgnoreCase(searchStr))
-                .or(contact.company.containsIgnoreCase(searchStr))
+                .or(contact.company.name.containsIgnoreCase(searchStr))
                 .or(contact.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr));
     }
 
     private void applyUnassignedFilter(QContact contact, BooleanBuilder builder) {
         Optional.ofNullable(showUnassigned).ifPresent(flag -> {
             BooleanExpression unassignedCondition = flag ?
-                    contact.company.equalsIgnoreCase(UNASSIGNED_COMPANY) :
-                    contact.company.toLowerCase().ne(UNASSIGNED_COMPANY);
+                    contact.company.name.equalsIgnoreCase(UNASSIGNED_COMPANY) :
+                    contact.company.name.toLowerCase().ne(UNASSIGNED_COMPANY);
 
             builder.and(unassignedCondition);
         });

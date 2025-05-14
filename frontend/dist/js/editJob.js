@@ -75,14 +75,14 @@ function showEditScreen(data, names){
       // OWNERS NAME
       body += "<div class='row form-group'>";
       body += " <div class='col-xs-6 col-lg-4'>";
-      body += names['JobOwnerName'];
-      body += "   <input type='text' name='Owners_Name' class='form-control' value=\"" + data.JobOwnerName.replace(/&/g, '&#38').replace(/</g, '&#60').replace(/>/g, '&#62').replace(/"/g, '&#34').replace(/'/g, '&#39') + "\">";
+      body += names['ContactPerson'];
+      body += "   <input type='text' name='Owners_Name' class='form-control' value=\"" + data.ContactPerson.replace(/&/g, '&#38').replace(/</g, '&#60').replace(/>/g, '&#62').replace(/"/g, '&#34').replace(/'/g, '&#39') + "\">";
       body += " </div>";
       
       // COMPANY NAME
       body += " <div class='col-xs-6 col-lg-4'>";
-      body += names['JobCompany'];
-      body += "   <input type='text' name='Company_Name' class='form-control' value=\"" + data.JobCompany.replace(/&/g, '&#38').replace(/</g, '&#60').replace(/>/g, '&#62').replace(/"/g, '&#34').replace(/'/g, '&#39') + "\">";
+      body += names['ContactCompany'];
+      body += "   <input type='text' name='Company_Name' class='form-control' value=\"" + data.ContactCompany.replace(/&/g, '&#38').replace(/</g, '&#60').replace(/>/g, '&#62').replace(/"/g, '&#34').replace(/'/g, '&#39') + "\">";
       body += " </div>";
       
       // EMAIL

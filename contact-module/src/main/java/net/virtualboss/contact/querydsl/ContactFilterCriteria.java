@@ -51,6 +51,12 @@ public class ContactFilterCriteria {
                 .or(contact.supervisor.containsIgnoreCase(searchStr))
                 .or(contact.spouse.containsIgnoreCase(searchStr))
                 .or(contact.company.name.containsIgnoreCase(searchStr))
+                .or(contact.phones.any().title.containsIgnoreCase(searchStr))
+                .or(contact.addresses.any().address1.containsIgnoreCase(searchStr))
+                .or(contact.addresses.any().address2.containsIgnoreCase(searchStr))
+                .or(contact.addresses.any().city.containsIgnoreCase(searchStr))
+                .or(contact.addresses.any().state.containsIgnoreCase(searchStr))
+                .or(contact.addresses.any().postal.containsIgnoreCase(searchStr))
                 .or(contact.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr));
     }
 

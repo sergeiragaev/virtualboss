@@ -14,4 +14,6 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
     @Query("from Company c where lower(c.name) = 'unassigned'")
     Optional<Company> getUnassigned();
 
+    Optional<Company> findCompanyByNameEqualsIgnoreCase(String companyName);
+
 }

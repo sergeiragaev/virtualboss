@@ -36,6 +36,8 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         taskRepository.deleteAll();
         jobRepository.deleteAll();
+        companyRepository.deleteAll();
+        professionRepository.deleteAll();
         holidayRepository.deleteAll();
         Holiday holiday = new Holiday();
         holiday.setCountryCode("US");
@@ -363,5 +365,4 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         assertEquals(firstTask.getJob().getLot(), response.getContent().get(0).get("JobLot"));
         assertEquals(firstTask.getContact().getPerson(), response.getContent().get(0).get("ContactPerson"));
     }
-
 }

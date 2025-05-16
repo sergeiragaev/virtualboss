@@ -21,6 +21,8 @@ public abstract class BaseEntityProcessor implements EntityProcessor {
     protected final DatabaseSaver databaseSaver;
     protected final Map<String, EntityCache> cashes;
 
+    private static final String CACHE = "Cache";
+
 
     protected Map<String, Object> process(DBFRow row, MigrationConfig.EntityConfig config) {
         Map<String, Object> values = new HashMap<>();
@@ -52,7 +54,7 @@ public abstract class BaseEntityProcessor implements EntityProcessor {
         }
 
         if (config.getIdField() != null) {
-            cashes.get(config.getName() + "Cache")
+            cashes.get(config.getName() + CACHE)
                     .add(values.get(config.getIdField()), UUID.fromString(values.get("id").toString()));
             values.remove(config.getIdField());
         }
@@ -73,13 +75,13 @@ public abstract class BaseEntityProcessor implements EntityProcessor {
         }
 
         if (column.getReference() != null) {
-            EntityCache cache = cashes.get(column.getReference() + "Cache");
+            EntityCache cache = cashes.get(column.getReference() + CACHE);
             UUID referenceValue = cache.get(rawValue.toString());
             if (referenceValue == null && !rawValue.toString().isBlank()) {
                 log.info(
                         MessageFormat.format(
                                 "Could not find value {0} in {1} for column {2}!",
-                                rawValue, column.getReference() + "Cache", column.getName())
+                                rawValue, column.getReference() + CACHE, column.getName())
                 );
 
             }

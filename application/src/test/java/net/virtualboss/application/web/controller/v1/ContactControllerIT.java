@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -36,7 +37,7 @@ class ContactControllerIT extends TestDependenciesContainer {
         String customValue = contact.getCustomValueByName("ContactCustomField3");
         mockMvc.perform(get("/contact/" + contactRepository.findAll().get(0).getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.ContactCompany").value(contact.getCompany()))
+                .andExpect(jsonPath("$.ContactCompany").value(contact.getCompany().getName()))
                 .andExpect(jsonPath("$.ContactCustomField3")
                         .value(customValue))
                 .andReturn();
@@ -44,6 +45,7 @@ class ContactControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("contact successfully deleted test")
+    @Transactional
     void deleteContactById_CorrectDelete() throws Exception {
         Contact contact = saveAndGetTestContactToDelete();
         mockMvc.perform(delete("/contact/" + contact.getId()))
@@ -52,6 +54,7 @@ class ContactControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("contact deletion failed of fake id test")
+    @Transactional
     void deleteContactById_NotFound() throws Exception {
         Contact contact = saveAndGetTestContactToDelete();
         contact.setId(UUID.randomUUID());
@@ -122,6 +125,7 @@ class ContactControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("search deleted contact test")
+    @Transactional
     void searchDeletedContact() throws Exception {
         UpsertContactRequest testRequest = generateTestContactRequest();
         Contact contact = saveContactInDbAndGet(testRequest, generateTestContactCustomFieldsRequest());

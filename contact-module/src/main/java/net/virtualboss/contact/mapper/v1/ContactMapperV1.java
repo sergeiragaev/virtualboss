@@ -27,8 +27,13 @@ public interface ContactMapperV1 {
 
     default Contact requestToContact(UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
         Contact contact = requestToContact(request);
-        return addCustomFLAndGroups(contact, customFieldsAndLists,
-                request.getGroups());
+        return addCustomFLAndGroups(
+                contact,
+                customFieldsAndLists,
+                request.getGroups(),
+                request.getCompany(),
+                request.getProfession()
+        );
     }
 
     default Contact requestToContact(String id, UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
@@ -37,7 +42,7 @@ public interface ContactMapperV1 {
         return contact;
     }
 
-    Contact addCustomFLAndGroups(Contact contact, CustomFieldsAndLists customFieldsAndLists, String jobGroups);
+    Contact addCustomFLAndGroups(Contact contact, CustomFieldsAndLists customFieldsAndLists, String groups, String company, String profession);
 
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
     ContactResponse contactToResponse(Contact contact);

@@ -135,18 +135,40 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
     @Override
     protected Set<String> parseFields(String fields) {
         return Arrays.stream(fields.split(","))
-                .map(field -> {
-                    if (field.contains(getCustomFieldPrefix())) return getCustomFieldsAndListsPrefix() + "." + field;
-                    if (field.contains("JobCustom")) return "job.JobCustomFieldsAndLists." + field;
-                    if (field.contains("ContactCustom")) return "contact.ContactCustomFieldsAndLists." + field;
-                    if (field.startsWith("Job")) return "job." + field;
-                    if (field.startsWith("ContactCompany")) return "contact.company." + field;
-                    if (field.startsWith("ContactProfession")) return "contact.profession." + field;
-                    if (field.startsWith("Contact")) return "contact." + field;
-                    if (field.equals("Color")) return setColorPath();
-                    return field;
-                })
+                .map(this::mapField)
                 .collect(Collectors.toSet());
+    }
+
+    private String mapField(String field) {
+        if (field.startsWith(getCustomFieldPrefix())) {
+            return getCustomFieldsAndListsPrefix() + "." + field;
+        }
+        if (field.startsWith("JobCustom")) {
+            return "job.JobCustomFieldsAndLists." + field;
+        }
+        if (field.startsWith("ContactCustom")) {
+            return "contact.ContactCustomFieldsAndLists." + field;
+        }
+        if (field.startsWith("Job")) {
+            return "job." + field;
+        }
+        if (field.startsWith("Contact")) {
+            return mapContactField(field);
+        }
+        if (field.equals("Color")) {
+            return setColorPath();
+        }
+        return field;
+    }
+
+    private String mapContactField(String field) {
+        if (field.equals("ContactCompany")) {
+            return "contact.company." + field;
+        }
+        if (field.equals("ContactProfession")) {
+            return "contact.profession." + field;
+        }
+        return "contact." + field;
     }
 
     private String setColorPath() {

@@ -46,7 +46,7 @@ class ContactServiceIT extends TestDependenciesContainer {
         Map<String, Object> savedContact = contactService.createContact(request, customFieldsAndLists);
         Contact result = mainService.getContactById(savedContact.get("ContactId").toString());
         assertEquals(savedContact.get("ContactId"), result.getId());
-        assertEquals(request.getCompany(), result.getCompany());
+        assertEquals(request.getCompany(), result.getCompany().getName());
         assertEquals(customFieldsAndLists.getCustomField4(),
                 result.getCustomValueByName("ContactCustomField4"));
     }
@@ -66,7 +66,7 @@ class ContactServiceIT extends TestDependenciesContainer {
         customFieldsAndLists.setCustomList4("Updated Contact custom list4");
         contactService.saveContact(id, updatedRequest, customFieldsAndLists);
         Contact updatedContact = contactRepository.findById(UUID.fromString(id)).orElseThrow();
-        assertEquals(updatedRequest.getCompany(), updatedContact.getCompany());
+        assertEquals(updatedRequest.getCompany(), updatedContact.getCompany().getName());
         assertEquals(customFieldsAndLists.getCustomList4(), updatedContact.getCustomValueByName("ContactCustomList4"));
         assertEquals("contact custom field 3", updatedContact.getCustomValueByName("ContactCustomField3"));
     }

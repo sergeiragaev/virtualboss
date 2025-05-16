@@ -3,7 +3,8 @@ const defaultJobFieldsToShow = "JobNumber,ContactPerson,JobEmail,JobNotes";
 const defaultJobFilters = ""; // empty is all active jobs
 /***********************************************************************************************/
 // use array.join(',') to convert an array to comma separated string.
-const allJobFieldCaptionNames = ["JobNumber", "JobLot", "ContactPerson", "JobSubdivision", "JobLockBox", "ContactAddresses", "ContactPhones", "ContactCompany", "JobEmail", "JobNotes", "JobDirections", "JobCustomField1", "JobCustomField2", "JobCustomField3", "JobCustomField4", "JobCustomField5", "JobCustomField6", "JobCustomList1", "JobCustomList2", "JobCustomList3", "JobCustomList4", "JobCustomList5", "JobCustomList6"];
+const allJobFieldCaptionNames = ["JobNumber", "JobLot", "JobSubdivision", "JobLockBox", "JobEmail", "JobNotes", "JobDirections", "JobCustomField1", "JobCustomField2", "JobCustomField3", "JobCustomField4", "JobCustomField5", "JobCustomField6", "JobCustomList1", "JobCustomList2", "JobCustomList3", "JobCustomList4", "JobCustomList5", "JobCustomList6"];
+const allOwnerFieldCaptionNames = ["ContactCompany", "ContactPerson", "ContactProfession", "ContactFirstName", "ContactLastName", "ContactSupervisor", "ContactSpouse", "ContactTaxID", "ContactWebSite", "ContactEmail", "ContactFax", "ContactWorkersCompDate", "ContactInsuranceDate", "ContactComments", "ContactNotes", "ContactPhones", "ContactAddresses", "ContactCustomField1", "ContactCustomField2", "ContactCustomField3", "ContactCustomField4", "ContactCustomField5", "ContactCustomField6", "ContactCustomList1", "ContactCustomList2", "ContactCustomList3", "ContactCustomList4", "ContactCustomList5", "ContactCustomList6"];
 /***********************************************************************************************/
 let jobsPerPage = 20;
 let jCurrentPage = 1;
@@ -181,7 +182,7 @@ function createJobList(customUrl){
           tbl += "    <tr>";
     
       $.ajax({      
-        url: '/api/v1/fieldcaptions?fields=JobId,' + allJobFieldCaptionNames.join(","),
+        url: '/api/v1/fieldcaptions?fields=JobId,' + allJobFieldCaptionNames.join(",") + "," + allOwnerFieldCaptionNames.join(','),
         dataType:'json',
         success: function(names){
           if(names == 'InvalidLogin'){
@@ -215,6 +216,20 @@ function createJobList(customUrl){
                 } else {
                   tbl += "<td><a href='#' onclick=\"return false;\">" + jobs.content[i][this] + "</a></td>";
                 }
+              }else if(this == "ContactAddresses"){
+                const addressArr = jobs.content[i][this].split(";");
+                let addresses = "";
+                $.each(addressArr, function(){
+                  addresses += "<div>" + this + "</div>";
+                });
+                tbl += "<td>" + addresses + "</td>";
+              }else if(this == "ContactPhones"){
+                const phoneArr = jobs.content[i][this].split(",");
+                let phones = "";
+                $.each(phoneArr, function(){
+                  phones += "<div>" + this + "</div>";
+                });
+                tbl += "<td>" + phones + "</td>";
               }else if(this == "JobNotes"){
                 tbl += "<td>" + jobs.content[i][this]; //.replace(/\\n/g, '<br />') + "</td>";
               // }else if(this == "JobAddress1"){
@@ -293,7 +308,7 @@ function getJobListFieldsToShowArray(){
 }
 
 function editJobListColumns(){
-  var jobFieldNames;
+  let jobFieldNames, ownerFieldNames;
 
   $.ajax({
     url: "/api/v1/fieldcaptions?fields=" + allJobFieldCaptionNames.join(','),
@@ -305,86 +320,123 @@ function editJobListColumns(){
 
       jobFieldNames = names;
 
-      var msg = "<div id='jobListFieldSettingsToggle' class='row'>";
+      $.ajax({
+        url: "/api/v1/fieldcaptions?fields=" + allOwnerFieldCaptionNames.join(','),
+        dataType: 'json',
+        success: function (names) {
+          if (names == 'InvalidLogin') {
+            logout();
+          }
+
+          ownerFieldNames = names;
+
+          var msg = "";
+          msg += "<div class='row'>";
+          msg += " <div class='col-xs-12'>";
+          msg += "  <div class='checkbox'>";
+          msg += "    <label>";
+          msg += "      <input type='checkbox' id='checkAllJobFieldBoxes' onchange='toggleAllJobFields();'> Check / Uncheck All";
+          msg += "    </label>";
+          msg += "  </div>";
+          msg += " </div>";
+          msg += "</div>";
+          msg += "<div id='jobListFieldSettingsToggle' class='row'>";
           msg += "<form role='form' name='jobFieldsToShowForm'>";
 
-      var fieldValues = getJobListFieldsToShowArray();
+          var fieldValues = getJobListFieldsToShowArray();
 
-      msg += "<div class='col-xs-12'>";
-      msg += "<h4>Job Fields</h4>";
+          msg += "<div class='col-xs-6 col-lg-4'>";
+          msg += "<h4>Job Fields</h4>";
 
-      $.each(jobFieldNames, function(i){
-        msg += "<div class='checkbox'><label>";
+          $.each(jobFieldNames, function(i){
+            msg += "<div class='checkbox'><label>";
 
-        if($.inArray(i, fieldValues) != -1){
-          msg += "<input type='checkbox' checked='checked' name='" + i + "'> <span class='activeFieldColor'>" + this + "</span>";
-        }else{
-          msg += "<input type='checkbox' name='" + i + "'> <span class='notActiveColor'>" + this + "</span>";
-        }
-
-        msg += "</label></div>";
-      });
-
-      msg += "</div>";
-      msg += "</form>";
-      msg += "</div>";
-      msg += "<div class='row'>";
-      msg += "  <div class='col-xs-12'>";
-      msg += "    <div class='checkbox'>";
-      msg += "      <label>";
-      msg += "        <input type='checkbox' id='checkAllJobFieldBoxes' onchange='toggleAllJobFields();'> Check / Uncheck All";
-      msg += "      </label>";
-      msg += "    </div>";
-      msg += "  </div>";
-      msg += "</div>";
-
-      BootstrapDialog.show({
-        title: "Choose Fields To Show On Job List",
-        message: msg,
-        buttons:[{
-          label: "Defaults",
-          cssClass: "btn-warning",
-          action: function(){
-            $.each($("form[name=jobFieldsToShowForm] input[type=checkbox]"), function(){
-              $(this).prop("checked", false);
-            });
-
-            $.each(defaultJobFieldsToShow.split(','), function(){
-              $("form[name=jobFieldsToShowForm] input[name=" + this + "]").prop("checked", true);
-            });
-          }
-        },{
-          label: "Cancel",
-          action: function(dialogRef){
-            dialogRef.close();
-          }
-        },{
-          label: "Save Changes",
-          cssClass: "btn-primary",
-          action: function(dialogRef){
-            var activeTaskFields = [];
-            var inputList = $("form[name=jobFieldsToShowForm]").serializeArray();
-
-            if(inputList.length <= 0){
-              alert("You need to have at least 1 field active");
-              return false;
+            if($.inArray(i, fieldValues) != -1){
+              msg += "<input type='checkbox' checked='checked' name='" + i + "'> <span class='activeFieldColor'>" + this + "</span>";
+            }else{
+              msg += "<input type='checkbox' name='" + i + "'> <span class='notActiveColor'>" + this + "</span>";
             }
 
-            $.each(inputList, function(){
-              activeTaskFields.push($(this).attr("name"));
-            });
+            msg += "</label></div>";
+          });
 
-            setCookie("JobListFieldsToShow", activeTaskFields.join(','));
-            setCookie("JobListSort", "[[0,0]]"); // resets table sort (solves issues when someone removes the sorted list)
-            createJobList();
+          msg += "</div>";
+          msg += "<div class='col-xs-6 col-lg-4'>";
+          msg += "<h4>Owner Fields</h4>";
 
-            dialogRef.close();
+          $.each(ownerFieldNames, function (i) {
+            msg += "<div class='checkbox'><label>";
+
+            if ($.inArray(i, fieldValues) != -1) {
+              msg += "<input type='checkbox' checked='checked' name='" + i + "'> <span class='activeFieldColor'>" + this + "</span>";
+            } else {
+              msg += "<input type='checkbox' name='" + i + "'> <span class='notActiveColor'>" + this + "</span>";
+            }
+
+            msg += "</label></div>";
+          });
+
+          msg += "</div>";
+
+          msg += "</form>";
+          msg += "</div>";
+
+          BootstrapDialog.show({
+            title: "Choose Fields To Show On Job List",
+            message: msg,
+            buttons:[{
+              label: "Defaults",
+              cssClass: "btn-warning",
+              action: function(){
+                $.each($("form[name=jobFieldsToShowForm] input[type=checkbox]"), function(){
+                  $(this).prop("checked", false);
+                });
+
+                $.each(defaultJobFieldsToShow.split(','), function(){
+                  $("form[name=jobFieldsToShowForm] input[name=" + this + "]").prop("checked", true);
+                });
+              }
+            },{
+              label: "Cancel",
+              action: function(dialogRef){
+                dialogRef.close();
+              }
+            },{
+              label: "Save Changes",
+              cssClass: "btn-primary",
+              action: function(dialogRef){
+                var activeTaskFields = [];
+                var inputList = $("form[name=jobFieldsToShowForm]").serializeArray();
+
+                if(inputList.length <= 0){
+                  alert("You need to have at least 1 field active");
+                  return false;
+                }
+
+                $.each(inputList, function(){
+                  activeTaskFields.push($(this).attr("name"));
+                });
+
+                setCookie("JobListFieldsToShow", activeTaskFields.join(','));
+                setCookie("JobListSort", "[[0,0]]"); // resets table sort (solves issues when someone removes the sorted list)
+                createJobList();
+
+                dialogRef.close();
+              }
+            }]
+          });
+        },
+        error: function(jqXhr, textStatus, errorThrown){
+          if(jqXhr.responseText == 'InvalidLogin'){
+            logout();
           }
-        }]
+
+          alert(errorThrown);
+        }
       });
     },
-    error: function(jqXhr, textStatus, errorThrown){
-      if(jqXhr.responseText == 'InvalidLogin'){
+    error: function (jqXhr, textStatus, errorThrown) {
+      if (jqXhr.responseText == 'InvalidLogin') {
         logout();
       }
 
@@ -415,7 +467,7 @@ function editJobFieldOrder(){
   msg += "<ul id='sortableFields'>";
 
   $.ajax({
-    url: "/api/v1/fieldcaptions?fields=" + allJobFieldCaptionNames.join(','),
+    url: "/api/v1/fieldcaptions?fields=" + allJobFieldCaptionNames.join(',') + "," + allOwnerFieldCaptionNames.join(','),
     dataType:'json',
     success: function(names){
       if(names == 'InvalidLogin'){

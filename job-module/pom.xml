@@ -17,7 +17,7 @@
 
     <properties>
         <java.version>17</java.version>
-        <querydsl.version>5.0.0</querydsl.version>
+        <querydsl.version>5.1.0</querydsl.version>
         <mapscruct.version>1.5.5.Final</mapscruct.version>
         <sonar.coverage.jacoco.xmlReportPaths>
             ${project.basedir}/../jacoco-aggregator/target/site/jacoco-aggregate/jacoco.xml

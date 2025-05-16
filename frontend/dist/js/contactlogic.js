@@ -205,8 +205,20 @@ function createContactList(customUrl){
                 } else {
                   tbl += "<td><a href='#' onclick=\"return false;\">" + contacts.content[i][this] + "</a></td>";
                 }
-              }else if(this == "ContactNotes"){
-                tbl += "<td>" + contacts.content[i][this]; //.replace(/\\n/g, '<br />') + "</td>";
+              }else if(this == "ContactAddresses"){
+                const addressArr = contacts.content[i][this].split(";");
+                let addresses = "";
+                $.each(addressArr, function(){
+                  addresses += "<div>" + this + "</div>";
+                });
+                tbl += "<td>" + addresses + "</td>";
+              }else if(this == "ContactPhones"){
+                const phoneArr = contacts.content[i][this].split(",");
+                let phones = "";
+                $.each(phoneArr, function(){
+                  phones += "<div>" + this + "</div>";
+                });
+                tbl += "<td>" + phones + "</td>";
               }else if(contactFieldsArray[j] == "ContactWorkersCompDate" || contactFieldsArray[j] == "ContactInsuranceDate"){
                 tbl += "<td>" + formatDate(contacts.content[i][contactFieldsArray[j]]) + "</td>";
               }else {

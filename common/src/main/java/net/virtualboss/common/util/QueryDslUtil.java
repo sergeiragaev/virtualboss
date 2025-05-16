@@ -36,6 +36,8 @@ public class QueryDslUtil {
     );
     private static final String FIELD_VALUE = "fieldValue";
     private static final String FIELD = "field";
+    private static final String ADDRESSES = "addresses";
+    private static final String PHONES = "phones";
 
     private QueryDslUtil() {
         throw new IllegalStateException("Utility class");
@@ -87,12 +89,12 @@ public class QueryDslUtil {
             return createTaskStatusColorExpression();
         }
 
-        if ("addresses".equals(entityFieldName) && fieldsList.contains(dtoFieldName)) {
-            return createAddressesExpression(qEntity);
+        if (ADDRESSES.equals(entityFieldName) && fieldsList.contains(dtoFieldName)) {
+            return createAddressesExpression(qEntity, false);
         }
 
-        if ("phones".equals(entityFieldName) && fieldsList.contains(dtoFieldName)) {
-            return createPhonesExpression(qEntity);
+        if (PHONES.equals(entityFieldName) && fieldsList.contains(dtoFieldName)) {
+            return createPhonesExpression(qEntity, false);
         }
 
         if (isSimpleType(dtoField.getType())) {
@@ -186,11 +188,11 @@ public class QueryDslUtil {
 
     private static boolean isSimpleType(Class<?> type) {
         return type.isEnum() ||
-                type.isPrimitive() ||
-                SIMPLE_TYPES.contains(type) ||
-                Number.class.isAssignableFrom(type) ||
-                Date.class.isAssignableFrom(type) ||
-                java.time.temporal.Temporal.class.isAssignableFrom(type);
+               type.isPrimitive() ||
+               SIMPLE_TYPES.contains(type) ||
+               Number.class.isAssignableFrom(type) ||
+               Date.class.isAssignableFrom(type) ||
+               java.time.temporal.Temporal.class.isAssignableFrom(type);
     }
 
     private static Expression<?> getQEntityExpression(Object qEntity, String fieldName) {
@@ -252,12 +254,12 @@ public class QueryDslUtil {
             case "owner.person" -> createContactPersonExpression(job.owner);
             case CONTACT_PERSON_FIELD -> createContactPersonExpression(QContact.contact);
             case "taskOrder" -> createTaskOrderExpression();
-            case "addresses" -> createAddressesExpression(QContact.contact);
-            case "contact.addresses" -> createAddressesExpression(task.contact);
-            case "owner.addresses" -> createAddressesExpression(job.owner);
-            case "phones" -> createPhonesExpression(QContact.contact);
-            case "contact.phones" -> createPhonesExpression(task.contact);
-            case "owner.phones" -> createPhonesExpression(job.owner);
+            case ADDRESSES -> createAddressesExpression(QContact.contact, true);
+            case "contact.addresses" -> createAddressesExpression(task.contact, true);
+            case "owner.addresses" -> createAddressesExpression(job.owner, true);
+            case PHONES -> createPhonesExpression(QContact.contact, true);
+            case "contact.phones" -> createPhonesExpression(task.contact, true);
+            case "owner.phones" -> createPhonesExpression(job.owner, true);
             default -> isCustomFieldPath(property)
                     ? handleCustomFieldSort(property, entityPath)
                     : entityPath.getComparable(property, Comparable.class);
@@ -281,48 +283,61 @@ public class QueryDslUtil {
         return Expressions.stringTemplate("string_agg(cast({0} as text), ',')", valuePath);
     }
 
-    private static Expression<String> createAddressesExpression(Object qEntity) {
-        QAddress address = new QAddress("addresses");
+    private static Expression<String> createAddressesExpression(Object qEntity, boolean forSorting) {
+        if (forSorting) return Expressions.stringPath(ADDRESSES);
+
+        QAddress address = QAddress.address;
         QCommunicationType type = QCommunicationType.communicationType;
 
-        return JPAExpressions.select(
+        return ExpressionUtils.as(
+                JPAExpressions.select(
                         Expressions.stringTemplate(
                                 "string_agg( cast(coalesce(CONCAT_WS(', ', " +
-                                        "CONCAT({0}, ': ', {1}, " +
-                                        "CASE WHEN {2} IS NOT NULL AND {2} <> '' THEN CONCAT(', ', {2}) ELSE '' END), " +
-                                        "{3}, {4}, {5}), '') as text), {6})",
+                                "CONCAT({0}, ': ', {1}, " +
+                                "CASE WHEN {2} IS NOT NULL AND {2} <> '' THEN CONCAT(', ', {2}) ELSE '' END), " +
+                                "{3}, {4}, {5}), '') as text), ';')",
                                 type.caption,
                                 address.address1,
                                 address.address2,
                                 address.city,
                                 address.state,
-                                address.postal,
-                                ConstantImpl.create(";")
+                                address.postal
                         )
                 )
                 .from(address)
                 .leftJoin(address.type, type)
                 .where(address.address1.isNotEmpty())
-                .where(address.entityId.eq(((QContact) qEntity).id))  // Пример условия
-                .groupBy(address.entityId);
+                .where(address.entityId.eq(((QContact) qEntity).id))
+                .groupBy(address.entityId),
+                ADDRESSES
+        );
     }
 
-    private static Expression<String> createPhonesExpression(Object qEntity) {
-        QCommunication comm = new QCommunication("phones");
+    private static Expression<?> createPhonesExpression(Object qEntity, boolean forSorting) {
+        if (forSorting) return Expressions.stringPath(PHONES);
+
+        QCommunication comm = QCommunication.communication;
         QCommunicationType type = QCommunicationType.communicationType;
 
-        return JPAExpressions.select(
+        return ExpressionUtils.as(
+                JPAExpressions.select(
                         Expressions.stringTemplate(
-                                "string_agg( cast(coalesce(case when {0} is not null and {0} <> '' then {1} || ': ' || {0} else null end, '') as text), {2})",
+                                "string_agg(cast(coalesce(" +
+                                "case when {0} is not null and {0} <> '' then {1} || ': ' || {0} " +
+                                "else null end, '') as text), ',')",
                                 comm.title,
-                                type.caption,
-                                ConstantImpl.create(",")
-                        )
+                                type.caption)
                 )
                 .from(comm)
                 .leftJoin(comm.type, type)
                 .where(comm.entityId.eq(((QContact) qEntity).id))
-                .groupBy(comm.entityId);
+                .groupBy(comm.entityId),
+                PHONES
+        );
+    }
+
+    public static Expression<String> safeOrderBy(Expression<?> expr) {
+        return Expressions.stringTemplate("({0})", expr); // предотвращает склейку by+имя
     }
 
     private static Expression<String> createContactPersonExpression(Object qEntity) {

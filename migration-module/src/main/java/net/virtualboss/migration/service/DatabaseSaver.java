@@ -3,6 +3,7 @@ package net.virtualboss.migration.service;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.MigrationException;
 import net.virtualboss.common.model.entity.Field;
+import net.virtualboss.common.model.enums.ChannelType;
 import net.virtualboss.common.web.dto.CustomValueDto;
 import net.virtualboss.migration.config.MigrationConfig;
 import net.virtualboss.migration.dto.FieldRowMapper;
@@ -49,6 +50,13 @@ public class DatabaseSaver {
     private final Map<String, UUID> companyCache = new ConcurrentHashMap<>();
 
     private static final String FLUSHING_BUFFER_MESSAGE = "Flushing buffer for {} ({} records)";
+
+    private static final String ADDRESS1 = "address1";
+    private static final String ADDRESS2 = "address2";
+    private static final String CITY = "city";
+    private static final String STATE = "state";
+    private static final String POSTAL = "postal";
+    private static final String COUNTRY = "country";
 
     public DatabaseSaver(JdbcTemplate jdbcTemplate, MigrationConfig migrationConfig) {
         this.jdbcTemplate = jdbcTemplate;
@@ -369,12 +377,11 @@ public class DatabaseSaver {
         attachmentsBuffer.clear();
     }
 
-    @Transactional
-    public void addCommunications(String entityId, String caption, String channel, String title) {
+    public void addCommunications(String entityId, String caption, ChannelType type, String title) {
         if (title.isBlank()) return;
         Map<String, Object> communication = new HashMap<>();
         communication.put("caption", caption);
-        communication.put("channel", channel);
+        communication.put("channel", type);
         communication.put("title", title);
 
         communicationsBuffer
@@ -386,8 +393,8 @@ public class DatabaseSaver {
         }
     }
 
-    private UUID getOrCacheCommunicationId(String caption, String channel) {
-        return communicationTypeCache.computeIfAbsent(Pair.of(caption, channel), pair -> {
+    private UUID getOrCacheCommunicationId(String caption, ChannelType channelType) {
+        return communicationTypeCache.computeIfAbsent(Pair.of(caption, channelType.toString()), pair -> {
                     List<UUID> existingIds = jdbcTemplate.query(connection -> {
                                 PreparedStatement ps = connection.prepareStatement(
                                         "SELECT id FROM communication_types WHERE lower(caption) = ? and channel = ?"
@@ -433,9 +440,9 @@ public class DatabaseSaver {
                         communication -> {
                             String title = communication.get("title").toString();
                             String caption = communication.get("caption").toString();
-                            String channel = communication.get("channel").toString();
+                            ChannelType channelType = (ChannelType) communication.get("channel");
 
-                            UUID communicationId = getOrCacheCommunicationId(caption, channel);
+                            UUID communicationId = getOrCacheCommunicationId(caption, channelType);
                             UUID id = UUID.randomUUID();
 
                             batchArgs.add(new Object[]{id, entityId, communicationId, title});
@@ -478,19 +485,19 @@ public class DatabaseSaver {
         addJobAddress(contactId.toString(), values);
 
         addCommunications(
-                contactId.toString(), "Job Home", "PHONE",
+                contactId.toString(), "Job Home", ChannelType.PHONE,
                 values.get("homePhone").toString()
         );
         addCommunications(
-                contactId.toString(), "Job Work", "PHONE",
+                contactId.toString(), "Job Work", ChannelType.PHONE,
                 values.get("workPhone").toString()
         );
         addCommunications(
-                contactId.toString(), "Job Cellular", "PHONE",
+                contactId.toString(), "Job Cellular", ChannelType.PHONE,
                 values.get("cellPhone").toString()
         );
         addCommunications(
-                contactId.toString(), "Job Fax", "PHONE",
+                contactId.toString(), "Job Fax", ChannelType.PHONE,
                 values.get("fax").toString()
         );
 
@@ -499,12 +506,12 @@ public class DatabaseSaver {
 
     private void addJobAddress(String contactId, Map<String, Object> values) {
         Map<String, Object> address = new HashMap<>();
-        address.put("address1", values.get("address1"));
-        address.put("address2", values.get("address2"));
-        address.put("city", values.get("city"));
-        address.put("state", values.get("state"));
-        address.put("postal", values.get("postal"));
-        address.put("country", values.get("country"));
+        address.put(ADDRESS1, values.get(ADDRESS1));
+        address.put(ADDRESS2, values.get(ADDRESS2));
+        address.put(CITY, values.get(CITY));
+        address.put(STATE, values.get(STATE));
+        address.put(POSTAL, values.get(POSTAL));
+        address.put(COUNTRY, values.get(COUNTRY));
 
         addressesBuffer
                 .computeIfAbsent(contactId, k -> new ArrayList<>())
@@ -523,16 +530,17 @@ public class DatabaseSaver {
         addressesBuffer.forEach((entityId, addresses) ->
                 addresses.forEach(
                         address -> {
-                            String address1 = address.get("address1").toString();
-                            String address2 = address.get("address2").toString();
-                            String city = address.get("city").toString();
-                            String state = address.get("state").toString();
-                            String postal = address.get("postal").toString();
-                            String country = address.get("country").toString();
+                            String address1 = address.get(ADDRESS1).toString();
+                            String address2 = address.get(ADDRESS2).toString();
+                            String city = address.get(CITY).toString();
+                            String state = address.get(STATE).toString();
+                            String postal = address.get(POSTAL).toString();
+                            String country = address.get(COUNTRY).toString();
 
                             UUID id = UUID.randomUUID();
 
-                            UUID communicationId = getOrCacheCommunicationId("Job site", "ADDRESS");
+                            UUID communicationId = getOrCacheCommunicationId(
+                                    "Job site", ChannelType.ADDRESS);
 
                             batchArgs.add(new Object[]{id, entityId, communicationId, address1, address2,
                                     city, state, postal, country});

@@ -114,12 +114,19 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
         QFieldValue fieldValueJob = new QFieldValue("fieldValueJob");
         QField fieldJob = new QField("fieldJob");
         QCompany company = QCompany.company;
+        QContact owner = job.owner;
+        QFieldValue fieldValueContact = new QFieldValue("fieldValueContact");
+        QField fieldContact = new QField("fieldContact");
+        QProfession profession = QProfession.profession;
 
         return List.of(
                 new CollectionJoin<>(job.customFieldsAndListsValues, fieldValueJob, JoinType.LEFTJOIN),
                 new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN),
+                new CollectionJoin<>(owner.customFieldsAndListsValues, fieldValueContact, JoinType.LEFTJOIN),
+                new EntityJoin<>(fieldValueContact.field, fieldContact, JoinType.LEFTJOIN),
                 new EntityJoin<>(job.owner, QContact.contact, JoinType.LEFTJOIN),
-                new EntityJoin<>(QContact.contact.company, company, JoinType.LEFTJOIN)
+                new EntityJoin<>(QContact.contact.company, company, JoinType.LEFTJOIN),
+                new EntityJoin<>(QContact.contact.profession, profession, JoinType.LEFTJOIN)
         );
     }
 
@@ -128,7 +135,8 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
         return List.of(
                 new GroupByExpression(QJob.job.id),
                 new GroupByExpression(QCompany.company.id),
-                new GroupByExpression(QContact.contact.id)
+                new GroupByExpression(QContact.contact.id),
+                new GroupByExpression(QProfession.profession.id)
         );
     }
 
@@ -177,13 +185,13 @@ public class JobService extends GenericService<Job, UUID, JobResponse, QJob> {
     protected Set<String> parseFields(String fields) {
         return Arrays.stream(fields.split(","))
                 .map(field -> {
-                    if (field.contains(getCustomFieldPrefix())) return getCustomFieldsAndListsPrefix() + "." + field;
-                    if (field.contains("ContactCustom")) return "owner.ContactCustomFieldsAndLists." + field;
+                    if (field.startsWith(getCustomFieldPrefix())) return getCustomFieldsAndListsPrefix() + "." + field;
+                    if (field.startsWith("ContactCustom")) return "owner.ContactCustomFieldsAndLists." + field;
                     if (field.equals("ContactCompany")) return "owner.company." + field;
+                    if (field.equals("ContactProfession")) return "owner.profession." + field;
                     if (field.startsWith("Contact")) return "owner." + field;
                     return field;
                 })
                 .collect(Collectors.toSet());
     }
-
 }

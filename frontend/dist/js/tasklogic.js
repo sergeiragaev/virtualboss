@@ -230,6 +230,20 @@ function formatTaskCell(task, field) {
       } else {
         return "<td><a href='#' onclick=\"return false;\">" + caption.replace(/&/g, '&#38').replace(/</g, '&lt').replace(/>/g, '&gt') + "</a></td>";
       }
+    case 'ContactAddresses':
+      const addressArr = task[field].split(";");
+      let addresses = "";
+      $.each(addressArr, function(){
+        addresses += "<div>" + this + "</div>";
+      });
+      return "<td>" + addresses + "</td>";
+    case 'ContactPhones':
+      const phoneArr = task[field].split(",");
+      let phones = "";
+      $.each(phoneArr, function(){
+        phones += "<div>" + this + "</div>";
+      });
+      return "<td>" + phones + "</td>";
     case 'TaskTargetStart':
     case 'TaskTargetFinish':
       return "<td>" + formatDate(task[field]) + "</td>";

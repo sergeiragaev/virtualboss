@@ -22,11 +22,11 @@ public interface JobMapperV1 {
     default Job requestToJob(UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
         Job job = requestToJob(request);
         return addCustomFLAndGroups(job, customFieldsAndLists,
-                request.getGroups());
+                request.getGroups(), request.getOwnerId());
     }
 
     @Mapping(target = "owner", ignore = true)
-    Job addCustomFLAndGroups(Job job, CustomFieldsAndLists customFieldsAndLists, String jobGroups);
+    Job addCustomFLAndGroups(Job job, CustomFieldsAndLists customFieldsAndLists, String jobGroups, String ownerId);
 
     default Job requestToJob(String id, UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
         Job job = requestToJob(request, customFieldsAndLists);

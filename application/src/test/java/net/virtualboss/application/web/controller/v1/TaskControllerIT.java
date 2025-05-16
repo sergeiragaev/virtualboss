@@ -35,6 +35,7 @@ class TaskControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("test get task by id test")
+    @Transactional
     void getTaskById_ReturnsValidTask() throws Exception {
         Task task = saveTaskInDbAndGet(
                 generateTestTaskRequest(),
@@ -51,6 +52,7 @@ class TaskControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("task successfully deleted test")
+    @Transactional
     void deleteTaskById_CorrectDelete() throws Exception {
         Task task = saveAndGetTestTaskToDelete();
         mockMvc.perform(delete("/task/" + task.getId()))
@@ -59,6 +61,7 @@ class TaskControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("task deletion failed of fake id test")
+    @Transactional
     void deleteTaskById_NotFound() throws Exception {
         Task task = saveAndGetTestTaskToDelete();
         task.setId(UUID.randomUUID());
@@ -97,7 +100,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                 .andExpect(jsonPath("content.[0].TaskStatus").value(testTaskRequest.getStatus().toCamelCase()))
                 .andExpect(jsonPath("content.[0].JobNumber").value(testTaskReference.getJobNumber()))
                 .andExpect(jsonPath("content.[0].ContactCompany").value(
-                        contactRepository.getReferenceById(UUID.fromString(testTaskReference.getContactId())).getCompany()))
+                        contactRepository.getReferenceById(UUID.fromString(testTaskReference.getContactId())).getCompany().getName()))
                 .andExpect(jsonPath("content.[0].TaskCustomField1").value("task custom field 1"))
                 .andExpect(jsonPath("content.[0].JobCustomList1").value("job custom list 1"))
                 .andExpect(jsonPath("content.[0].ContactCustomField4").value("contact custom field 4"))
@@ -106,6 +109,7 @@ class TaskControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("creating task test")
+    @Transactional
     void createTask() throws Exception {
         CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder()
                 .customField1("test custom field1")
@@ -131,6 +135,7 @@ class TaskControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("update task description is correct test")
+    @Transactional
     void updateTaskDescription_CorrectUpdate() throws Exception {
         Task newTask = saveAndGetTestTaskToUpdate();
         UpsertTaskRequest updatedTaskRequest = getUpdatedTaskRequestByTask(newTask);
@@ -155,6 +160,7 @@ class TaskControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("update task's dates by it's id is correct test")
+    @Transactional
     void updateTaskDates_CorrectUpdate() throws Exception {
         Task newTask = saveAndGetTestTaskToUpdate();
         mockMvc.perform(put("/task")
@@ -173,6 +179,7 @@ class TaskControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("update assigning task to Unassigned contact and empty job is correct test")
+    @Transactional
     void updateAssigningTaskToUnassignedContactAndEmptyJob_CorrectUpdate() throws Exception {
         Task newTask = saveAndGetTestTaskToUpdate();
         UpsertTaskRequest updatedTaskRequest = getUpdatedTaskRequestByTask(newTask);

@@ -10,8 +10,6 @@ import java.util.UUID;
 @Builder
 public class UpsertContactRequest {
     private UUID id;
-    private String company;
-    private String profession;
     private String firstName;
     private String lastName;
     private String supervisor;
@@ -24,6 +22,7 @@ public class UpsertContactRequest {
     private String notes;
     private String fax;
     private String email;
-    private String phones;
+    private String company;
+    private String profession;
     private String groups;
 }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -31,6 +32,7 @@ class JobControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("test get job by id")
+    @Transactional
     void getJobById_ReturnsValidJob() throws Exception {
         Job job = saveJobInDbAndGet(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
         String customValue = job.getCustomValueByName("JobCustomField2");
@@ -44,6 +46,7 @@ class JobControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("job successfully deleted test")
+    @Transactional
     void deleteJobById_CorrectDelete() throws Exception {
         Job job = saveAndGetTestJobToDelete();
         mockMvc.perform(delete("/job/" + job.getId()))
@@ -52,6 +55,7 @@ class JobControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("job deletion failed of fake id test")
+    @Transactional
     void deleteJobById_NotFound() throws Exception {
         Job job = saveAndGetTestJobToDelete();
         job.setId(UUID.randomUUID());
@@ -60,6 +64,7 @@ class JobControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("creating job test")
+    @Transactional
     void createJob() throws Exception {
         CustomFieldsAndLists customFieldsAndLists = CustomFieldsAndLists.builder()
                 .customField1("test custom field1")
@@ -104,6 +109,7 @@ class JobControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("search jobs with specific criteria api test")
+    @Transactional
     void searchJobs() throws Exception {
         UpsertJobRequest testRequest = generateTestJobRequest();
         saveJobInDbAndGet(testRequest, generateTestJobCustomFieldsRequest());
@@ -121,6 +127,7 @@ class JobControllerIT extends TestDependenciesContainer {
 
     @Test
     @DisplayName("search deleted job test")
+    @Transactional
     void searchDeletedJob() throws Exception {
         UpsertJobRequest testRequest = generateTestJobRequest();
         Job job = saveJobInDbAndGet(testRequest, generateTestJobCustomFieldsRequest());
@@ -139,7 +146,7 @@ class JobControllerIT extends TestDependenciesContainer {
     private Job saveAndGetTestJobToUpdate() {
         return saveJobInDbAndGet(UpsertJobRequest.builder()
                         .number("new job number")
-                        .postal("new postal")
+//                        .postal("new postal")
                         .build(),
                 generateTestJobCustomFieldsRequest());
     }

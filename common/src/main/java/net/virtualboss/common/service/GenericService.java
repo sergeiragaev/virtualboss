@@ -221,7 +221,7 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
     protected Set<String> parseFields(String fields) {
         return Arrays.stream(fields.split(","))
                 .map(field -> {
-                    if (field.contains(getCustomFieldPrefix())) {
+                    if (field.startsWith(getCustomFieldPrefix())) {
                         return getCustomFieldsAndListsPrefix() + "." + field;
                     }
                     return field;

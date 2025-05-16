@@ -3,14 +3,11 @@ package net.virtualboss.application.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import net.virtualboss.common.model.entity.*;
 import net.virtualboss.common.repository.*;
 import net.virtualboss.contact.mapper.v1.ContactMapperV1;
 import net.virtualboss.job.mapper.v1.JobMapperV1;
 import net.virtualboss.task.mapper.v1.TaskMapperV1;
-import net.virtualboss.common.model.entity.Contact;
-import net.virtualboss.common.model.entity.Group;
-import net.virtualboss.common.model.entity.Job;
-import net.virtualboss.common.model.entity.Task;
 import net.virtualboss.common.model.enums.EntityType;
 import net.virtualboss.common.model.enums.TaskStatus;
 import net.virtualboss.task.service.TaskService;
@@ -71,6 +68,10 @@ public class TestDependenciesContainer {
     protected TaskService taskService;
     @Autowired
     protected HolidayRepository holidayRepository;
+    @Autowired
+    protected CompanyRepository companyRepository;
+    @Autowired
+    protected ProfessionRepository professionRepository;
 
     protected MockMvc mockMvc;
 
@@ -223,33 +224,33 @@ public class TestDependenciesContainer {
                 .company("Contact company")
                 .insuranceDate(LocalDate.now().plusYears(2))
                 .workersCompDate(LocalDate.now().plusYears(1))
-                .phones("Contact phones number")
                 .groups(String.valueOf(group.getId()))
                 .build();
     }
 
     protected UpsertJobRequest generateTestJobRequest() {
         Group group = saveJobGroupInDbAndGet();
+        Contact contact = saveContactInDbAndGet(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
         return UpsertJobRequest.builder()
-                .address1("Address first row")
-                .address2("Address second row")
-                .city("City")
-                .state("State")
+//                .address1("Address first row")
+//                .address2("Address second row")
+//                .city("City")
+//                .state("State")
                 .email("job@email.com")
-                .fax("Fax number")
+//                .fax("Fax number")
                 .lot("Lot number")
-                .company("Job Company")
-                .country("Country")
-                .cellPhone("Cellphone number")
+//                .company("Job Company")
+//                .country("Country")
+//                .cellPhone("Cellphone number")
                 .directions("Directions to job")
                 .lockBox("Loc box number")
                 .notes("Job notes")
-                .homePhone("Home phone number")
-                .postal("zip")
-                .ownerName("Owner name")
+//                .homePhone("Home phone number")
+//                .postal("zip")
+                .ownerId(String.valueOf(contact.getId()))
                 .subdivision("Subdivision")
                 .number("Some job")
-                .workPhone("Work phone number")
+//                .workPhone("Work phone number")
                 .groups(String.valueOf(group.getId()))
                 .build();
     }
@@ -300,6 +301,8 @@ public class TestDependenciesContainer {
         contactRepository.deleteAll();
         employeeRepository.deleteAll();
         groupRepository.deleteAll();
+        companyRepository.deleteAll();
+        professionRepository.deleteAll();
     }
 
     protected String getQueryString(String unparsedString,

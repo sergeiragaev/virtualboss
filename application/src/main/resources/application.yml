@@ -61,6 +61,6 @@ server:
 
 file:
   upload:
-    path: "application/src/main/resources/temp/"
+    path: ${FILE_UPLOAD_PATH:classpath:temp/}
 migration:
-  test-data-path: "application/src/test/resources/testdata"
+  test-data-path: "classpath:testdata"

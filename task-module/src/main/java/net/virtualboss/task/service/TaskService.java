@@ -345,20 +345,19 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
     }
 
     private void adjustDateRangeForSpecialCases(TaskFilter filter) {
-        LocalDate referenceDate = filter.getThisDate() == null ? LocalDate.now() : filter.getThisDate();
+        LocalDate referenceDate = filter.getThisDate() != null ? filter.getThisDate() : LocalDate.now();
 
-        Integer dateCriteriaValue = filter.getDateCriteria();
-        DateCriteria dateCriteria = dateCriteriaValue != null
-                ? DateCriteria.fromValue(dateCriteriaValue)
-                : DateCriteria.EXACT; // default value
+        DateCriteria dateCriteria = Optional.ofNullable(filter.getDateCriteria())
+                .map(DateCriteria::fromValue)
+                .orElse(DateCriteria.EXACT);
 
-        if (dateCriteria == DateCriteria.ON_OR_BEFORE) {
-            filter.setDateTo(referenceDate);
-        } else if (dateCriteria == DateCriteria.ON_OR_AFTER) {
-            filter.setDateFrom(referenceDate);
-        } else {
-            filter.setDateFrom(referenceDate);
-            filter.setDateTo(referenceDate);
+        switch (dateCriteria) {
+            case ON_OR_BEFORE -> filter.setDateTo(referenceDate);
+            case ON_OR_AFTER -> filter.setDateFrom(referenceDate);
+            default -> {
+                filter.setDateFrom(referenceDate);
+                filter.setDateTo(referenceDate);
+            }
         }
     }
 
@@ -486,7 +485,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
             if (taskIds.contains(parent.getId())) throw new CircularLinkingException(
                     MessageFormat.format(
                             "Cannot make {0} pending {1}, " +
-                                    "because {1} follows {0}",
+                            "because {1} follows {0}",
                             taskFromDb, parent)
             );
         });

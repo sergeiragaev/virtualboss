@@ -35,17 +35,21 @@ services:
     environment:
       - REDIS_PORT=6379
       - REDIS_DATABASES=1
+    networks:
+      virtualbossnet:
 
-#  virtualboss:
-#    hostname: 'virtualboss'
-#    image: ragaev/virtualboss:0.0.1-SNAPSHOT
-#    environment:
-#      - DATABASE_URL=jdbc:postgresql://postgres:5432/virtualboss
-#    ports:
-#      - "8080:8080"
-#    restart: on-failure
-#    networks:
-#      virtualbossnet:
+  virtualboss:
+    hostname: 'virtualboss'
+    image: ragaev/virtualboss:0.0.1-SNAPSHOT
+    environment:
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/virtualboss
+      - REDIS_HOST=redis
+      - FILE_UPLOAD_PATH=tmp/
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    networks:
+      virtualbossnet:
 #    deploy:
 #      placement:
 #        constraints:

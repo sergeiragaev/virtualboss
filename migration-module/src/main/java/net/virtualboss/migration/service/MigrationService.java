@@ -5,6 +5,7 @@ import com.linuxense.javadbf.DBFRow;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.MigrationException;
+import net.virtualboss.common.repository.*;
 import net.virtualboss.migration.config.MigrationConfig;
 import net.virtualboss.field.service.FieldService;
 import net.virtualboss.field.web.dto.FieldDto;
@@ -27,6 +28,7 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +48,16 @@ public class MigrationService {
 
     private final ResourceLoader resourceLoader;
 
+    private final FieldValueRepository fieldValueRepository;
+    private final TaskRepository taskRepository;
+    private final JobRepository jobRepository;
+    private final ContactRepository contactRepository;
+    private final EmployeeRepository employeeRepository;
+    private final GroupRepository groupRepository;
+    private final CompanyRepository companyRepository;
+    private final ProfessionRepository professionRepository;
+    private final TaskAttachmentRepository taskAttachmentRepository;
+
     public void migrate(String dataPath) {
 
         String pathToUse = Optional.ofNullable(dataPath)
@@ -57,6 +69,9 @@ public class MigrationService {
             String finalDataPath = baseDir.getAbsolutePath();
 
             migrateFields(finalDataPath);
+
+            clearAllRepositories();
+
             databaseSaver.preloadCaches();
 
             migrationConfig.getEntities().forEach((entityName, config) -> {
@@ -71,12 +86,23 @@ public class MigrationService {
                     relationProcessor.processEmbeddedField(finalDataPath, relation);
                 }
             });
+
+            deleteDirectory(baseDir.toPath());
+
         } catch (IOException ex) {
             throw new MigrationException(ex.getLocalizedMessage());
         }
     }
 
-    private File asDirectoryOnDisk(String path) throws IOException {
+    public void deleteDirectory(Path dir) throws IOException {
+        try (Stream<Path> paths = Files.walk(dir)) {
+            paths.sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        }
+    }
+
+    public File asDirectoryOnDisk(String path) throws IOException {
         File maybe = new File(path);
         if (maybe.exists() && maybe.isDirectory()) {
             return maybe;
@@ -175,5 +201,21 @@ public class MigrationService {
                 log.error("There is error occurred while parsing fields info for field {}: {}", name, e.getLocalizedMessage());
             }
         }
+    }
+
+    private void clearAllRepositories() {
+        fieldValueRepository.deleteAll();
+        taskAttachmentRepository.deleteAll();
+        taskRepository.markAllAsDeleted();
+        jobRepository.markAllAsDeleted();
+
+        contactRepository.markAllAsDeleted();
+        contactRepository.markAllCommunicationsAsDeleted();
+        contactRepository.markAllAddressesAsDeleted();
+
+        groupRepository.markAllAsDeleted();
+        employeeRepository.markAllAsDeleted();
+        companyRepository.markAllAsDeleted();
+        professionRepository.markAllAsDeleted();
     }
 }

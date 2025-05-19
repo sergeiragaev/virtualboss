@@ -50,11 +50,6 @@ public class JobResponse {
     @EntityMapping
     private String notes = "";
 
-    @JsonProperty("JobEmail")
-    @Builder.Default
-    @EntityMapping
-    private String email = "";
-
     @JsonProperty("JobCustomFieldsAndLists")
     @Flatten(prefix = "Job")
     @Builder.Default

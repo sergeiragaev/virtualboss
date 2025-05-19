@@ -37,6 +37,8 @@ public class JobProcessor extends BaseEntityProcessor {
 
         values.remove("company");
 
+        values.remove("email");
+
         values.remove("homePhone");
         values.remove("workPhone");
         values.remove("cellPhone");

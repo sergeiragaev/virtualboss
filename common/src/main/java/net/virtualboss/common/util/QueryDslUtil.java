@@ -292,16 +292,18 @@ public class QueryDslUtil {
         return ExpressionUtils.as(
                 JPAExpressions.select(
                         Expressions.stringTemplate(
-                                "string_agg( cast(coalesce(CONCAT_WS(', ', " +
+                                "string_agg( cast(coalesce(" +
+                                "case when NOT {6} THEN (CONCAT_WS(', ', " +
                                 "CONCAT({0}, ': ', {1}, " +
                                 "CASE WHEN {2} IS NOT NULL AND {2} <> '' THEN CONCAT(', ', {2}) ELSE '' END), " +
-                                "{3}, {4}, {5}), '') as text), ';')",
+                                "{3}, {4}, {5})) else null end, '') as text), ';')",
                                 type.caption,
                                 address.address1,
                                 address.address2,
                                 address.city,
                                 address.state,
-                                address.postal
+                                address.postal,
+                                address.isDeleted
                         )
                 )
                 .from(address)
@@ -323,9 +325,10 @@ public class QueryDslUtil {
                 JPAExpressions.select(
                         Expressions.stringTemplate(
                                 "string_agg(cast(coalesce(" +
-                                "case when {0} is not null and {0} <> '' then {1} || ': ' || {0} " +
+                                "case when {0} is not null and {0} <> '' and not {1} then {2} || ': ' || {0} " +
                                 "else null end, '') as text), ',')",
                                 comm.title,
+                                comm.isDeleted,
                                 type.caption)
                 )
                 .from(comm)

@@ -16,6 +16,5 @@ public class UpsertJobRequest {
     private String lockBox;
     private String directions;
     private String notes;
-    private String email;
     private String groups;
 }

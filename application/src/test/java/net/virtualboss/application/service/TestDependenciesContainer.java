@@ -236,7 +236,7 @@ public class TestDependenciesContainer {
 //                .address2("Address second row")
 //                .city("City")
 //                .state("State")
-                .email("job@email.com")
+//                .email("job@email.com")
 //                .fax("Fax number")
                 .lot("Lot number")
 //                .company("Job Company")

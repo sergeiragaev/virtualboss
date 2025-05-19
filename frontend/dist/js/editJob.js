@@ -10,7 +10,7 @@ function editJob(jobID){
       }
 
       $.ajax({
-        url: '/api/v1/fieldcaptions?fields=JobId,' + allJobFieldCaptionNames.join(","),
+        url: '/api/v1/fieldcaptions?fields=JobId,' + allJobFieldCaptionNames.join(",") + "," + allOwnerFieldCaptionNames.join(','),
         dataType: 'json',
         success: function(names){
           if(names == 'InvalidLogin'){
@@ -87,8 +87,8 @@ function showEditScreen(data, names){
       
       // EMAIL
       body += " <div class='col-xs-6 col-lg-4'>";
-      body += names['JobEmail'];
-      body += "   <input name='Email' type='email' class='form-control' value=\"" + data.JobEmail.replace(/&/g, '&#38').replace(/</g, '&#60').replace(/>/g, '&#62').replace(/"/g, '&#34').replace(/'/g, '&#39') + "\">";
+      body += names['ContactEmail'];
+      body += "   <input name='Email' type='email' class='form-control' value=\"" + data.ContactEmail.replace(/&/g, '&#38').replace(/</g, '&#60').replace(/>/g, '&#62').replace(/"/g, '&#34').replace(/'/g, '&#39') + "\">";
       body += " </div>";
       body += "</div>";
       
@@ -108,253 +108,10 @@ function showEditScreen(data, names){
       // CUSTOM Job FIELDS
       
       body += " <div class='row'>";
-      body += "   <div class='col-xs-12 col-sm-6'>";
-      
-      if(eval(Cookies.get("ShowJobCustomField1"))){
-        body += "     <div class='input-group form-group' id='JobCustomField1Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField1 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField1' id='JobCustomField1' value='" + data.JobCustomField1 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomField1Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField1 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField1' disabled='true' id='JobCustomField1' value='" + data.JobCustomField1 + "' class='form-control' />";      
-        body += "     </div>";
-      }
-      
-      if(eval(Cookies.get("ShowJobCustomField2"))){
-        body += "     <div class='input-group form-group' id='JobCustomField2Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField2 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField2' id='JobCustomField2' value='" + data.JobCustomField2 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomField2Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField2 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField2' disabled='true' id='JobCustomField2' value='" + data.JobCustomField2 + "' class='form-control' />";      
-        body += "     </div>";
-      }
+      body += createCustomFields(data, names);
 
-      if(eval(Cookies.get("ShowJobCustomField3"))){
-        body += "     <div class='input-group form-group' id='JobCustomField3Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField3 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField3' id='JobCustomField3' value='" + data.JobCustomField3 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomField3Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField3 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField3' disabled='true' id='JobCustomField3' value='" + data.JobCustomField3 + "' class='form-control' />";      
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowJobCustomField4"))){
-        body += "     <div class='input-group form-group' id='JobCustomField4Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField4 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField4' id='JobCustomField4' value='" + data.JobCustomField4 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomField4Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField4 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField4' disabled='true' id='JobCustomField4' value='" + data.JobCustomField4 + "' class='form-control' />";      
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowJobCustomField5"))){
-        body += "     <div class='input-group form-group' id='JobCustomField5Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField5 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField5' id='JobCustomField5' value='" + data.JobCustomField5 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomField5Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField5 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField5' disabled='true' id='JobCustomField5' value='" + data.JobCustomField5 + "' class='form-control' />";      
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowJobCustomField6"))){
-        body += "     <div class='input-group form-group' id='JobCustomField6Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField6 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField6' id='JobCustomField6' value='" + data.JobCustomField6 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomField6Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomField6 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField6' disabled='true' id='JobCustomField6' value='" + data.JobCustomField6 + "' class='form-control' />";      
-        body += "     </div>";
-      }
-
-      body += "   </div>";
-      
       // CUSTOM LISTS
-      
-      body += "   <div class='col-xs-12 col-lg-6'>";
-
-      if(eval(Cookies.get("ShowJobCustomList1"))){
-        body += "     <div class='input-group form-group' id='JobCustomList1Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList1 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList1 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList1' id='JobCustomList1' value='" + data.JobCustomList1 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomList1Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList1 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList1 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList1' disabled='true' id='JobCustomList1' value='" + data.JobCustomList1 + "' class='form-control' />";
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowJobCustomList2"))){
-        body += "     <div class='input-group form-group' id='JobCustomList2Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList2 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList1 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList2' id='JobCustomList2' value='" + data.JobCustomList2 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomList2Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList2 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList2 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList2' disabled='true' id='JobCustomList2' value='" + data.JobCustomList2 + "' class='form-control' />";
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowJobCustomList3"))){
-        body += "     <div class='input-group form-group' id='JobCustomList3Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList3 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList3 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList3' id='JobCustomList3' value='" + data.JobCustomList3 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomList3Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList3 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList1 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList3' disabled='true' id='JobCustomList3' value='" + data.JobCustomList3 + "' class='form-control' />";
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowJobCustomList4"))){
-        body += "     <div class='input-group form-group' id='JobCustomList4Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList4 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList4 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList4' id='JobCustomList4' value='" + data.JobCustomList4 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomList4Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList4 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList4 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList4' disabled='true' id='JobCustomList4' value='" + data.JobCustomList4 + "' class='form-control' />";
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowJobCustomList5"))){
-        body += "     <div class='input-group form-group' id='JobCustomList5Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList5 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList5 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList5' id='JobCustomList5' value='" + data.JobCustomList5 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomList5Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList5 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList5 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList5' disabled='true' id='JobCustomList5' value='" + data.JobCustomList5 + "' class='form-control' />";
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowJobCustomList6"))){
-        body += "     <div class='input-group form-group' id='JobCustomList6Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList6 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList6 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList6' id='JobCustomList6' value='" + data.JobCustomList6 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='JobCustomList6Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.JobCustomList6 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.JobCustomList6 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList6' disabled='true' id='JobCustomList6' value='" + data.JobCustomList6 + "' class='form-control' />";
-        body += "     </div>";
-      }
+      body += createCustomLists(data, names);
 
       body += " </div>";
       body += "</div>";
@@ -788,6 +545,101 @@ function editJobCustomFieldOptions(){
       }
     }]
   });
+}
+
+function createCustomLists(data, names) {
+  return `<div class='col-xs-12 col-lg-6'>
+            ${[1, 2, 3, 4, 5, 6].map(i =>
+    createCustomList(i, data, names, 'JobCustomList')).join('')}
+        </div>`.trim().replace(/\n\s+/g, '');
+}
+
+function createCustomList(index, data, names, prefix) {
+  const cookieName = `Show${prefix}${index}`;
+  const isVisible = Cookies.get(cookieName) === 'true';
+
+  return `
+        <div class="input-group form-group ${!isVisible ? 'hidden' : ''}" id="${prefix}${index}Wrap">
+            <div class="input-group-btn">
+                <button class="btn btn-default" type="button">${names[`${prefix}${index}`]}</button>
+            </div>
+            ${createCustomListSelect("CustomList" + index, data)}
+        </div>
+    `.trim().replace(/\n\s+/g, '');
+}
+
+function createCustomListSelect(customListName, data) {
+
+  const baseUrl = '/api/v1/customList';
+  const captionWithPrefix = 'Job' + customListName;
+  const dataUrl = baseUrl + "/" + captionWithPrefix;
+  let body = '';
+
+  $.ajax({
+    async: false,
+    url: dataUrl,
+    dataType: 'json',
+    success: function (response) {
+      if (response === 'InvalidLogin') return logout();
+
+      body += ` <select class='form-control' id=${captionWithPrefix} name=${customListName}>`;
+      body += "   <option value=''></option>";
+
+      $.each(response, function () {
+        this.Name = $.trim(this);
+        if (this.Name === data[captionWithPrefix]) {
+          body += "<option value=\"" + this.Name + "\" selected>" + this.Name + "</option>";
+        } else {
+          body += "<option value=\"" + this.Name + "\">" + this.Name + "</option>";
+        }
+      });
+
+      body += "     </select>";
+
+    },
+    error: handleRequestError
+  });
+
+  return body;
+}
+
+function handleRequestError(jqXhr) {
+  BootstrapDialog.closeAll();
+  console.error('Request failed:', jqXhr.responseText);
+  BootstrapDialog.alert({
+    title: 'Error',
+    message: 'Failed to load jobs. Please try again later.'
+  });
+}
+
+function createCustomFields(data, names) {
+  return `<div class="col-xs-12 col-sm-6">
+            ${[1, 2, 3, 4, 5, 6].map(i =>
+    createCustomField(i, data, names, 'JobCustomField'))
+    .join('')} 
+            </div>`.trim().replace(/\n\s+/g, '');
+}
+
+function createCustomField(index, data, names, prefix) {
+  const cookieName = `Show${prefix}${index}`;
+  const isVisible = Cookies.get(cookieName) === 'true';
+
+  return `<div class="input-group form-group ${!isVisible ? 'hidden' : ''}" id="${prefix}${index}Wrap">
+        <div class="input-group-btn">
+            <button class="btn btn-default" type="button">${names[`${prefix}${index}`]}</button>
+        </div>
+        <input type="text" name="CustomField${index}" id="${prefix}${index}" value="${escapeHtml(data[`${prefix}${index}`] || '')}" class="form-control" ${!isVisible ? 'disabled' : ''}>
+    </div>`.trim().replace(/\n\s+/g, '');
+}
+
+function escapeHtml(str) {
+  if (str === undefined || str === null) return '';
+  return str.toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /**********************************************************************************************/

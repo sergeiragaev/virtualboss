@@ -1,9 +1,9 @@
 ﻿/***********************************************************************************************/
-const defaultJobFieldsToShow = "JobNumber,ContactPerson,JobEmail,JobNotes";
+const defaultJobFieldsToShow = "JobNumber,ContactPerson,ContactEmail,JobNotes";
 const defaultJobFilters = ""; // empty is all active jobs
 /***********************************************************************************************/
 // use array.join(',') to convert an array to comma separated string.
-const allJobFieldCaptionNames = ["JobNumber", "JobLot", "JobSubdivision", "JobLockBox", "JobEmail", "JobNotes", "JobDirections", "JobCustomField1", "JobCustomField2", "JobCustomField3", "JobCustomField4", "JobCustomField5", "JobCustomField6", "JobCustomList1", "JobCustomList2", "JobCustomList3", "JobCustomList4", "JobCustomList5", "JobCustomList6"];
+const allJobFieldCaptionNames = ["JobNumber", "JobLot", "JobSubdivision", "JobLockBox", "JobNotes", "JobDirections", "JobCustomField1", "JobCustomField2", "JobCustomField3", "JobCustomField4", "JobCustomField5", "JobCustomField6", "JobCustomList1", "JobCustomList2", "JobCustomList3", "JobCustomList4", "JobCustomList5", "JobCustomList6"];
 const allOwnerFieldCaptionNames = ["ContactCompany", "ContactPerson", "ContactProfession", "ContactFirstName", "ContactLastName", "ContactSupervisor", "ContactSpouse", "ContactTaxID", "ContactWebSite", "ContactEmail", "ContactFax", "ContactWorkersCompDate", "ContactInsuranceDate", "ContactComments", "ContactNotes", "ContactPhones", "ContactAddresses", "ContactCustomField1", "ContactCustomField2", "ContactCustomField3", "ContactCustomField4", "ContactCustomField5", "ContactCustomField6", "ContactCustomList1", "ContactCustomList2", "ContactCustomList3", "ContactCustomList4", "ContactCustomList5", "ContactCustomList6"];
 /***********************************************************************************************/
 let jobsPerPage = 20;

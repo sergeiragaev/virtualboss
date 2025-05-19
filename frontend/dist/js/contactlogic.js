@@ -181,17 +181,6 @@ function createContactList(customUrl){
           tbl += "  <tbody>";
               
           $.each(contacts.content, function(i){
-            var emptyContact = true;
-            
-            for(var n in contactFieldsArray){
-              if(contacts.content[i][contactFieldsArray[n]] != ""){
-                emptyContact = false;
-              }
-            }
-            
-            if(emptyContact){
-              return;
-            }
 
             if(eval(Cookies.get('UseContactColor'))) {
               tbl += "<tr onclick=\"editContact('" + contacts.content[i]['ContactId'] + "');\" style='cursor:pointer; color:" + contacts.content[i]['Color'] + ";'>";

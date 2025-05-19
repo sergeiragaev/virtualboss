@@ -53,8 +53,6 @@ public class Job {
     @Column(columnDefinition = "TEXT", name = "notes_rtf")
     private String notesRtf;
 
-    private String email;
-
     @Column(name = "is_deleted")
     @Builder.Default
     private Boolean isDeleted = false;

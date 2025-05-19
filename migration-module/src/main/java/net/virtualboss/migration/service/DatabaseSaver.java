@@ -269,6 +269,9 @@ public class DatabaseSaver {
     }
 
     public void preloadCaches() {
+        fieldCache.clear();
+        fieldValueCache.clear();
+
         List<Field> fields = jdbcTemplate.query(
                 "SELECT * FROM fields",
                 new FieldRowMapper()
@@ -483,6 +486,11 @@ public class DatabaseSaver {
         UUID contactId = getOrCacheContactId(name, company);
 
         addJobAddress(contactId.toString(), values);
+
+        addCommunications(
+                contactId.toString(), "Job Email", ChannelType.EMAIL,
+                values.get("email").toString()
+        );
 
         addCommunications(
                 contactId.toString(), "Job Home", ChannelType.PHONE,

@@ -58,7 +58,7 @@ public abstract class ContactMapperDelegate implements ContactMapperV1 {
     }
 
     public Set<Communication> mapPhones(String phones, Contact contact) {
-        if (phones == null || phones.isBlank()) return Set.of();
+        if (phones == null || phones.isBlank()) return null;
 
         return Arrays.stream(phones.split(","))
                 .map(String::trim)
@@ -80,7 +80,7 @@ public abstract class ContactMapperDelegate implements ContactMapperV1 {
     }
 
     public Set<Address> mapAddresses(String addresses, Contact contact) {
-        if (addresses == null || addresses.isBlank()) return Set.of();
+        if (addresses == null || addresses.isBlank()) return null;
 
         return Arrays.stream(addresses.split(";"))
                 .map(String::trim)

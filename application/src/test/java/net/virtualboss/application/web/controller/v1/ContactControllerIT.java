@@ -91,8 +91,8 @@ class ContactControllerIT extends TestDependenciesContainer {
     @Test
     @DisplayName("update contact company and custom field1 value is correct test")
     void updateContactCompanyById_CorrectUpdate() throws Exception {
-        Contact newContact = saveAndGetTestContactToUpdate();
-        ContactReferencesRequest updatedRequest = getUpdatedContactRequestByContact(newContact);
+        saveAndGetTestContactToUpdate();
+        ContactReferencesRequest updatedRequest = getUpdatedContactRequestByContact();
         String updatedJson = objectMapper.writeValueAsString(updatedRequest);
         String updatedQueryString = getQueryString(updatedJson, false);
         CustomFieldsAndLists customFL = generateTestContactCustomFieldsRequest();

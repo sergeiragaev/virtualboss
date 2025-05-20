@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Transactional
 public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
@@ -218,16 +217,7 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
         return Sort.Direction.ASC; // Дефолтное направление
     }
 
-    protected Set<String> parseFields(String fields) {
-        return Arrays.stream(fields.split(","))
-                .map(field -> {
-                    if (field.startsWith(getCustomFieldPrefix())) {
-                        return getCustomFieldsAndListsPrefix() + "." + field;
-                    }
-                    return field;
-                })
-                .collect(Collectors.toSet());
-    }
+    protected abstract Set<String> parseFields(String fields);
 
     protected abstract Class<E> getEntityClass();
 

@@ -3,6 +3,7 @@ package net.virtualboss.contact.web.controller.v1;
 import lombok.RequiredArgsConstructor;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.contact.service.ContactService;
+import net.virtualboss.contact.web.dto.ContactReferencesRequest;
 import net.virtualboss.contact.web.dto.UpsertContactRequest;
 import net.virtualboss.common.web.dto.filter.CommonFilter;
 import org.springframework.cache.annotation.CacheConfig;
@@ -42,15 +43,18 @@ public class ContactController {
     public ResponseEntity<Map<String, Object>> saveContact(
             @PathVariable String id,
             UpsertContactRequest request,
-            CustomFieldsAndLists customFieldsAndLists) {
-        return ResponseEntity.ok(service.saveContact(id, request, customFieldsAndLists));
+            CustomFieldsAndLists customFieldsAndLists,
+            ContactReferencesRequest referencesRequest) {
+        return ResponseEntity.ok(service.saveContact(id, request, customFieldsAndLists, referencesRequest));
     }
 
     @PostMapping("/contact")
     public ResponseEntity<Map<String, Object>> createContact(
             UpsertContactRequest request,
-            CustomFieldsAndLists customFieldsAndLists) {
-        return new ResponseEntity<>(service.createContact(request, customFieldsAndLists), HttpStatus.CREATED);
+            CustomFieldsAndLists customFieldsAndLists,
+            ContactReferencesRequest referencesRequest) {
+        return new ResponseEntity<>(
+                service.createContact(request, customFieldsAndLists, referencesRequest), HttpStatus.CREATED);
     }
 
 }

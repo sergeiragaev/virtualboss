@@ -91,12 +91,12 @@ public class Contact {
     @JsonIgnore
     private Set<Task> tasks = new HashSet<>();
 
-    @OneToMany(cascade = DETACH, mappedBy = "entityId")
+    @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonIgnore
     private Set<Communication> phones = new HashSet<>();
 
-    @OneToMany(cascade = DETACH, mappedBy = "entityId")
+    @OneToMany(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonIgnore
     private Set<Address> addresses = new HashSet<>();

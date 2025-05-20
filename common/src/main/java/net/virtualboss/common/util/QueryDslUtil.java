@@ -309,8 +309,8 @@ public class QueryDslUtil {
                 .from(address)
                 .leftJoin(address.type, type)
                 .where(address.address1.isNotEmpty())
-                .where(address.entityId.eq(((QContact) qEntity).id))
-                .groupBy(address.entityId),
+                .where(address.contact.eq((QContact) qEntity))
+                .groupBy(address.contact),
                 ADDRESSES
         );
     }
@@ -333,8 +333,8 @@ public class QueryDslUtil {
                 )
                 .from(comm)
                 .leftJoin(comm.type, type)
-                .where(comm.entityId.eq(((QContact) qEntity).id))
-                .groupBy(comm.entityId),
+                .where(comm.contact.eq((QContact) qEntity))
+                .groupBy(comm.contact),
                 PHONES
         );
     }

@@ -11,22 +11,22 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"entityId", "type"})
+@ToString(exclude = {"contact", "type"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Communication {
 
     @Id
     @GeneratedValue
+    @EqualsAndHashCode.Include
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, name = "type_id")
-    @EqualsAndHashCode.Include
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "type_id", nullable = false)
     private CommunicationType type;
 
-    @Column(nullable = false, name = "entity_id")
-    @EqualsAndHashCode.Include
-    private UUID entityId;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "entity_id")
+    private Contact contact;
 
     private String title;
 

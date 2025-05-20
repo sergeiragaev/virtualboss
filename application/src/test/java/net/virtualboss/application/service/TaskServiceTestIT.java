@@ -150,9 +150,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         filter.setThisDate(LocalDate.now().plusDays(5));
         Page<Map<String, Object>> result = taskService.findAll(null, filter);
         assertNotNull(result);
-        assertFalse(result.getContent().get(0).isEmpty());
+        assertFalse(result.getContent().getFirst().isEmpty());
         assertEquals(1, result.getContent().size());
-        assertEquals(savedTaskId, result.getContent().get(0).get("TaskId").toString());
+        assertEquals(savedTaskId, result.getContent().getFirst().get("TaskId").toString());
     }
 
     @Test
@@ -238,9 +238,9 @@ class TaskServiceTestIT extends TestDependenciesContainer {
         filter.setDateCriteria(DateCriteria.ON_OR_AFTER.getValue());
         Page<Map<String, Object>> result = taskService.findAll(null, filter);
         assertNotNull(result);
-        assertFalse(result.getContent().get(0).isEmpty());
+        assertFalse(result.getContent().getFirst().isEmpty());
         assertEquals(1, result.getTotalElements());
-        assertEquals(savedTaskId, result.getContent().get(0).get("TaskId").toString());
+        assertEquals(savedTaskId, result.getContent().getFirst().get("TaskId").toString());
     }
 
     @Test
@@ -357,12 +357,12 @@ class TaskServiceTestIT extends TestDependenciesContainer {
                 new TaskFilter());
         long firstTaskNumber = taskRepository.findAll().stream().map(Task::getNumber).min(Long::compareTo).orElseThrow();
         Task firstTask = taskRepository.findByNumber(firstTaskNumber).orElseThrow();
-        assertEquals(firstTask.getId(), response.getContent().get(0).get("TaskId"));
-        assertEquals(firstTask.getDescription(), response.getContent().get(0).get("TaskDescription"));
-        assertEquals(firstTask.getTargetStart(), response.getContent().get(0).get("TaskTargetStart"));
-        assertEquals(firstTask.getCustomValueByName("TaskCustomField2"), response.getContent().get(0).get("TaskCustomField2"));
-        assertEquals(firstTask.getJob().getCustomValueByName("JobCustomList1"), response.getContent().get(0).get("JobCustomList1"));
-        assertEquals(firstTask.getJob().getLot(), response.getContent().get(0).get("JobLot"));
-        assertEquals(firstTask.getContact().getPerson(), response.getContent().get(0).get("ContactPerson"));
+        assertEquals(firstTask.getId(), response.getContent().getFirst().get("TaskId"));
+        assertEquals(firstTask.getDescription(), response.getContent().getFirst().get("TaskDescription"));
+        assertEquals(firstTask.getTargetStart(), response.getContent().getFirst().get("TaskTargetStart"));
+        assertEquals(firstTask.getCustomValueByName("TaskCustomField2"), response.getContent().getFirst().get("TaskCustomField2"));
+        assertEquals(firstTask.getJob().getCustomValueByName("JobCustomList1"), response.getContent().getFirst().get("JobCustomList1"));
+        assertEquals(firstTask.getJob().getLot(), response.getContent().getFirst().get("JobLot"));
+        assertEquals(firstTask.getContact().getPerson(), response.getContent().getFirst().get("ContactPerson"));
     }
 }

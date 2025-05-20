@@ -22,7 +22,4 @@ public class UpsertContactRequest {
     private String notes;
     private String fax;
     private String email;
-    private String company;
-    private String profession;
-    private String groups;
 }

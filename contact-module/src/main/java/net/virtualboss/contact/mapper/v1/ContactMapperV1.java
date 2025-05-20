@@ -4,6 +4,7 @@ import net.virtualboss.common.mapper.v1.GroupMapperV1;
 import net.virtualboss.common.model.entity.Address;
 import net.virtualboss.common.model.entity.Communication;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
+import net.virtualboss.contact.web.dto.ContactReferencesRequest;
 import net.virtualboss.contact.web.dto.ContactResponse;
 import net.virtualboss.common.model.entity.Contact;
 import net.virtualboss.contact.web.dto.UpsertContactRequest;
@@ -19,30 +20,37 @@ import java.util.stream.Collectors;
 @DecoratedWith(ContactMapperDelegate.class)
 public interface ContactMapperV1 {
 
-    @Mapping(target = "groups", ignore = true)
-    @Mapping(target = "phones", ignore = true)
-    @Mapping(target = "company", ignore = true)
-    @Mapping(target = "profession", ignore = true)
     Contact requestToContact(UpsertContactRequest request);
 
-    default Contact requestToContact(UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
+    default Contact requestToContact(
+            UpsertContactRequest request,
+            CustomFieldsAndLists customFieldsAndLists,
+            ContactReferencesRequest referencesRequest) {
         Contact contact = requestToContact(request);
         return addCustomFLAndGroups(
                 contact,
                 customFieldsAndLists,
-                request.getGroups(),
-                request.getCompany(),
-                request.getProfession()
+                referencesRequest
         );
     }
 
-    default Contact requestToContact(String id, UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
-        Contact contact = requestToContact(request, customFieldsAndLists);
+    default Contact requestToContact(
+            String id,
+            UpsertContactRequest request,
+            CustomFieldsAndLists customFieldsAndLists,
+            ContactReferencesRequest referencesRequest) {
+        Contact contact = requestToContact(request, customFieldsAndLists, referencesRequest);
         contact.setId(UUID.fromString(id));
         return contact;
     }
 
-    Contact addCustomFLAndGroups(Contact contact, CustomFieldsAndLists customFieldsAndLists, String groups, String company, String profession);
+    @Mapping(target = "groups", ignore = true)
+    @Mapping(target = "company", ignore = true)
+    @Mapping(target = "profession", ignore = true)
+    @Mapping(target = "phones", ignore = true)
+    @Mapping(target = "addresses", ignore = true)
+    Contact addCustomFLAndGroups(Contact contact,
+            CustomFieldsAndLists customFieldsAndLists, ContactReferencesRequest request);
 
     @Mapping(source = "customFieldsAndListsValues", target = "customFieldsAndLists")
     ContactResponse contactToResponse(Contact contact);
@@ -52,7 +60,7 @@ public interface ContactMapperV1 {
             return "";
         }
         return phones.stream()
-                .filter(phone -> !phone.getTitle().isBlank())
+                .filter(phone -> phone.getTitle() != null)
                 .map(phone ->
                         phone.getType().getCaption() + ": " + phone.getTitle()
                 ).collect(Collectors.joining(","));
@@ -63,11 +71,11 @@ public interface ContactMapperV1 {
             return "";
         }
         return addresses.stream()
-                .filter(address -> !address.getAddress1().isBlank())
+                .filter(address -> address.getAddress1() != null)
                 .map(address ->
                         address.getType().getCaption() + ": " +
-                                address.getAddress1() + (address.getAddress2().isBlank() ? "" : ", " + address.getAddress2()) + ", " +
-                                address.getCity() + ", " + address.getState() + ", " + address.getPostal()
+                        address.getAddress1() + (address.getAddress2().isBlank() ? "" : ", " + address.getAddress2()) + ", " +
+                        address.getCity() + ", " + address.getState() + ", " + address.getPostal()
                 ).collect(Collectors.joining(";"));
     }
 }

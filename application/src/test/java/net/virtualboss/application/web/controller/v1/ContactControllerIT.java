@@ -4,6 +4,7 @@ import net.virtualboss.application.service.TestDependenciesContainer;
 import net.virtualboss.common.model.entity.Contact;
 import net.virtualboss.contact.service.ContactService;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
+import net.virtualboss.contact.web.dto.ContactReferencesRequest;
 import net.virtualboss.contact.web.dto.UpsertContactRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +34,10 @@ class ContactControllerIT extends TestDependenciesContainer {
     @Test
     @DisplayName("test get contact by id")
     void getContactById_ReturnsValidContact() throws Exception {
-        Contact contact = saveContactInDbAndGet(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
+        Contact contact = saveContactInDbAndGet(
+                generateTestContactRequest(),
+                generateTestContactCustomFieldsRequest(),
+                generateTestContactReferenceRequest());
         String customValue = contact.getCustomValueByName("ContactCustomField3");
         mockMvc.perform(get("/contact/" + contactRepository.findAll().getFirst().getId()))
                 .andExpect(status().isOk())
@@ -72,8 +76,10 @@ class ContactControllerIT extends TestDependenciesContainer {
         String queryString = getQueryString(jsonString, false);
         String customQueryString = getQueryString(
                 objectMapper.writeValueAsString(customFieldsAndLists), true);
+        String referenceQueryString = getQueryString(
+                objectMapper.writeValueAsString(generateTestContactReferenceRequest()), true);
 
-        mockMvc.perform(post("/contact" + queryString + customQueryString)
+        mockMvc.perform(post("/contact" + queryString + customQueryString + referenceQueryString)
 //                        .header("id", 1L)
                 )
                 .andExpect(jsonPath("$.ContactGroups").value("Test contact group"))
@@ -86,7 +92,7 @@ class ContactControllerIT extends TestDependenciesContainer {
     @DisplayName("update contact company and custom field1 value is correct test")
     void updateContactCompanyById_CorrectUpdate() throws Exception {
         Contact newContact = saveAndGetTestContactToUpdate();
-        UpsertContactRequest updatedRequest = getUpdatedContactRequestByContact(newContact);
+        ContactReferencesRequest updatedRequest = getUpdatedContactRequestByContact(newContact);
         String updatedJson = objectMapper.writeValueAsString(updatedRequest);
         String updatedQueryString = getQueryString(updatedJson, false);
         CustomFieldsAndLists customFL = generateTestContactCustomFieldsRequest();
@@ -108,8 +114,8 @@ class ContactControllerIT extends TestDependenciesContainer {
     @Test
     @DisplayName("search contacts with specific criteria api test")
     void searchContacts() throws Exception {
-        UpsertContactRequest testRequest = generateTestContactRequest();
-        saveContactInDbAndGet(testRequest, generateTestContactCustomFieldsRequest());
+        ContactReferencesRequest testRequest = generateTestContactReferenceRequest();
+        saveContactInDbAndGet(generateTestContactRequest(), generateTestContactCustomFieldsRequest(), testRequest);
         mockMvc.perform(get("/contact")
                         .param("fields", "ContactId,ContactCompany,ContactCustomList5,ContactPerson,Color,ContactPhones,ContactAddresses")
                         .param("page", String.valueOf(1))
@@ -127,8 +133,8 @@ class ContactControllerIT extends TestDependenciesContainer {
     @DisplayName("search deleted contact test")
     @Transactional
     void searchDeletedContact() throws Exception {
-        UpsertContactRequest testRequest = generateTestContactRequest();
-        Contact contact = saveContactInDbAndGet(testRequest, generateTestContactCustomFieldsRequest());
+        ContactReferencesRequest testRequest = generateTestContactReferenceRequest();
+        Contact contact = saveContactInDbAndGet(generateTestContactRequest(), generateTestContactCustomFieldsRequest(), testRequest);
         contactService.deleteContact(contact.getId().toString());
         mockMvc.perform(get("/contact")
                         .param("fields", "ContactId,ContactCompany")
@@ -143,17 +149,19 @@ class ContactControllerIT extends TestDependenciesContainer {
 
     private Contact saveAndGetTestContactToUpdate() {
         return saveContactInDbAndGet(UpsertContactRequest.builder()
-                        .company("new contact company")
                         .firstName("new first name")
                         .build(),
-                generateTestContactCustomFieldsRequest());
+                generateTestContactCustomFieldsRequest(),
+                ContactReferencesRequest.builder()
+                        .company("new contact company")
+                        .build()
+                );
     }
 
-    private UpsertContactRequest getUpdatedContactRequestByContact(Contact newContact) {
+    private ContactReferencesRequest getUpdatedContactRequestByContact() {
         String updatedContactCompany = "updated contact company";
-        return UpsertContactRequest.builder()
+        return ContactReferencesRequest.builder()
                 .company(updatedContactCompany)
-                .id(newContact.getId())
                 .build();
     }
 

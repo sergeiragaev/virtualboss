@@ -11,7 +11,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"entityId", "type"})
+@ToString(exclude = {"contact", "type"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Address {
 
@@ -20,12 +20,13 @@ public class Address {
     @EqualsAndHashCode.Include
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, name = "type_id")
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "type_id", nullable = false)
     private CommunicationType type;
 
-    @Column(nullable = false, name = "entity_id")
-    private UUID entityId;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "entity_id")
+    private Contact contact;
 
     private String address1;
 

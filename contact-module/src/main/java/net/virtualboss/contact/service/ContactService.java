@@ -14,6 +14,7 @@ import net.virtualboss.common.util.BeanUtils;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.contact.mapper.v1.ContactResponseMapper;
 import net.virtualboss.contact.querydsl.ContactFilterCriteria;
+import net.virtualboss.contact.web.dto.ContactReferencesRequest;
 import net.virtualboss.contact.web.dto.ContactResponse;
 import net.virtualboss.common.repository.ContactRepository;
 import net.virtualboss.contact.web.dto.UpsertContactRequest;
@@ -144,11 +145,15 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
 
     @Transactional
     @CachePut(value = "contact", key = "#id")
-    public Map<String, Object> saveContact(String id, UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
+    public Map<String, Object> saveContact(
+            String id,
+            UpsertContactRequest request,
+            CustomFieldsAndLists customFieldsAndLists,
+            ContactReferencesRequest referencesRequest) {
         Contact unassigned = mainService.getContactById(null);
         if (unassigned.getId().toString().equals(id))
             throw new AccessDeniedException("Cannot update Unassigned contact");
-        Contact contact = mapper.requestToContact(id, request, customFieldsAndLists);
+        Contact contact = mapper.requestToContact(id, request, customFieldsAndLists, referencesRequest);
         Contact contactFromDB = mainService.getContactById(id);
         contact.getCustomFieldsAndListsValues().addAll(contactFromDB.getCustomFieldsAndListsValues());
         BeanUtils.copyNonNullProperties(contact, contactFromDB);
@@ -156,8 +161,11 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
     }
 
     @Transactional
-    public Map<String, Object> createContact(UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
-        Contact contact = mapper.requestToContact(request, customFieldsAndLists);
+    public Map<String, Object> createContact(
+            UpsertContactRequest request,
+            CustomFieldsAndLists customFieldsAndLists,
+            ContactReferencesRequest referencesRequest) {
+        Contact contact = mapper.requestToContact(request, customFieldsAndLists, referencesRequest);
         return contactResponseMapper.map(mapper.contactToResponse(repository.save(contact)), null);
     }
 

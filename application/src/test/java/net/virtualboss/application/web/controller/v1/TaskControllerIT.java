@@ -42,7 +42,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                 generateTestTaskCustomFieldsRequest(),
                 generateTestTaskReferenceRequest());
         String customValue = task.getCustomValueByName("TaskCustomField1");
-        mockMvc.perform(get("/task/" + taskRepository.findAll().get(0).getId()))
+        mockMvc.perform(get("/task/" + taskRepository.findAll().getFirst().getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.TaskDescription").value(task.getDescription()))
                 .andExpect(jsonPath("$.TaskCustomField1")
@@ -79,7 +79,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                 testTaskReference);
         mockMvc.perform(get("/task")
                         .param("fields", "TaskId,TaskDescription,TaskCustomField1,TaskStatus," +
-                                         "JobCustomList1,ContactCustomField4,JobNumber,ContactCompany,Color")
+                                         "JobCustomList1,ContactCustomField4,JobNumber,ContactCompany,Color,ContactPhones,ContactAddresses")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("sort", "TaskNumber:asc,ContactCustomField4:desc,TaskCustomField1:asc")
@@ -144,7 +144,7 @@ class TaskControllerIT extends TestDependenciesContainer {
         CustomFieldsAndLists customFL = generateTestTaskCustomFieldsRequest();
         customFL.setCustomField1("new custom field 1 value");
         String updatedCustomFL = getQueryString(objectMapper.writeValueAsString(customFL), true);
-        mockMvc.perform(put("/task/" + taskRepository.findAll().get(0).getId() +
+        mockMvc.perform(put("/task/" + taskRepository.findAll().getFirst().getId() +
                             updatedTaskQueryString +
                             updatedCustomFL)
                 )
@@ -164,7 +164,7 @@ class TaskControllerIT extends TestDependenciesContainer {
     void updateTaskDates_CorrectUpdate() throws Exception {
         Task newTask = saveAndGetTestTaskToUpdate();
         mockMvc.perform(put("/task")
-                        .param("taskId", String.valueOf(taskRepository.findAll().get(0).getId()))
+                        .param("taskId", String.valueOf(taskRepository.findAll().getFirst().getId()))
                         .param("Start", String.valueOf(LocalDate.now()))
                 )
                 .andExpect(jsonPath("content.[0].TaskId").value(
@@ -193,7 +193,7 @@ class TaskControllerIT extends TestDependenciesContainer {
                 .jobNumber("")
                 .build();
         String updatedReference = getQueryString(objectMapper.writeValueAsString(updatedTaskReference), true);
-        mockMvc.perform(put("/task/" + taskRepository.findAll().get(0).getId() +
+        mockMvc.perform(put("/task/" + taskRepository.findAll().getFirst().getId() +
                             updatedTaskQueryString +
                             updatedCustomFL +
                             updatedReference)

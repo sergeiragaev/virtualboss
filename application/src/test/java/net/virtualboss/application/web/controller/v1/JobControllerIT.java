@@ -36,7 +36,7 @@ class JobControllerIT extends TestDependenciesContainer {
     void getJobById_ReturnsValidJob() throws Exception {
         Job job = saveJobInDbAndGet(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
         String customValue = job.getCustomValueByName("JobCustomField2");
-        mockMvc.perform(get("/job/" + jobRepository.findAll().get(0).getId()))
+        mockMvc.perform(get("/job/" + jobRepository.findAll().getFirst().getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.JobNumber").value(job.getNumber()))
                 .andExpect(jsonPath("$.JobCustomField2")
@@ -94,9 +94,9 @@ class JobControllerIT extends TestDependenciesContainer {
         CustomFieldsAndLists customFL = generateTestJobCustomFieldsRequest();
         customFL.setCustomField1("new job custom field 1 value");
         String updatedCustomFL = getQueryString(objectMapper.writeValueAsString(customFL), true);
-        mockMvc.perform(put("/job/" + jobRepository.findAll().get(0).getId() +
-                                updatedQueryString +
-                                updatedCustomFL)
+        mockMvc.perform(put("/job/" + jobRepository.findAll().getFirst().getId() +
+                            updatedQueryString +
+                            updatedCustomFL)
 //                        .header("id", 1L)
                 )
                 .andExpect(jsonPath("$.JobCustomField1").value(
@@ -114,7 +114,7 @@ class JobControllerIT extends TestDependenciesContainer {
         UpsertJobRequest testRequest = generateTestJobRequest();
         saveJobInDbAndGet(testRequest, generateTestJobCustomFieldsRequest());
         mockMvc.perform(get("/job")
-                        .param("fields", "JobId,JobNumber,JobCustomField2,Color")
+                        .param("fields", "JobId,JobNumber,JobCustomField2,Color,ContactPhones,ContactAddresses")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("sort", "number:asc")

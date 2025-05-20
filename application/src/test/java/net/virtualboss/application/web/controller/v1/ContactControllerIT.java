@@ -35,7 +35,7 @@ class ContactControllerIT extends TestDependenciesContainer {
     void getContactById_ReturnsValidContact() throws Exception {
         Contact contact = saveContactInDbAndGet(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
         String customValue = contact.getCustomValueByName("ContactCustomField3");
-        mockMvc.perform(get("/contact/" + contactRepository.findAll().get(0).getId()))
+        mockMvc.perform(get("/contact/" + contactRepository.findAll().getFirst().getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.ContactCompany").value(contact.getCompany().getName()))
                 .andExpect(jsonPath("$.ContactCustomField3")
@@ -92,9 +92,9 @@ class ContactControllerIT extends TestDependenciesContainer {
         CustomFieldsAndLists customFL = generateTestContactCustomFieldsRequest();
         customFL.setCustomField1("new contact custom field 1 value");
         String updatedCustomFL = getQueryString(objectMapper.writeValueAsString(customFL), true);
-        mockMvc.perform(put("/contact/" + contactRepository.findAll().get(0).getId() +
-                                updatedQueryString +
-                                updatedCustomFL)
+        mockMvc.perform(put("/contact/" + contactRepository.findAll().getFirst().getId() +
+                            updatedQueryString +
+                            updatedCustomFL)
 //                        .header("id", 1L)
                 )
                 .andExpect(jsonPath("$.ContactCustomField1").value(
@@ -111,7 +111,7 @@ class ContactControllerIT extends TestDependenciesContainer {
         UpsertContactRequest testRequest = generateTestContactRequest();
         saveContactInDbAndGet(testRequest, generateTestContactCustomFieldsRequest());
         mockMvc.perform(get("/contact")
-                        .param("fields", "ContactId,ContactCompany,ContactCustomList5,ContactPerson,Color")
+                        .param("fields", "ContactId,ContactCompany,ContactCustomList5,ContactPerson,Color,ContactPhones,ContactAddresses")
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("sort", "firstName:asc,lastName:asc,company:asc")

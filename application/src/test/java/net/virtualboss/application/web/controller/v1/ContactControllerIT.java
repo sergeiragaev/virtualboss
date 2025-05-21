@@ -39,7 +39,7 @@ class ContactControllerIT extends TestDependenciesContainer {
                 generateTestContactCustomFieldsRequest(),
                 generateTestContactReferenceRequest());
         String customValue = contact.getCustomValueByName("ContactCustomField3");
-        mockMvc.perform(get("/contact/" + contactRepository.findAll().getFirst().getId()))
+        mockMvc.perform(get("/contact/" + contactRepository.findAll().get(0).getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.ContactCompany").value(contact.getCompany().getName()))
                 .andExpect(jsonPath("$.ContactCustomField3")
@@ -98,7 +98,7 @@ class ContactControllerIT extends TestDependenciesContainer {
         CustomFieldsAndLists customFL = generateTestContactCustomFieldsRequest();
         customFL.setCustomField1("new contact custom field 1 value");
         String updatedCustomFL = getQueryString(objectMapper.writeValueAsString(customFL), true);
-        mockMvc.perform(put("/contact/" + contactRepository.findAll().getFirst().getId() +
+        mockMvc.perform(put("/contact/" + contactRepository.findAll().get(0).getId() +
                             updatedQueryString +
                             updatedCustomFL)
 //                        .header("id", 1L)

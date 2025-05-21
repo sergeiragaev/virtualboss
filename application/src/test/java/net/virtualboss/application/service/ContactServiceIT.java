@@ -169,9 +169,9 @@ class ContactServiceIT extends TestDependenciesContainer {
         filter.setIsDeleted(false);
         Page<Map<String, Object>> result = contactService.findAll("ContactId", filter);
         assertNotNull(result);
-        assertFalse(result.getContent().getFirst().isEmpty());
+        assertFalse(result.getContent().get(0).isEmpty());
         assertEquals(1, result.getTotalElements());
-        assertEquals(savedContactId, result.getContent().getFirst().get("ContactId").toString());
+        assertEquals(savedContactId, result.getContent().get(0).get("ContactId").toString());
     }
 
     @Test

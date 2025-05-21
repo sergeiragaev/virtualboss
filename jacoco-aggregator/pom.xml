@@ -16,7 +16,7 @@
     <description>jacoco-aggregator</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
         <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
         <sonar.coverage.jacoco.xmlReportPaths>
             ${project.basedir}/../jacoco-aggregator/target/site/jacoco-aggregate/jacoco.xml

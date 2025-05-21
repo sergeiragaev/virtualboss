@@ -36,7 +36,7 @@ class JobControllerIT extends TestDependenciesContainer {
     void getJobById_ReturnsValidJob() throws Exception {
         Job job = saveJobInDbAndGet(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
         String customValue = job.getCustomValueByName("JobCustomField2");
-        mockMvc.perform(get("/job/" + jobRepository.findAll().getFirst().getId()))
+        mockMvc.perform(get("/job/" + jobRepository.findAll().get(0).getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.JobNumber").value(job.getNumber()))
                 .andExpect(jsonPath("$.JobCustomField2")
@@ -94,7 +94,7 @@ class JobControllerIT extends TestDependenciesContainer {
         CustomFieldsAndLists customFL = generateTestJobCustomFieldsRequest();
         customFL.setCustomField1("new job custom field 1 value");
         String updatedCustomFL = getQueryString(objectMapper.writeValueAsString(customFL), true);
-        mockMvc.perform(put("/job/" + jobRepository.findAll().getFirst().getId() +
+        mockMvc.perform(put("/job/" + jobRepository.findAll().get(0).getId() +
                             updatedQueryString +
                             updatedCustomFL)
 //                        .header("id", 1L)

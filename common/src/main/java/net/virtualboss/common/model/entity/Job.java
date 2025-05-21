@@ -37,8 +37,9 @@ public class Job {
 
     private String subdivision;
 
-    @Column(name = "owner_name")
-    private String ownerName;
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "owner_id")
+    private Contact owner;
 
     @Column(name = "lock_box")
     private String lockBox;
@@ -52,36 +53,11 @@ public class Job {
     @Column(columnDefinition = "TEXT", name = "notes_rtf")
     private String notesRtf;
 
-    private String address1;
-
-    private String address2;
-
-    private String city;
-
-    private String state;
-
-    private String postal;
-
-    @Column(name = "home_phone")
-    private String homePhone;
-
-    @Column(name = "work_phone")
-    private String workPhone;
-
-    @Column(name = "cell_phone")
-    private String cellPhone;
-
-    private String fax;
-
-    private String company;
-
-    private String email;
-
-    private String country;
-
     @Column(name = "is_deleted")
     @Builder.Default
     private Boolean isDeleted = false;
+
+    private String color;
 
     @OneToMany(cascade = DETACH)
     @Builder.Default

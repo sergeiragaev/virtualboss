@@ -17,3 +17,7 @@ databaseChangeLog:
       file: db/changelog/changeset/v1/008-insert-holidays-table-and-rules.sql
   - include:
       file: db/changelog/changeset/v1/009-insert-functions.sql
+  - include:
+      file: db/changelog/changeset/v1/010-create-communication-tables.xml
+  - include:
+      file: db/changelog/changeset/v1/011-create-dictionary-tables.xml

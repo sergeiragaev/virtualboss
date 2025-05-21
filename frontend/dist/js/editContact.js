@@ -80,11 +80,14 @@ function showEditScreen(data, names){
       body += "     <input name='Email' class='form-control' value='" + data.ContactEmail.replace(/&/g, '&#38').replace(/'/g, '&#39').replace(/</g, '&#60').replace(/>/g, '&#62').replace(/"/g, '&#34') + "'>";
       body += "   </div>";
       body += " </div>";
-      
+
+      //Communications
+      body += " <div class='row form-group'>";
       // PHONE
       var phoneArr = data['ContactPhones'].split(",");
       
-      body += " <div class='form-group'>";
+//      body += " <div class='form-group'>";
+      body += "   <div class='col-xs-6'>";
       body += "   <strong>" + names['ContactPhones'] + "</strong>";
       
       $.each(phoneArr, function(){
@@ -92,10 +95,24 @@ function showEditScreen(data, names){
       });
       
       body += " </div>";
-      
+
+      // ADDRESSES
+      var addressArr = data['ContactAddresses'].split(";");
+
+//      body += " <div class='form-group'>";
+      body += "   <div class='col-xs-6'>";
+      body += "   <strong>" + names['ContactAddresses'] + "</strong>";
+
+      $.each(addressArr, function(){
+        body += "<div>" + this + "</div>";
+      });
+
+      body += " </div>";
+      body += " </div>";
+
       // NOTES      
       body += " <div class='form-group'>";
-      body += "   <label>" + names['ContactNotes'] + "</label>";
+      body += names['ContactNotes'];
       body += "   <textarea name='Notes' class='form-control' style='min-height:150px; height:auto; white-space:pre-wrap;'>" + data.ContactNotes.replace(/(?:\r\n |\r |\n )/g, '&#10;') + "</textarea>";
       body += " </div>";
       
@@ -113,253 +130,14 @@ function showEditScreen(data, names){
       // CUSTOM Contact FIELDS
       
       body += " <div class='row'>";
-      body += "   <div class='col-xs-12 col-sm-6'>";
-      
-      if(eval(Cookies.get("ShowContactCustomField1"))){
-        body += "     <div class='input-group form-group' id='ContactCustomField1Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField1 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField1' id='ContactCustomField1' value='" + data.ContactCustomField1 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomField1Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField1 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField1' disabled='true' id='ContactCustomField1' value='" + data.ContactCustomField1 + "' class='form-control' />";      
-        body += "     </div>";
-      }
-      
-      if(eval(Cookies.get("ShowContactCustomField2"))){
-        body += "     <div class='input-group form-group' id='ContactCustomField2Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField2 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField2' id='ContactCustomField2' value='" + data.ContactCustomField2 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomField2Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField2 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField2' disabled='true' id='ContactCustomField2' value='" + data.ContactCustomField2 + "' class='form-control' />";      
-        body += "     </div>";
-      }
 
-      if(eval(Cookies.get("ShowContactCustomField3"))){
-        body += "     <div class='input-group form-group' id='ContactCustomField3Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField3 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField3' id='ContactCustomField3' value='" + data.ContactCustomField3 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomField3Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField3 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField3' disabled='true' id='ContactCustomField3' value='" + data.ContactCustomField3 + "' class='form-control' />";      
-        body += "     </div>";
-      }
+      body += createCustomFields(data, names);
 
-      if(eval(Cookies.get("ShowContactCustomField4"))){
-        body += "     <div class='input-group form-group' id='ContactCustomField4Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField4 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField4' id='ContactCustomField4' value='" + data.ContactCustomField4 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomField4Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField4 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField4' disabled='true' id='ContactCustomField4' value='" + data.ContactCustomField4 + "' class='form-control' />";      
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowContactCustomField5"))){
-        body += "     <div class='input-group form-group' id='ContactCustomField5Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField5 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField5' id='ContactCustomField5' value='" + data.ContactCustomField5 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomField5Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField5 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField5' disabled='true' id='ContactCustomField5' value='" + data.ContactCustomField5 + "' class='form-control' />";      
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowContactCustomField6"))){
-        body += "     <div class='input-group form-group' id='ContactCustomField6Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField6 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField6' id='ContactCustomField6' value='" + data.ContactCustomField6 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomField6Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomField6 + "</button>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomField6' disabled='true' id='ContactCustomField6' value='" + data.ContactCustomField6 + "' class='form-control' />";      
-        body += "     </div>";
-      }
-
-      body += "   </div>";
+      // body += "   </div>";
       
       // CUSTOM LISTS
-      
-      body += "   <div class='col-xs-12 col-lg-6'>";
 
-      if(eval(Cookies.get("ShowContactCustomList1"))){
-        body += "     <div class='input-group form-group' id='ContactCustomList1Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList1 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList1 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList1' id='ContactCustomList1' value='" + data.ContactCustomList1 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomList1Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList1 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList1 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList1' disabled='true' id='ContactCustomList1' value='" + data.ContactCustomList1 + "' class='form-control' />";
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowContactCustomList2"))){
-        body += "     <div class='input-group form-group' id='ContactCustomList2Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList2 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList1 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList2' id='ContactCustomList2' value='" + data.ContactCustomList2 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomList2Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList2 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList2 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList2' disabled='true' id='ContactCustomList2' value='" + data.ContactCustomList2 + "' class='form-control' />";
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowContactCustomList3"))){
-        body += "     <div class='input-group form-group' id='ContactCustomList3Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList3 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList3 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList3' id='ContactCustomList3' value='" + data.ContactCustomList3 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomList3Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList3 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList1 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList3' disabled='true' id='ContactCustomList3' value='" + data.ContactCustomList3 + "' class='form-control' />";
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowContactCustomList4"))){
-        body += "     <div class='input-group form-group' id='ContactCustomList4Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList4 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList4 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList4' id='ContactCustomList4' value='" + data.ContactCustomList4 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomList4Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList4 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList4 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList4' disabled='true' id='ContactCustomList4' value='" + data.ContactCustomList4 + "' class='form-control' />";
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowContactCustomList5"))){
-        body += "     <div class='input-group form-group' id='ContactCustomList5Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList5 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList5 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList5' id='ContactCustomList5' value='" + data.ContactCustomList5 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomList5Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList5 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList5 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList5' disabled='true' id='ContactCustomList5' value='" + data.ContactCustomList5 + "' class='form-control' />";
-        body += "     </div>";
-      }
-
-      if(eval(Cookies.get("ShowContactCustomList6"))){
-        body += "     <div class='input-group form-group' id='ContactCustomList6Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList6 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList6 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList6' id='ContactCustomList6' value='" + data.ContactCustomList6 + "' class='form-control' />";
-        body += "     </div>";
-      }else{
-        body += "     <div class='input-group form-group hidden' id='ContactCustomList6Wrap'>";
-        body += "       <div class='input-group-btn'>";
-        body += "         <button class='btn btn-default' type='button'>" + names.ContactCustomList6 + "</button>";
-        body += "         <button type='button' class='btn btn-default dropdown-toggle' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class='caret'></span></button>";
-        body += "         <ul class='dropdown-menu'>";
-        //body += "           <li><a href='#' onclick=\"chooseFromJobList(); return false;\">Values for " + names.ContactCustomList6 + "</a></li>";
-        body += "         </ul>";
-        body += "       </div>";
-        body += "       <input type='text' name='CustomList6' disabled='true' id='ContactCustomList6' value='" + data.ContactCustomList6 + "' class='form-control' />";
-        body += "     </div>";
-      }
+      body += createCustomLists(data, names);
 
       body += " </div>";
       body += "</div>";
@@ -782,6 +560,101 @@ function editContactCustomFieldOptions(){
       }
     }]
   });
+}
+
+function createCustomLists(data, names) {
+  return `<div class='col-xs-12 col-lg-6'>
+            ${[1, 2, 3, 4, 5, 6].map(i =>
+    createCustomList(i, data, names, 'ContactCustomList')).join('')}
+        </div>`.trim().replace(/\n\s+/g, '');
+}
+
+function createCustomList(index, data, names, prefix) {
+  const cookieName = `Show${prefix}${index}`;
+  const isVisible = Cookies.get(cookieName) === 'true';
+
+  return `
+        <div class="input-group form-group ${!isVisible ? 'hidden' : ''}" id="${prefix}${index}Wrap">
+            <div class="input-group-btn">
+                <button class="btn btn-default" type="button">${names[`${prefix}${index}`]}</button>
+            </div>
+            ${createCustomListSelect("CustomList" + index, data)}
+        </div>
+    `.trim().replace(/\n\s+/g, '');
+}
+
+function createCustomListSelect(customListName, data) {
+
+  const baseUrl = '/api/v1/customList';
+  const captionWithPrefix = 'Contact' + customListName;
+  const dataUrl = baseUrl + "/" + captionWithPrefix;
+  let body = '';
+
+  $.ajax({
+    async: false,
+    url: dataUrl,
+    dataType: 'json',
+    success: function (response) {
+      if (response === 'InvalidLogin') return logout();
+
+      body += ` <select class='form-control' id=${captionWithPrefix} name=${customListName}>`;
+      body += "   <option value=''></option>";
+
+      $.each(response, function () {
+        this.Name = $.trim(this);
+        if (this.Name === data[captionWithPrefix]) {
+          body += "<option value=\"" + this.Name + "\" selected>" + this.Name + "</option>";
+        } else {
+          body += "<option value=\"" + this.Name + "\">" + this.Name + "</option>";
+        }
+      });
+
+      body += "     </select>";
+
+    },
+    error: handleRequestError
+  });
+
+  return body;
+}
+
+function handleRequestError(jqXhr) {
+  BootstrapDialog.closeAll();
+  console.error('Request failed:', jqXhr.responseText);
+  BootstrapDialog.alert({
+    title: 'Error',
+    message: 'Failed to load contacts. Please try again later.'
+  });
+}
+
+function createCustomFields(data, names) {
+  return `<div class="col-xs-12 col-sm-6">
+            ${[1, 2, 3, 4, 5, 6].map(i =>
+    createCustomField(i, data, names, 'ContactCustomField'))
+    .join('')} 
+            </div>`.trim().replace(/\n\s+/g, '');
+}
+
+function createCustomField(index, data, names, prefix) {
+  const cookieName = `Show${prefix}${index}`;
+  const isVisible = Cookies.get(cookieName) === 'true';
+
+  return `<div class="input-group form-group ${!isVisible ? 'hidden' : ''}" id="${prefix}${index}Wrap">
+        <div class="input-group-btn">
+            <button class="btn btn-default" type="button">${names[`${prefix}${index}`]}</button>
+        </div>
+        <input type="text" name="CustomField${index}" id="${prefix}${index}" value="${escapeHtml(data[`${prefix}${index}`] || '')}" class="form-control" ${!isVisible ? 'disabled' : ''}>
+    </div>`.trim().replace(/\n\s+/g, '');
+}
+
+function escapeHtml(str) {
+  if (str === undefined || str === null) return '';
+  return str.toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /**********************************************************************************************/

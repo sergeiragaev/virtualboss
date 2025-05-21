@@ -1,7 +1,7 @@
 ﻿/***********************************************************************************************/
 const defaultContactFieldsToShow = "ContactPerson,ContactEmail,ContactCompany";
 const defaultContactFilters = "";
-const allContactFieldCaptionNames = ["ContactCompany", "ContactPerson", "ContactProfession", "ContactFirstName", "ContactLastName", "ContactSupervisor", "ContactSpouse", "ContactTaxID", "ContactWebSite", "ContactEmail", "ContactFax", "ContactWorkersCompDate", "ContactInsuranceDate", "ContactComments", "ContactNotes", "ContactPhones", "ContactCustomField1", "ContactCustomField2", "ContactCustomField3", "ContactCustomField4", "ContactCustomField5", "ContactCustomField6", "ContactCustomList1", "ContactCustomList2", "ContactCustomList3", "ContactCustomList4", "ContactCustomList5", "ContactCustomList6"];
+const allContactFieldCaptionNames = ["ContactCompany", "ContactPerson", "ContactProfession", "ContactFirstName", "ContactLastName", "ContactSupervisor", "ContactSpouse", "ContactTaxID", "ContactWebSite", "ContactEmail", "ContactAddresses", "ContactWorkersCompDate", "ContactInsuranceDate", "ContactComments", "ContactNotes", "ContactPhones", "ContactCustomField1", "ContactCustomField2", "ContactCustomField3", "ContactCustomField4", "ContactCustomField5", "ContactCustomField6", "ContactCustomList1", "ContactCustomList2", "ContactCustomList3", "ContactCustomList4", "ContactCustomList5", "ContactCustomList6"];
 
 let contactsPerPage = 20;
 let cCurrentPage = 1;
@@ -88,6 +88,10 @@ function loadContactSettings(){
   if(!Cookies.get("ShowContactCustomList6")){
     setCookie("ShowContactCustomList6", false);
   }
+
+  if (!Cookies.get("UseContactColor")) {
+    setCookie("UseContactColor", false);
+  }
 }
 
 function loadContactFilters(){
@@ -105,7 +109,7 @@ function loadContactFilters(){
 function createContactList(customUrl){
   let dataUrl;
   const contactFieldsArray = getContactFieldsToShowArray();
-  const contactFieldsString = Cookies.get("ContactFieldsToShow");
+  let contactFieldsString = Cookies.get("ContactFieldsToShow");
   const activeContactFilters = getActiveContactFilters();
   const sortParams = getSortParams(contactFieldsArray);
 
@@ -113,6 +117,10 @@ function createContactList(customUrl){
     title: "Loading Contacts, Please wait...",
     message: "<i class='fa fa-circle-o-notch fa-spin'></i> Loading Contacts..."
   });
+
+  if(eval(Cookies.get('UseContactColor'))) {
+    contactFieldsString += ",Color";
+  }
 
   // START CONTACT LIST CREATION  
   if(!customUrl){
@@ -173,25 +181,33 @@ function createContactList(customUrl){
           tbl += "  <tbody>";
               
           $.each(contacts.content, function(i){
-            var emptyContact = true;
-            
-            for(var n in contactFieldsArray){
-              if(contacts.content[i][contactFieldsArray[n]] != ""){
-                emptyContact = false;
-              }
+
+            if(eval(Cookies.get('UseContactColor'))) {
+              tbl += "<tr onclick=\"editContact('" + contacts.content[i]['ContactId'] + "');\" style='cursor:pointer; color:" + contacts.content[i]['Color'] + ";'>";
+            } else {
+              tbl += "<tr onclick=\"editContact('" + contacts.content[i]['ContactId'] + "');\" style='cursor:pointer;'>";
             }
-            
-            if(emptyContact){
-              return;
-            }
-            
-            tbl += "<tr onclick=\"editContact('" + contacts.content[i]['ContactId'] + "');\" style='cursor:pointer;'>";
-            
             $.each(contactFieldsArray, function(j){             
               if(this == "ContactPerson"){
-                tbl += "<td><a href='#' onclick=\"return false;\">" + contacts.content[i][this] + "</a></td>";
-              }else if(this == "ContactNotes"){
-                tbl += "<td>" + contacts.content[i][this]; //.replace(/\\n/g, '<br />') + "</td>";
+                if(eval(Cookies.get('UseContactColor'))) {
+                  tbl += "<td>" + contacts.content[i][this] + "</td>";
+                } else {
+                  tbl += "<td><a href='#' onclick=\"return false;\">" + contacts.content[i][this] + "</a></td>";
+                }
+              }else if(this == "ContactAddresses"){
+                const addressArr = contacts.content[i][this].split(";");
+                let addresses = "";
+                $.each(addressArr, function(){
+                  addresses += "<div>" + this + "</div>";
+                });
+                tbl += "<td>" + addresses + "</td>";
+              }else if(this == "ContactPhones"){
+                const phoneArr = contacts.content[i][this].split(",");
+                let phones = "";
+                $.each(phoneArr, function(){
+                  phones += "<div>" + this + "</div>";
+                });
+                tbl += "<td>" + phones + "</td>";
               }else if(contactFieldsArray[j] == "ContactWorkersCompDate" || contactFieldsArray[j] == "ContactInsuranceDate"){
                 tbl += "<td>" + formatDate(contacts.content[i][contactFieldsArray[j]]) + "</td>";
               }else {
@@ -507,6 +523,18 @@ function editOptions() {
   var msg = "";
   msg += "<form role='form' name='contactManagerOptionsForm'>";
 
+  msg += " <div class='checkbox'>";
+  msg += "  <label>";
+
+  if (eval(Cookies.get('UseContactColor'))) {
+    msg += "<input id='contactColorOption' name='UseContactColor' type='checkbox' checked='checked'> Use Active Color Profile For Contacts";
+  } else {
+    msg += "<input id='contactColorOption' name='UseContactColor' type='checkbox'> Use Active Color Profile For Contacts";
+  }
+
+  msg += "  </label>";
+  msg += "</div>";
+  
   msg += "<div class='checkbox'>";
   msg += "  <label>";
 
@@ -545,6 +573,8 @@ function editOptions() {
       label: "Save Changes",
       cssClass: "btn-primary",
       action: function (dialogRef) {
+
+        setCookie('UseContactColor', $("#contactColorOption").prop("checked"));
 
         if ($("#contactLimitOptionToggle").prop("checked")) {
           setCookie('ShowAllContacts', true);

@@ -13,10 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -30,9 +28,7 @@ public class UploadDataBaseService {
 
     public String convertData(MultipartFile file) throws IOException {
 
-        String destination = uploadPath + UUID.randomUUID();
-        Path dir = Path.of(destination);
-        Path tempDir = Files.createDirectory(dir);
+        Path tempDir = service.asDirectoryOnDisk(uploadPath + UUID.randomUUID()).toPath();
 
         File zip = File.createTempFile(UUID.randomUUID().toString(), "temp", tempDir.toFile());
 
@@ -53,24 +49,15 @@ public class UploadDataBaseService {
                 zipFile.extractFile(fileHeader, tempDir.toString(), lowerEntryName);
             }
         } catch (ZipException e) {
-            deleteDirectory(tempDir);
+            service.deleteDirectory(tempDir);
             log.info("Error extracting file {}: {}", file, e.getMessage());
         } finally {
             Files.delete(zip.toPath());
         }
 
-        service.migrate(destination);
-
-        deleteDirectory(dir);
+        service.migrate(tempDir.toString());
 
         return "Data added";
     }
 
-    private void deleteDirectory(Path dir) throws IOException {
-        try (Stream<Path> paths = Files.walk(dir)) {
-            paths.sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
-        }
-    }
 }

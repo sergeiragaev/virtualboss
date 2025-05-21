@@ -101,6 +101,10 @@ public class TaskResponse {
     @EntityMapping
     private Integer finishPlus = 1;
 
+    @JsonProperty("Color")
+    @EntityMapping
+    private String statusColor;
+
     @JsonProperty("TaskDeleted")
     private Boolean isDeleted;
 

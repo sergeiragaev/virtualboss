@@ -25,4 +25,4 @@ file:
   upload:
     path: "src/main/resources/temp/"
 migration:
-  test-data-path: "src/test/resources/testdata"
+  test-data-path: "testdata"

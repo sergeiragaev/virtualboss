@@ -3,12 +3,10 @@ package net.virtualboss.common.util;
 import com.querydsl.core.types.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.querydsl.core.types.dsl.*;
+import com.querydsl.jpa.JPAExpressions;
 import net.virtualboss.common.annotation.EntityMapping;
 import net.virtualboss.common.exception.MappingException;
-import net.virtualboss.common.model.entity.QContact;
-import net.virtualboss.common.model.entity.QField;
-import net.virtualboss.common.model.entity.QFieldValue;
-import net.virtualboss.common.model.entity.QTask;
+import net.virtualboss.common.model.entity.*;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.ReflectionUtils;
@@ -20,6 +18,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static net.virtualboss.common.model.entity.QJob.job;
+import static net.virtualboss.common.model.entity.QTask.task;
 
 public class QueryDslUtil {
 
@@ -35,6 +36,8 @@ public class QueryDslUtil {
     );
     private static final String FIELD_VALUE = "fieldValue";
     private static final String FIELD = "field";
+    private static final String ADDRESSES = "addresses";
+    private static final String PHONES = "phones";
 
     private QueryDslUtil() {
         throw new IllegalStateException("Utility class");
@@ -78,8 +81,20 @@ public class QueryDslUtil {
             return createTaskFollowsExpression();
         }
 
-        if (CONTACT_PERSON_FIELD.equals(entityFieldName)) {
+        if (CONTACT_PERSON_FIELD.equals(entityFieldName) && fieldsList.contains(dtoFieldName)) {
             return createContactPersonExpression(qEntity);
+        }
+
+        if ("statusColor".equals(entityFieldName)) {
+            return createTaskStatusColorExpression();
+        }
+
+        if (ADDRESSES.equals(entityFieldName) && fieldsList.contains(dtoFieldName)) {
+            return createAddressesExpression(qEntity, false);
+        }
+
+        if (PHONES.equals(entityFieldName) && fieldsList.contains(dtoFieldName)) {
+            return createPhonesExpression(qEntity, false);
         }
 
         if (isSimpleType(dtoField.getType())) {
@@ -91,6 +106,15 @@ public class QueryDslUtil {
         }
 
         return handleComplexTypeField(dtoField, dtoFieldName, qEntity, entityFieldName, fieldsList);
+    }
+
+    private static Expression<String> createTaskStatusColorExpression() {
+        QTaskStatusColor taskStatusColor = QTaskStatusColor.taskStatusColor;
+
+        return Expressions.stringTemplate(
+                "COALESCE({0}, '#FFFFFF')",
+                taskStatusColor.color
+        );
     }
 
     private static Expression<?> handleSimpleTypeField(
@@ -152,7 +176,6 @@ public class QueryDslUtil {
                 .max();
     }
 
-    // Common helper methods
     private static String getEntityFieldName(Field dtoField, EntityMapping annotation) {
         return annotation.path().isEmpty() ? dtoField.getName() : annotation.path();
     }
@@ -204,7 +227,6 @@ public class QueryDslUtil {
                 .toList();
     }
 
-    // Sorting related methods
     public static <T> OrderSpecifier<Comparable<Object>>[] getOrderSpecifiers(
             Sort sort,
             Class<T> entityClass,
@@ -228,9 +250,16 @@ public class QueryDslUtil {
 
         Expression<?> expr = switch (property) {
             case TASK_FOLLOWS_FIELD -> createTaskFollowsExpression();
-            case "contact.person" -> createContactPersonExpression(QTask.task.contact);
+            case "contact.person" -> createContactPersonExpression(task.contact);
+            case "owner.person" -> createContactPersonExpression(job.owner);
             case CONTACT_PERSON_FIELD -> createContactPersonExpression(QContact.contact);
             case "taskOrder" -> createTaskOrderExpression();
+            case ADDRESSES -> createAddressesExpression(QContact.contact, true);
+            case "contact.addresses" -> createAddressesExpression(task.contact, true);
+            case "owner.addresses" -> createAddressesExpression(job.owner, true);
+            case PHONES -> createPhonesExpression(QContact.contact, true);
+            case "contact.phones" -> createPhonesExpression(task.contact, true);
+            case "owner.phones" -> createPhonesExpression(job.owner, true);
             default -> isCustomFieldPath(property)
                     ? handleCustomFieldSort(property, entityPath)
                     : entityPath.getComparable(property, Comparable.class);
@@ -241,10 +270,10 @@ public class QueryDslUtil {
 
     private static Expression<?> createTaskOrderExpression() {
         try {
-            Expression<?> taskOrder = getQEntityExpression(QTask.task, "taskOrder");
+            Expression<?> taskOrder = getQEntityExpression(task, "taskOrder");
             return Expressions.stringTemplate("try_cast({0}, 0)", taskOrder);
         } catch (Exception e) {
-            throw new MappingException("Error creating contact person expression", e);
+            throw new MappingException("Error creating order expression", e);
         }
     }
 
@@ -252,6 +281,66 @@ public class QueryDslUtil {
         QTask taskFollows = new QTask(TASK_FOLLOWS_ALIAS);
         Path<?> valuePath = Expressions.path(String.class, taskFollows, "number");
         return Expressions.stringTemplate("string_agg(cast({0} as text), ',')", valuePath);
+    }
+
+    private static Expression<String> createAddressesExpression(Object qEntity, boolean forSorting) {
+        if (forSorting) return Expressions.stringPath(ADDRESSES);
+
+        QAddress address = QAddress.address;
+        QCommunicationType type = QCommunicationType.communicationType;
+
+        return ExpressionUtils.as(
+                JPAExpressions.select(
+                        Expressions.stringTemplate(
+                                "string_agg( cast(coalesce(" +
+                                "case when NOT {6} THEN (CONCAT_WS(', ', " +
+                                "CONCAT({0}, ': ', {1}, " +
+                                "CASE WHEN {2} IS NOT NULL AND {2} <> '' THEN CONCAT(', ', {2}) ELSE '' END), " +
+                                "{3}, {4}, {5})) else null end, '') as text), ';')",
+                                type.caption,
+                                address.address1,
+                                address.address2,
+                                address.city,
+                                address.state,
+                                address.postal,
+                                address.isDeleted
+                        )
+                )
+                .from(address)
+                .leftJoin(address.type, type)
+                .where(address.address1.isNotEmpty())
+                .where(address.contact.eq((QContact) qEntity))
+                .groupBy(address.contact),
+                ADDRESSES
+        );
+    }
+
+    private static Expression<?> createPhonesExpression(Object qEntity, boolean forSorting) {
+        if (forSorting) return Expressions.stringPath(PHONES);
+
+        QCommunication comm = QCommunication.communication;
+        QCommunicationType type = QCommunicationType.communicationType;
+
+        return ExpressionUtils.as(
+                JPAExpressions.select(
+                        Expressions.stringTemplate(
+                                "string_agg(cast(coalesce(" +
+                                "case when {0} is not null and {0} <> '' and not {1} then {2} || ': ' || {0} " +
+                                "else null end, '') as text), ',')",
+                                comm.title,
+                                comm.isDeleted,
+                                type.caption)
+                )
+                .from(comm)
+                .leftJoin(comm.type, type)
+                .where(comm.contact.eq((QContact) qEntity))
+                .groupBy(comm.contact),
+                PHONES
+        );
+    }
+
+    public static Expression<String> safeOrderBy(Expression<?> expr) {
+        return Expressions.stringTemplate("({0})", expr); // предотвращает склейку by+имя
     }
 
     private static Expression<String> createContactPersonExpression(Object qEntity) {

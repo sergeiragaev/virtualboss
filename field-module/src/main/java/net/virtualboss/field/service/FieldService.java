@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,11 +24,15 @@ public class FieldService {
     public Map<String, String> getFieldCaptions(String fieldList) {
         String[] fields = fieldList.split(",");
         List<Field> fieldCaptions = fieldRepository.findAllByNameIn(Arrays.stream(fields).toList());
-        Map<String, String> captions = new HashMap<>();
-        for (Field field : fieldCaptions) {
-            captions.put(field.getName(), field.getAlias());
-        }
-        return captions;
+
+        return fieldCaptions.stream()
+                .sorted(Comparator.comparing(Field::getAlias))
+                .collect(Collectors.toMap(
+                        Field::getName,
+                        Field::getAlias,
+                        (existing, replacement) -> replacement,
+                        LinkedHashMap::new
+                ));
     }
 
     public void updateField(FieldDto fieldDto) {

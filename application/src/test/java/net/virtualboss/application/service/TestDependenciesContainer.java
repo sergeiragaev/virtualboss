@@ -3,14 +3,12 @@ package net.virtualboss.application.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import net.virtualboss.common.model.entity.*;
 import net.virtualboss.common.repository.*;
 import net.virtualboss.contact.mapper.v1.ContactMapperV1;
+import net.virtualboss.contact.web.dto.ContactReferencesRequest;
 import net.virtualboss.job.mapper.v1.JobMapperV1;
 import net.virtualboss.task.mapper.v1.TaskMapperV1;
-import net.virtualboss.common.model.entity.Contact;
-import net.virtualboss.common.model.entity.Group;
-import net.virtualboss.common.model.entity.Job;
-import net.virtualboss.common.model.entity.Task;
 import net.virtualboss.common.model.enums.EntityType;
 import net.virtualboss.common.model.enums.TaskStatus;
 import net.virtualboss.task.service.TaskService;
@@ -28,6 +26,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -71,6 +70,10 @@ public class TestDependenciesContainer {
     protected TaskService taskService;
     @Autowired
     protected HolidayRepository holidayRepository;
+    @Autowired
+    protected CompanyRepository companyRepository;
+    @Autowired
+    protected ProfessionRepository professionRepository;
 
     protected MockMvc mockMvc;
 
@@ -114,8 +117,10 @@ public class TestDependenciesContainer {
         return jobRepository.save(job);
     }
 
-    protected Contact saveContactInDbAndGet(UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
-        Contact contact = contactMapper.requestToContact(request, customFieldsAndLists);
+    @Transactional
+    protected Contact saveContactInDbAndGet(
+            UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists, ContactReferencesRequest referencesRequest) {
+        Contact contact = contactMapper.requestToContact(request, customFieldsAndLists, referencesRequest);
         return contactRepository.save(contact);
     }
 
@@ -169,7 +174,10 @@ public class TestDependenciesContainer {
 
     protected TaskReferencesRequest generateTestTaskReferenceRequest() {
         Job job = saveJobInDbAndGet(generateTestJobRequest(), generateTestJobCustomFieldsRequest());
-        Contact contact = saveContactInDbAndGet(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
+        Contact contact = saveContactInDbAndGet(
+                generateTestContactRequest(),
+                generateTestContactCustomFieldsRequest(),
+                generateTestContactReferenceRequest());
         Group group = saveTaskGroupInDbAndGet();
         return TaskReferencesRequest.builder()
 //                .requested("Admin")
@@ -207,7 +215,6 @@ public class TestDependenciesContainer {
     }
 
     protected UpsertContactRequest generateTestContactRequest() {
-        Group group = saveContactGroupInDbAndGet();
         return UpsertContactRequest.builder()
                 .comments("Some comments")
                 .fax("Fax number")
@@ -217,39 +224,55 @@ public class TestDependenciesContainer {
                 .taxId("Tax ID")
                 .email("contact@email.com")
                 .spouse("Spouse")
-                .profession("Profession")
                 .supervisor("Supervisor")
                 .webSite("www.contact.org")
-                .company("Contact company")
                 .insuranceDate(LocalDate.now().plusYears(2))
                 .workersCompDate(LocalDate.now().plusYears(1))
-                .phones("Contact phones number")
+                .build();
+    }
+
+    protected ContactReferencesRequest generateTestContactReferenceRequest() {
+        Group group = saveContactGroupInDbAndGet();
+        return ContactReferencesRequest.builder()
+                .profession("Profession")
+                .company("Contact company")
+                .phones("Service #1: (800)546-5548," +
+                        "Cellular #2: (734)544-5456," +
+                        "Cellular #1: (734)545-6546," +
+                        "Work #2: (419)875-5465," +
+                        "Work #1: (800)546-4546")
+                .addresses("Job site: 6638 Buck Creek, Holland, MI, 88423;" +
+                           "Home: 6638 Buck Creek Dr., Holland, MI, 88423")
                 .groups(String.valueOf(group.getId()))
                 .build();
     }
 
     protected UpsertJobRequest generateTestJobRequest() {
         Group group = saveJobGroupInDbAndGet();
+        Contact contact = saveContactInDbAndGet(
+                generateTestContactRequest(),
+                generateTestContactCustomFieldsRequest(),
+                generateTestContactReferenceRequest());
         return UpsertJobRequest.builder()
-                .address1("Address first row")
-                .address2("Address second row")
-                .city("City")
-                .state("State")
-                .email("job@email.com")
-                .fax("Fax number")
+//                .address1("Address first row")
+//                .address2("Address second row")
+//                .city("City")
+//                .state("State")
+//                .email("job@email.com")
+//                .fax("Fax number")
                 .lot("Lot number")
-                .company("Job Company")
-                .country("Country")
-                .cellPhone("Cellphone number")
+//                .company("Job Company")
+//                .country("Country")
+//                .cellPhone("Cellphone number")
                 .directions("Directions to job")
                 .lockBox("Loc box number")
                 .notes("Job notes")
-                .homePhone("Home phone number")
-                .postal("zip")
-                .ownerName("Owner name")
+//                .homePhone("Home phone number")
+//                .postal("zip")
+                .ownerId(String.valueOf(contact.getId()))
                 .subdivision("Subdivision")
                 .number("Some job")
-                .workPhone("Work phone number")
+//                .workPhone("Work phone number")
                 .groups(String.valueOf(group.getId()))
                 .build();
     }
@@ -300,6 +323,8 @@ public class TestDependenciesContainer {
         contactRepository.deleteAll();
         employeeRepository.deleteAll();
         groupRepository.deleteAll();
+        companyRepository.deleteAll();
+        professionRepository.deleteAll();
     }
 
     protected String getQueryString(String unparsedString,

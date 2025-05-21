@@ -32,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.*;
@@ -57,6 +58,7 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
             "Job", "job.",
             "Contact", "contact."
     );
+    private final SecureRandom random = new SecureRandom();
 
     public TaskService(EntityManager entityManager,
                        MainService mainService,
@@ -133,15 +135,45 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
     @Override
     protected Set<String> parseFields(String fields) {
         return Arrays.stream(fields.split(","))
-                .map(field -> {
-                    if (field.contains(getCustomFieldPrefix())) return getCustomFieldsAndListsPrefix() + "." + field;
-                    if (field.contains("JobCustom")) return "job.JobCustomFieldsAndLists." + field;
-                    if (field.contains("ContactCustom")) return "contact.ContactCustomFieldsAndLists." + field;
-                    if (field.startsWith("Job")) return "job." + field;
-                    if (field.startsWith("Contact")) return "contact." + field;
-                    return field;
-                })
+                .map(this::mapField)
                 .collect(Collectors.toSet());
+    }
+
+    private String mapField(String field) {
+        if (field.startsWith(getCustomFieldPrefix())) {
+            return getCustomFieldsAndListsPrefix() + "." + field;
+        }
+        if (field.startsWith("JobCustom")) {
+            return "job.JobCustomFieldsAndLists." + field;
+        }
+        if (field.startsWith("ContactCustom")) {
+            return "contact.ContactCustomFieldsAndLists." + field;
+        }
+        if (field.startsWith("Job")) {
+            return "job." + field;
+        }
+        if (field.startsWith("Contact")) {
+            return mapContactField(field);
+        }
+        if (field.equals("Color")) {
+            return setColorPath();
+        }
+        return field;
+    }
+
+    private String mapContactField(String field) {
+        if (field.equals("ContactCompany")) {
+            return "contact.company." + field;
+        }
+        if (field.equals("ContactProfession")) {
+            return "contact.profession." + field;
+        }
+        return "contact." + field;
+    }
+
+    private String setColorPath() {
+        String[] colors = new String[]{"job.Color", "contact.Color", "statusColor"};
+        return colors[random.nextInt(3)];
     }
 
     @Override
@@ -176,6 +208,10 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
         QField fieldJob = new QField("fieldJob");
         QField fieldContact = new QField("fieldContact");
         QTask taskFollows = new QTask("task_follows_0");
+        QTaskStatusColor taskStatusColor = QTaskStatusColor.taskStatusColor;
+        QCompany company = QCompany.company;
+        QProfession profession = QProfession.profession;
+
         return List.of(
                 new CollectionJoin<>(task.customFieldsAndListsValues, fieldValueTask, JoinType.LEFTJOIN),
                 new EntityJoin<>(fieldValueTask.field, fieldTask, JoinType.LEFTJOIN),
@@ -183,17 +219,26 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
                 new EntityJoin<>(fieldValueContact.field, fieldContact, JoinType.LEFTJOIN),
                 new CollectionJoin<>(job.customFieldsAndListsValues, fieldValueJob, JoinType.LEFTJOIN),
                 new EntityJoin<>(fieldValueJob.field, fieldJob, JoinType.LEFTJOIN),
-                new CollectionJoin<>(QTask.task.follows, taskFollows, JoinType.LEFTJOIN)
+                new CollectionJoin<>(QTask.task.follows, taskFollows, JoinType.LEFTJOIN),
+                new EntityJoinWithCondition<>(
+                        taskStatusColor, task.status.eq(taskStatusColor.status), JoinType.LEFTJOIN),
+                new EntityJoin<>(task.contact, QContact.contact, JoinType.LEFTJOIN),
+                new EntityJoin<>(QContact.contact.company, company, JoinType.LEFTJOIN),
+                new EntityJoin<>(QContact.contact.profession, profession, JoinType.LEFTJOIN)
         );
     }
 
     @Override
     protected List<GroupByExpression> getGroupBy() {
         QTask task = QTask.task;
+        QTaskStatusColor taskStatusColor = QTaskStatusColor.taskStatusColor;
         return List.of(
                 new GroupByExpression(task.id),
                 new GroupByExpression(task.job),
-                new GroupByExpression(task.contact));
+                new GroupByExpression(QContact.contact.id),
+                new GroupByExpression(QCompany.company.id),
+                new GroupByExpression(QProfession.profession.id),
+                new GroupByExpression(taskStatusColor.status));
     }
 
     @Override
@@ -300,20 +345,19 @@ public class TaskService extends GenericService<Task, UUID, TaskResponse, QTask>
     }
 
     private void adjustDateRangeForSpecialCases(TaskFilter filter) {
-        LocalDate referenceDate = filter.getThisDate() == null ? LocalDate.now() : filter.getThisDate();
+        LocalDate referenceDate = filter.getThisDate() != null ? filter.getThisDate() : LocalDate.now();
 
-        Integer dateCriteriaValue = filter.getDateCriteria();
-        DateCriteria dateCriteria = dateCriteriaValue != null
-                ? DateCriteria.fromValue(dateCriteriaValue)
-                : DateCriteria.EXACT; // default value
+        DateCriteria dateCriteria = Optional.ofNullable(filter.getDateCriteria())
+                .map(DateCriteria::fromValue)
+                .orElse(DateCriteria.EXACT);
 
-        if (dateCriteria == DateCriteria.ON_OR_BEFORE) {
-            filter.setDateTo(referenceDate);
-        } else if (dateCriteria == DateCriteria.ON_OR_AFTER) {
-            filter.setDateFrom(referenceDate);
-        } else {
-            filter.setDateFrom(referenceDate);
-            filter.setDateTo(referenceDate);
+        switch (dateCriteria) {
+            case ON_OR_BEFORE -> filter.setDateTo(referenceDate);
+            case ON_OR_AFTER -> filter.setDateFrom(referenceDate);
+            default -> {
+                filter.setDateFrom(referenceDate);
+                filter.setDateTo(referenceDate);
+            }
         }
     }
 

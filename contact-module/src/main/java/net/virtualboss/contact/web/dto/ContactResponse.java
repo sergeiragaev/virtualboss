@@ -21,15 +21,15 @@ public class ContactResponse {
     @EntityMapping
     private UUID id;
 
-    @JsonProperty("ContactCompany")
-    @EntityMapping
     @Builder.Default
-    private String company = "";
+    @EntityMapping
+    @Flatten
+    private CompanyResponse company = CompanyResponse.builder().build();
 
-    @JsonProperty("ContactProfession")
-    @EntityMapping
     @Builder.Default
-    private String profession = "";
+    @EntityMapping
+    @Flatten
+    private ProfessionResponse profession = ProfessionResponse.builder().build();
 
     @JsonProperty("ContactPerson")
     @EntityMapping
@@ -84,20 +84,20 @@ public class ContactResponse {
     @Builder.Default
     private String notes = "";
 
-    @JsonProperty("ContactFax")
-    @EntityMapping
-    @Builder.Default
-    private String fax = "";
-
     @JsonProperty("ContactEmail")
     @EntityMapping
     @Builder.Default
     private String email = "";
 
     @JsonProperty("ContactPhones")
-    @EntityMapping
     @Builder.Default
+    @EntityMapping
     private String phones = "";
+
+    @JsonProperty("ContactAddresses")
+    @Builder.Default
+    @EntityMapping
+    private String addresses = "";
 
     @JsonProperty("ContactDeleted")
     @Builder.Default
@@ -113,9 +113,10 @@ public class ContactResponse {
     @Builder.Default
     private String groups = "";
 
-    /**
-     * Вычисляемое поле "ContactPerson", объединяющее имя и фамилию.
-     */
+    @JsonProperty("Color")
+    @EntityMapping
+    private String color;
+
     public String getPerson() {
         String fullName = firstName;
         if (!firstName.isBlank() && !lastName.isBlank()) {

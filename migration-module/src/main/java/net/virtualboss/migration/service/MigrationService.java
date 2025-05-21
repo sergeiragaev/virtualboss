@@ -4,15 +4,31 @@ import com.linuxense.javadbf.DBFReader;
 import com.linuxense.javadbf.DBFRow;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import net.virtualboss.common.exception.MigrationException;
+import net.virtualboss.common.repository.*;
 import net.virtualboss.migration.config.MigrationConfig;
 import net.virtualboss.field.service.FieldService;
 import net.virtualboss.field.web.dto.FieldDto;
 import net.virtualboss.migration.processor.EntityProcessor;
 import net.virtualboss.migration.processor.relation.RelationProcessor;
+import org.apache.commons.lang3.SystemUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -30,30 +46,119 @@ public class MigrationService {
     @Value("${migration.test-data-path}")
     private String testDataPath;
 
+    private final ResourceLoader resourceLoader;
+
+    private final FieldValueRepository fieldValueRepository;
+    private final TaskRepository taskRepository;
+    private final JobRepository jobRepository;
+    private final ContactRepository contactRepository;
+    private final EmployeeRepository employeeRepository;
+    private final GroupRepository groupRepository;
+    private final CompanyRepository companyRepository;
+    private final ProfessionRepository professionRepository;
+    private final TaskAttachmentRepository taskAttachmentRepository;
+
     public void migrate(String dataPath) {
 
-        if (dataPath == null) {
-            dataPath = testDataPath;
+        String pathToUse = Optional.ofNullable(dataPath)
+                .filter(p -> !p.isBlank())
+                .orElse(testDataPath);
+
+        try {
+            File baseDir = asDirectoryOnDisk(pathToUse);
+            String finalDataPath = baseDir.getAbsolutePath();
+
+            migrateFields(finalDataPath);
+
+            clearAllRepositories();
+
+            databaseSaver.preloadCaches();
+
+            migrationConfig.getEntities().forEach((entityName, config) -> {
+                EntityProcessor processor = processors.get(entityName + "Processor");
+                processDBF(finalDataPath, config, processor);
+            });
+
+            migrationConfig.getRelations().forEach(relation -> {
+                if (relation.getFrom().hasSourceFile()) {
+                    relationProcessor.processExternalFile(finalDataPath, relation);
+                } else {
+                    relationProcessor.processEmbeddedField(finalDataPath, relation);
+                }
+            });
+
+            deleteDirectory(baseDir.toPath());
+
+        } catch (IOException ex) {
+            throw new MigrationException(ex.getLocalizedMessage());
+        }
+    }
+
+    public void deleteDirectory(Path dir) throws IOException {
+        try (Stream<Path> paths = Files.walk(dir)) {
+            paths.sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        }
+    }
+
+    public File asDirectoryOnDisk(String path) throws IOException {
+        File maybe = new File(path);
+        if (maybe.exists() && maybe.isDirectory()) {
+            return maybe;
         }
 
-        migrateFields(dataPath);
+        String base = path.replaceFirst("^classpath:", "").replaceFirst("^/+", "");
+        String pattern = "classpath*:" + base + "/**/*";
 
-        databaseSaver.preloadCaches();
+        Path tempDir = createSecureTempDirectory("migration-data-");
 
-        final String finalDataPath = dataPath;
-        migrationConfig.getEntities().forEach((entityName, config) -> {
-            EntityProcessor processor = processors.get(entityName + "Processor");
-            processDBF(finalDataPath, config, processor);
-        });
+        PathMatchingResourcePatternResolver resolver =
+                new PathMatchingResourcePatternResolver(resourceLoader);
+        Resource[] resources = resolver.getResources(pattern);
 
-        migrationConfig.getRelations().forEach(relation -> {
-            if (relation.getFrom().hasSourceFile()) {
-                relationProcessor.processExternalFile(finalDataPath, relation);
-            } else {
-                relationProcessor.processEmbeddedField(finalDataPath, relation);
+        for (Resource res : resources) {
+            String filename = res.getFilename();
+            String uri = res.getURI().toString();
+            int idx = uri.indexOf(base);
+
+            if (filename == null || !res.isReadable() || idx < 0) {
+                continue;
             }
-        });
 
+            String rel = uri.substring(idx + base.length()).replaceFirst("^/+", "");
+            Path target = tempDir.resolve(rel);
+            Files.createDirectories(target.getParent());
+            try (InputStream in = res.getInputStream()) {
+                Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+        return tempDir.toFile();
+    }
+
+    private Path createSecureTempDirectory(String prefix) throws IOException {
+        File secureBaseDir = new File("vbSecureDirectory");
+        if (!secureBaseDir.exists() && !secureBaseDir.mkdirs()) {
+            throw new IOException("Cannot create secure base dir: " + secureBaseDir);
+        }
+
+        Path tempDir;
+        if (SystemUtils.IS_OS_UNIX) {
+            FileAttribute<Set<PosixFilePermission>> attr =
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------"));
+            tempDir = Files.createTempDirectory(secureBaseDir.toPath(), prefix, attr);
+        } else {
+            tempDir = Files.createTempDirectory(secureBaseDir.toPath(), prefix);
+            File dir = tempDir.toFile();
+            boolean ok = dir.setReadable(true, true)
+                         && dir.setWritable(true, true)
+                         && dir.setExecutable(true, true);
+            if (!ok) {
+                throw new IOException("Failed to set owner‑only perms on " + tempDir);
+            }
+        }
+
+        return tempDir;
     }
 
     private void processDBF(String path, MigrationConfig.EntityConfig config, EntityProcessor processor) {
@@ -96,5 +201,21 @@ public class MigrationService {
                 log.error("There is error occurred while parsing fields info for field {}: {}", name, e.getLocalizedMessage());
             }
         }
+    }
+
+    private void clearAllRepositories() {
+        fieldValueRepository.deleteAll();
+        taskAttachmentRepository.deleteAll();
+        taskRepository.markAllAsDeleted();
+        jobRepository.markAllAsDeleted();
+
+        contactRepository.markAllAsDeleted();
+        contactRepository.markAllCommunicationsAsDeleted();
+        contactRepository.markAllAddressesAsDeleted();
+
+        groupRepository.markAllAsDeleted();
+        employeeRepository.markAllAsDeleted();
+        companyRepository.markAllAsDeleted();
+        professionRepository.markAllAsDeleted();
     }
 }

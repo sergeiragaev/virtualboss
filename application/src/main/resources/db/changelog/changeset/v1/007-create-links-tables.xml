@@ -93,6 +93,7 @@
             <column name="type" type="VARCHAR(255)"/>
             <column name="description" type="VARCHAR(255)"/>
             <column name="name" type="VARCHAR(255)"/>
+            <column name="color" type="VARCHAR(7)"/>
             <column name="is_deleted" type="boolean"/>
         </createTable>
     </changeSet>
@@ -137,22 +138,24 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="addFKTasksConstraint" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="tasks" constraintName="fk_job_id"
-                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
-                                 referencedColumnNames="id" referencedTableName="jobs" validate="true"/>
-    </changeSet>
+<!--    <changeSet id="addFKTasksConstraint" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="tasks" constraintName="fk_job_id"-->
+<!--                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"-->
+<!--                                 referencedColumnNames="id" referencedTableName="jobs" validate="true"/>-->
+<!--    </changeSet>-->
 
     <changeSet id="addFKJobsTasksConstraintTasksId" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="tasks_id" baseTableName="jobs_tasks" constraintName="fk_tasks_id"
                                  deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
                                  referencedColumnNames="id" referencedTableName="tasks" validate="true"/>
     </changeSet>
-    <changeSet id="addFKJobsTasksConstraintJobId" author="Sergei Ragaev">
-        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="jobs_tasks" constraintName="fk_job_id"
-                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"
-                                 referencedColumnNames="id" referencedTableName="jobs" validate="true"/>
-    </changeSet>
+
+<!--    <changeSet id="addFKJobsTasksConstraintJobId" author="Sergei Ragaev">-->
+<!--        <addForeignKeyConstraint baseColumnNames="job_id" baseTableName="jobs_tasks" constraintName="fk_job_id"-->
+<!--                                 deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION"-->
+<!--                                 referencedColumnNames="id" referencedTableName="jobs" validate="true"/>-->
+<!--    </changeSet>-->
+
     <changeSet id="addFKTasksFollowsConstraintFollowsId" author="Sergei Ragaev">
         <addForeignKeyConstraint baseColumnNames="follows_id" baseTableName="tasks_follows"
                                  constraintName="fk_follows_id" deferrable="false" initiallyDeferred="false"

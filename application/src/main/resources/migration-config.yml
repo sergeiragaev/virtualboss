@@ -1,6 +1,39 @@
 migration:
   batch-size: 1000
   entities:
+
+    company:
+      name: company
+      table: companies
+      dbf-file: ctcust.dbf
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: name
+          source: CU_NAME
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+
+    profession:
+      name: profession
+      table: professions
+      dbf-file: ctlist.dbf
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: color
+          source: LI_PRCOLOR
+          type: STRING
+          processor: convertColor
+        - name: name
+          source: LI_PROFESS
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+
     employee:
       name: employee
       table: employees
@@ -23,7 +56,8 @@ migration:
           processor: sanitizeMemo
         - name: color
           source: EM_COLOR
-          type: INTEGER
+          type: STRING
+          processor: convertColor
         - name: role
           source: EM_RIGHTS
           type: INTEGER
@@ -46,12 +80,14 @@ migration:
         - name: modified_time
           source: CU_LASTMOD
           type: TIMESTAMP
-        - name: company
+        - name: company_id
           source: CU_NAME
-          type: STRING
-        - name: profession
+          type: UUID
+          reference: company
+        - name: profession_id
           source: CU_PROFESS
-          type: STRING
+          type: UUID
+          reference: profession
         - name: last_name
           source: CU_LAST
           type: STRING
@@ -85,9 +121,6 @@ migration:
         - name: tax_id
           source: CU_TAXID
           type: STRING
-        - name: fax
-          source: CU_FAXNO
-          type: STRING
         - name: workers_comp_date
           source: CU_COMPDAT
           type: DATE
@@ -99,6 +132,10 @@ migration:
           type: STRING
         - name: is_deleted
           type: BOOLEAN
+        - name: color
+          processor: convertColor
+          source: CU_COLOR
+          type: STRING
 #        - name: employee_id
 #          source: CU_ENTERED
 #          type: UUID
@@ -171,6 +208,9 @@ migration:
         - name: postal
           source: JO_ZIP
           type: STRING
+        - name: country
+          source: JO_COUNTRY
+          type: STRING
         - name: lock_box
           source: JO_LOCKBOX
           type: STRING
@@ -186,32 +226,33 @@ migration:
           source: JO_DESCRTF
           type: STRING
           processor: sanitizeMemo
-        - name: owner_name
+        - name: owner_id
           source: JO_OWNER
-          type: STRING
+          type: UUID
         - name: email
           source: JO_EMAIL
-          type: STRING
-        - name: country
-          source: JO_COUNTRY
-          type: STRING
-        - name: home_phone
-          source: JO_OWNERPH
-          type: STRING
-        - name: work_phone
-          source: JO_WORK1
-          type: STRING
-        - name: cell_phone
-          source: JO_CELL1
-          type: STRING
-        - name: fax
-          source: JO_FAX1
           type: STRING
         - name: company
           source: JO_COMPANY
           type: STRING
         - name: legacy_id
           source: JO_CODE
+          type: STRING
+        - name: color
+          source: JO_COLOR
+          type: STRING
+          processor: convertColor
+        - name: homePhone
+          source: JO_OWNERPH
+          type: STRING
+        - name: workPhone
+          source: JO_WORK1
+          type: STRING
+        - name: cellPhone
+          source: JO_CELL1
+          type: STRING
+        - name: fax
+          source: JO_FAX1
           type: STRING
         - name: is_deleted
           type: BOOLEAN
@@ -376,6 +417,10 @@ migration:
           source: GR_TYPE
           type: STRING
           processor: assignGroupType
+        - name: color
+          source: GR_COLOR
+          processor: convertColor
+          type: STRING
 
     contactGroup:
       name: contactGroup
@@ -403,6 +448,155 @@ migration:
           type: STRING
           assigned: true
           processor: assignGroupType
+
+    phoneType:
+      name: phoneType
+      table: communication_types
+      dbf-file: ctpholst.dbf
+      id-field: legacy_id
+      id-field-source: PH_ID
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: caption
+          source: PH_DESC
+          type: STRING
+        - name: legacy_id
+          source: PH_ID
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+        - name: channel
+          source: "PHONE"
+          type: STRING
+          assigned: true
+    phone:
+      name: phone
+      table: communications
+      dbf-file: ctphone.dbf
+      id-field: legacy_id
+      id-field-source: PH_CODE
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: entity_id
+          source: PH_CUSTID
+          type: UUID
+          reference: contact
+        - name: type_id
+          source: PH_PHTYPE
+          type: UUID
+          reference: phoneType
+        - name: title
+          source: PH_PHONE
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+        - name: legacy_id
+          source: PH_CODE
+          type: STRING
+    addressType:
+      name: addressType
+      table: communication_types
+      dbf-file: ctaddlst.dbf
+      id-field: legacy_id
+      id-field-source: AD_ID
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: caption
+          source: AD_DESC
+          type: STRING
+        - name: legacy_id
+          source: AD_ID
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+        - name: channel
+          source: "ADDRESS"
+          type: STRING
+          assigned: true
+    address:
+      name: address
+      table: addresses
+      dbf-file: ctaddr.dbf
+      id-field: legacy_id
+      id-field-source: AD_CODE
+      columns:
+        - name: id
+          type: UUID
+          generated: true
+        - name: entity_id
+          source: AD_CUSTID
+          type: UUID
+          reference: contact
+        - name: type_id
+          source: AD_ADDTYPE
+          type: UUID
+          reference: addressType
+        - name: address1
+          source: AD_ADDRESS
+          type: STRING
+        - name: address2
+          source: AD_ADDRES2
+          type: STRING
+        - name: city
+          source: AD_CITY
+          type: STRING
+        - name: state
+          source: AD_STATE
+          type: STRING
+        - name: postal
+          source: AD_POSTAL
+          type: STRING
+        - name: country
+          source: AD_COUNTRY
+          type: STRING
+        - name: is_deleted
+          type: BOOLEAN
+        - name: legacy_id
+          source: AD_CODE
+          type: STRING
+#    jobAddress:
+#      name: jobAddress
+#      table: addresses
+#      dbf-file: tmjob.dbf
+#      columns:
+#        - name: id
+#          type: UUID
+#          generated: true
+#        - name: address1
+#          source: JO_ADDR
+#          type: STRING
+#        - name: address2
+#          source: JO_ADDR2
+#          type: STRING
+#        - name: city
+#          source: JO_CITY
+#          type: STRING
+#        - name: state
+#          source: JO_STATE
+#          type: STRING
+#        - name: postal
+#          source: JO_ZIP
+#          type: STRING
+#        - name: entity_id
+#          source: JO_CODE
+#          type: UUID
+#          reference: job
+#        - name: type_id
+#          assigned: true
+#          source: "Job Site"
+#          type: UUID
+#          reference: addressType
+#        - name: country
+#          source: JO_COUNTRY
+#          type: STRING
+#        - name: is_deleted
+#          type: BOOLEAN
 
   relations:
     - name: contact_group_members

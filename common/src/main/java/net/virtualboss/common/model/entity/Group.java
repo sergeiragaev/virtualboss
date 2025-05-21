@@ -35,6 +35,8 @@ public class Group {
 
     private String description;
 
+    private String color;
+
     @Column(name = "is_deleted")
     @Builder.Default
     private Boolean isDeleted = false;

@@ -11,30 +11,25 @@
                 <constraints nullable="false" primaryKey="true" primaryKeyName="contacts_pkey"/>
             </column>
 
-            <column name="created_time" type="DATETIME">
-                <constraints nullable="false"/>
-            </column>
-            <column name="modified_time" type="DATETIME">
-                <constraints nullable="false"/>
-            </column>
+            <column name="created_time" type="DATETIME"/>
+            <column name="modified_time" type="DATETIME"/>
 
             <column name="insurance_date" type="date"/>
             <column name="workers_comp_date" type="date"/>
             <column name="comments" type="VARCHAR(255)"/>
-            <column name="company" type="VARCHAR(255)"/>
+            <column name="company_id" type="UUID"/>
             <column name="email" type="VARCHAR(255)"/>
-            <column name="fax" type="VARCHAR(255)"/>
             <column name="first_name" type="VARCHAR(255)"/>
             <column name="last_name" type="VARCHAR(255)"/>
             <column name="notes" type="TEXT"/>
             <column name="notes_rtf" type="TEXT"/>
-            <column name="phones" type="VARCHAR(255)"/>
-            <column name="profession" type="VARCHAR(255)"/>
+            <column name="profession_id" type="UUID"/>
             <column name="spouse" type="VARCHAR(255)"/>
             <column name="supervisor" type="VARCHAR(255)"/>
             <column name="tax_id" type="VARCHAR(255)"/>
             <column name="web_site" type="VARCHAR(255)"/>
-            <column name="is_deleted" type="boolean"/>
+            <column name="color" type="VARCHAR(7)"/>
+            <column name="is_deleted" type="BOOLEAN"/>
 
         </createTable>
     </changeSet>

@@ -151,22 +151,27 @@ public class TaskFilterCriteria {
                         .or(job.lot.containsIgnoreCase(searchStr))
                         .or(job.directions.containsIgnoreCase(searchStr))
                         .or(job.notes.containsIgnoreCase(searchStr))
-                        .or(job.ownerName.containsIgnoreCase(searchStr))
-                        .or(job.company.containsIgnoreCase(searchStr))
+//                        .or(job.owner.company.name.containsIgnoreCase(searchStr))
                         .or(job.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr)))
                 .orElse(null);
     }
 
     private BooleanExpression createContactSearchPredicate(QTask task, String searchStr) {
         return Optional.ofNullable(task.contact)
-                .map(contact -> contact.profession.containsIgnoreCase(searchStr)
+                .map(contact -> contact.profession.name.containsIgnoreCase(searchStr)
                         .or(contact.firstName.containsIgnoreCase(searchStr))
                         .or(contact.lastName.containsIgnoreCase(searchStr))
                         .or(contact.notes.containsIgnoreCase(searchStr))
                         .or(contact.comments.containsIgnoreCase(searchStr))
                         .or(contact.supervisor.containsIgnoreCase(searchStr))
                         .or(contact.spouse.containsIgnoreCase(searchStr))
-                        .or(contact.company.containsIgnoreCase(searchStr))
+                        .or(contact.company.name.containsIgnoreCase(searchStr))
+                        .or(contact.phones.any().title.containsIgnoreCase(searchStr))
+                        .or(contact.addresses.any().address1.containsIgnoreCase(searchStr))
+                        .or(contact.addresses.any().address2.containsIgnoreCase(searchStr))
+                        .or(contact.addresses.any().city.containsIgnoreCase(searchStr))
+                        .or(contact.addresses.any().state.containsIgnoreCase(searchStr))
+                        .or(contact.addresses.any().postal.containsIgnoreCase(searchStr))
                         .or(contact.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr)))
                 .orElse(null);
     }

@@ -43,22 +43,28 @@ public class ContactFilterCriteria {
     }
 
     private BooleanExpression createSearchPredicate(QContact contact, String searchStr) {
-        return contact.profession.containsIgnoreCase(searchStr)
+        return contact.profession.name.containsIgnoreCase(searchStr)
                 .or(contact.firstName.containsIgnoreCase(searchStr))
                 .or(contact.lastName.containsIgnoreCase(searchStr))
                 .or(contact.notes.containsIgnoreCase(searchStr))
                 .or(contact.comments.containsIgnoreCase(searchStr))
                 .or(contact.supervisor.containsIgnoreCase(searchStr))
                 .or(contact.spouse.containsIgnoreCase(searchStr))
-                .or(contact.company.containsIgnoreCase(searchStr))
+                .or(contact.company.name.containsIgnoreCase(searchStr))
+                .or(contact.phones.any().title.containsIgnoreCase(searchStr))
+                .or(contact.addresses.any().address1.containsIgnoreCase(searchStr))
+                .or(contact.addresses.any().address2.containsIgnoreCase(searchStr))
+                .or(contact.addresses.any().city.containsIgnoreCase(searchStr))
+                .or(contact.addresses.any().state.containsIgnoreCase(searchStr))
+                .or(contact.addresses.any().postal.containsIgnoreCase(searchStr))
                 .or(contact.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr));
     }
 
     private void applyUnassignedFilter(QContact contact, BooleanBuilder builder) {
         Optional.ofNullable(showUnassigned).ifPresent(flag -> {
             BooleanExpression unassignedCondition = flag ?
-                    contact.company.equalsIgnoreCase(UNASSIGNED_COMPANY) :
-                    contact.company.toLowerCase().ne(UNASSIGNED_COMPANY);
+                    contact.company.name.equalsIgnoreCase(UNASSIGNED_COMPANY) :
+                    contact.company.name.toLowerCase().ne(UNASSIGNED_COMPANY);
 
             builder.and(unassignedCondition);
         });

@@ -25,7 +25,7 @@ public class Employee {
 
     private String password;
 
-    private Integer color;
+    private String color;
 
     @Column(columnDefinition = "TEXT")
     @ToString.Exclude

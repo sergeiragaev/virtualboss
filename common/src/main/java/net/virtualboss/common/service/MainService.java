@@ -4,10 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.EntityNotFoundException;
 import net.virtualboss.common.model.entity.Job;
-import net.virtualboss.common.repository.ContactRepository;
-import net.virtualboss.common.repository.JobRepository;
+import net.virtualboss.common.repository.*;
 import net.virtualboss.common.model.entity.*;
-import net.virtualboss.common.repository.TaskRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +19,8 @@ public class MainService {
     private final TaskRepository taskRepository;
     private final JobRepository jobRepository;
     private final ContactRepository contactRepository;
+    private final CompanyRepository companyRepository;
+    private final ProfessionRepository professionRepository;
 
     public void eraseJobFromTasks(Job job) {
         taskRepository.findAllByJob(job)
@@ -55,8 +55,12 @@ public class MainService {
 
     private Contact createUnassigned() {
         Contact contact = new Contact();
-        contact.setCompany("Unassigned");
+        contact.setCompany(companyRepository.getUnassigned().orElseGet(this::createUnassignedCompany));
         return contactRepository.save(contact);
+    }
+
+    private Company createUnassignedCompany() {
+        return getCompany("Unassigned");
     }
 
     public Job getJobByNumber(String jobNumber) {
@@ -79,4 +83,21 @@ public class MainService {
         }
         return set;
     }
+
+    public Company getCompany(String companyName) {
+        if (companyName == null || companyName.isBlank()) return null;
+        Company company = Company.builder().name(companyName).build();
+        return companyRepository
+                .findCompanyByNameEqualsIgnoreCase(companyName)
+                .orElse(companyRepository.save(company));
+    }
+
+    public Profession getProfession(String name) {
+        if (name == null || name.isBlank()) return null;
+        Profession profession = Profession.builder().name(name).build();
+        return professionRepository
+                .findProfessionByNameIgnoreCase(name)
+                .orElse(professionRepository.save(profession));
+    }
+
 }

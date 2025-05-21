@@ -2,6 +2,7 @@ package net.virtualboss.job.mapper.v1;
 
 import net.virtualboss.common.mapper.v1.GroupMapperV1;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
+import net.virtualboss.contact.mapper.v1.ContactMapperV1;
 import net.virtualboss.job.web.dto.JobResponse;
 import net.virtualboss.common.model.entity.Job;
 import net.virtualboss.job.web.dto.UpsertJobRequest;
@@ -11,7 +12,7 @@ import java.util.UUID;
 
 @Mapper(componentModel = "spring", unmappedSourcePolicy = ReportingPolicy.IGNORE,
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
-        uses = {GroupMapperV1.class, JobCustomFLMapperV1.class})
+        uses = {ContactMapperV1.class, GroupMapperV1.class, JobCustomFLMapperV1.class})
 @DecoratedWith(JobMapperDelegate.class)
 public interface JobMapperV1 {
 
@@ -21,10 +22,11 @@ public interface JobMapperV1 {
     default Job requestToJob(UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
         Job job = requestToJob(request);
         return addCustomFLAndGroups(job, customFieldsAndLists,
-                request.getGroups());
+                request.getGroups(), request.getOwnerId());
     }
 
-    Job addCustomFLAndGroups(Job job, CustomFieldsAndLists customFieldsAndLists, String jobGroups);
+    @Mapping(target = "owner", ignore = true)
+    Job addCustomFLAndGroups(Job job, CustomFieldsAndLists customFieldsAndLists, String jobGroups, String ownerId);
 
     default Job requestToJob(String id, UpsertJobRequest request, CustomFieldsAndLists customFieldsAndLists) {
         Job job = requestToJob(request, customFieldsAndLists);

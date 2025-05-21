@@ -91,4 +91,11 @@ public class ExceptionHandlerController {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ex.getMessage());
     }
+
+    @ExceptionHandler(MigrationException.class)
+    public ResponseEntity<ErrorResponse> pathNotFound(MigrationException ex) {
+        log.error("There is error occurred while trying to migrate data", ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(ex.getLocalizedMessage(), new ArrayList<>()));
+    }
 }

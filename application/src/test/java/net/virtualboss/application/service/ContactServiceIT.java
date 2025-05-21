@@ -1,10 +1,13 @@
 package net.virtualboss.application.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import net.virtualboss.common.exception.AccessDeniedException;
 import net.virtualboss.common.service.MainService;
 import net.virtualboss.common.model.entity.Contact;
 import net.virtualboss.contact.service.ContactService;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
+import net.virtualboss.contact.web.dto.ContactReferencesRequest;
 import net.virtualboss.contact.web.dto.UpsertContactRequest;
 import net.virtualboss.common.web.dto.filter.CommonFilter;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +34,9 @@ class ContactServiceIT extends TestDependenciesContainer {
     @Autowired
     private MainService mainService;
 
+    @PersistenceContext
+    EntityManager em;
+
     @BeforeEach
     void init() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
@@ -41,12 +47,14 @@ class ContactServiceIT extends TestDependenciesContainer {
     @DisplayName("Get contact by ID returns valid contact")
     @Transactional
     void getContactById_ReturnsValidContact() {
-        UpsertContactRequest request = generateTestContactRequest();
+        ContactReferencesRequest request = generateTestContactReferenceRequest();
         CustomFieldsAndLists customFieldsAndLists = generateTestContactCustomFieldsRequest();
-        Map<String, Object> savedContact = contactService.createContact(request, customFieldsAndLists);
+        Map<String, Object> savedContact =
+                contactService.createContact(
+                        generateTestContactRequest(), customFieldsAndLists, generateTestContactReferenceRequest());
         Contact result = mainService.getContactById(savedContact.get("ContactId").toString());
         assertEquals(savedContact.get("ContactId"), result.getId());
-        assertEquals(request.getCompany(), result.getCompany());
+        assertEquals(request.getCompany(), result.getCompany().getName());
         assertEquals(customFieldsAndLists.getCustomField4(),
                 result.getCustomValueByName("ContactCustomField4"));
     }
@@ -56,17 +64,17 @@ class ContactServiceIT extends TestDependenciesContainer {
     @Transactional
     void updateContact_CorrectUpdate() {
         CustomFieldsAndLists customFieldsAndLists = generateTestContactCustomFieldsRequest();
+        UpsertContactRequest request = generateTestContactRequest();
         Map<String, Object> savedContact = contactService.createContact(
-                generateTestContactRequest(), customFieldsAndLists);
+                request, customFieldsAndLists, generateTestContactReferenceRequest());
         String id = savedContact.get("ContactId").toString();
-        UpsertContactRequest updatedRequest = UpsertContactRequest.builder()
-                .id(UUID.fromString(id))
+        ContactReferencesRequest updatedRequest = ContactReferencesRequest.builder()
                 .company("Updated contact company")
                 .build();
         customFieldsAndLists.setCustomList4("Updated Contact custom list4");
-        contactService.saveContact(id, updatedRequest, customFieldsAndLists);
+        contactService.saveContact(id, request, customFieldsAndLists, updatedRequest);
         Contact updatedContact = contactRepository.findById(UUID.fromString(id)).orElseThrow();
-        assertEquals(updatedRequest.getCompany(), updatedContact.getCompany());
+        assertEquals(updatedRequest.getCompany(), updatedContact.getCompany().getName());
         assertEquals(customFieldsAndLists.getCustomList4(), updatedContact.getCustomValueByName("ContactCustomList4"));
         assertEquals("contact custom field 3", updatedContact.getCustomValueByName("ContactCustomField3"));
     }
@@ -81,7 +89,7 @@ class ContactServiceIT extends TestDependenciesContainer {
         assertEquals(1, contactRepository.count());
         String contactId = unassignedContact.getId().toString();
         assertThrows(AccessDeniedException.class,
-                () -> contactService.saveContact(contactId, request, customFL));
+                () -> contactService.saveContact(contactId, request, customFL, null));
     }
 
     @Test
@@ -106,7 +114,9 @@ class ContactServiceIT extends TestDependenciesContainer {
     @DisplayName("Search contacts with specific word in custom fields")
     @Transactional
     void searchContacts() {
-        contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
+        contactService.createContact(generateTestContactRequest(),
+                generateTestContactCustomFieldsRequest(),
+                generateTestContactReferenceRequest());
         CommonFilter filter = new CommonFilter();
         filter.setFindString("custom");
         Page<Map<String, Object>> result = contactService.findAll(null, filter);
@@ -118,7 +128,10 @@ class ContactServiceIT extends TestDependenciesContainer {
     @DisplayName("Search contacts with not filter set")
     @Transactional
     void searchAllContacts() {
-        contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
+        contactService.createContact(
+                generateTestContactRequest(),
+                generateTestContactCustomFieldsRequest(),
+                generateTestContactReferenceRequest());
         CommonFilter filter = new CommonFilter();
         Page<Map<String, Object>> result = contactService.findAll(null, filter);
         assertNotNull(result);
@@ -129,7 +142,10 @@ class ContactServiceIT extends TestDependenciesContainer {
     @DisplayName("Search contacts with blank filter find string")
     @Transactional
     void searchAllWithBlankContacts() {
-        contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
+        contactService.createContact(
+                generateTestContactRequest(),
+                generateTestContactCustomFieldsRequest(),
+                generateTestContactReferenceRequest());
         CommonFilter filter = new CommonFilter();
         filter.setFindString(" ");
         Page<Map<String, Object>> result = contactService.findAll(null, filter);
@@ -141,7 +157,11 @@ class ContactServiceIT extends TestDependenciesContainer {
     @DisplayName("Search specific contact by filters")
     @Transactional
     void searchSpecificContactByFilters() {
-        Map<String, Object> savedContactMap = contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
+        Map<String, Object> savedContactMap =
+                contactService.createContact(
+                        generateTestContactRequest(),
+                        generateTestContactCustomFieldsRequest(),
+                        generateTestContactReferenceRequest());
         CommonFilter filter = new CommonFilter();
         String savedContactCompany = savedContactMap.get("ContactCompany").toString();
         String savedContactId = savedContactMap.get("ContactId").toString();
@@ -149,16 +169,20 @@ class ContactServiceIT extends TestDependenciesContainer {
         filter.setIsDeleted(false);
         Page<Map<String, Object>> result = contactService.findAll("ContactId", filter);
         assertNotNull(result);
-        assertFalse(result.getContent().get(0).isEmpty());
+        assertFalse(result.getContent().getFirst().isEmpty());
         assertEquals(1, result.getTotalElements());
-        assertEquals(savedContactId, result.getContent().get(0).get("ContactId").toString());
+        assertEquals(savedContactId, result.getContent().getFirst().get("ContactId").toString());
     }
 
     @Test
     @DisplayName("Search Contact with non-matching filters")
     @Transactional
     void searchContactWithNonMatchingFilters() {
-        Map<String, Object> savedContactMap = contactService.createContact(generateTestContactRequest(), generateTestContactCustomFieldsRequest());
+        Map<String, Object> savedContactMap =
+                contactService.createContact(
+                        generateTestContactRequest(),
+                        generateTestContactCustomFieldsRequest(),
+                        generateTestContactReferenceRequest());
         CommonFilter filter = new CommonFilter();
         String savedContactId = savedContactMap.get("ContactId").toString();
         filter.setIsDeleted(false);

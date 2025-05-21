@@ -46,9 +46,15 @@ public class JobFilterCriteria {
                 .or(job.subdivision.containsIgnoreCase(searchStr))
                 .or(job.lot.containsIgnoreCase(searchStr))
                 .or(job.directions.containsIgnoreCase(searchStr))
+                .or(job.owner.email.containsIgnoreCase(searchStr))
                 .or(job.notes.containsIgnoreCase(searchStr))
-                .or(job.ownerName.containsIgnoreCase(searchStr))
-                .or(job.company.containsIgnoreCase(searchStr))
+                .or(job.owner.company.name.containsIgnoreCase(searchStr))
+                .or(job.owner.phones.any().title.containsIgnoreCase(searchStr))
+                .or(job.owner.addresses.any().address1.containsIgnoreCase(searchStr))
+                .or(job.owner.addresses.any().address2.containsIgnoreCase(searchStr))
+                .or(job.owner.addresses.any().city.containsIgnoreCase(searchStr))
+                .or(job.owner.addresses.any().state.containsIgnoreCase(searchStr))
+                .or(job.owner.addresses.any().postal.containsIgnoreCase(searchStr))
                 .or(job.customFieldsAndListsValues.any().customValue.containsIgnoreCase(searchStr));
     }
 

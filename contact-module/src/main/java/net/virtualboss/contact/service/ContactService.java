@@ -14,6 +14,7 @@ import net.virtualboss.common.util.BeanUtils;
 import net.virtualboss.common.web.dto.CustomFieldsAndLists;
 import net.virtualboss.contact.mapper.v1.ContactResponseMapper;
 import net.virtualboss.contact.querydsl.ContactFilterCriteria;
+import net.virtualboss.contact.web.dto.ContactReferencesRequest;
 import net.virtualboss.contact.web.dto.ContactResponse;
 import net.virtualboss.common.repository.ContactRepository;
 import net.virtualboss.contact.web.dto.UpsertContactRequest;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -112,18 +114,23 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
         QContact contact = QContact.contact;
         QFieldValue fieldValueContact = new QFieldValue("fieldValueContact");
         QField fieldContact = new QField("fieldContact");
+        QCompany company = QCompany.company;
+        QProfession profession = QProfession.profession;
 
         return List.of(
                 new CollectionJoin<>(contact.customFieldsAndListsValues, fieldValueContact, JoinType.LEFTJOIN),
-                new EntityJoin<>(fieldValueContact.field, fieldContact, JoinType.LEFTJOIN)
+                new EntityJoin<>(fieldValueContact.field, fieldContact, JoinType.LEFTJOIN),
+                new EntityJoin<>(company, company, JoinType.LEFTJOIN),
+                new EntityJoin<>(profession, profession, JoinType.LEFTJOIN)
         );
     }
 
     @Override
     protected List<GroupByExpression> getGroupBy() {
-        QContact contact = QContact.contact;
         return List.of(
-                new GroupByExpression(contact.id)
+                new GroupByExpression(QContact.contact.id),
+                new GroupByExpression(QCompany.company.id),
+                new GroupByExpression(QProfession.profession.id)
         );
     }
 
@@ -138,11 +145,15 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
 
     @Transactional
     @CachePut(value = "contact", key = "#id")
-    public Map<String, Object> saveContact(String id, UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
+    public Map<String, Object> saveContact(
+            String id,
+            UpsertContactRequest request,
+            CustomFieldsAndLists customFieldsAndLists,
+            ContactReferencesRequest referencesRequest) {
         Contact unassigned = mainService.getContactById(null);
         if (unassigned.getId().toString().equals(id))
             throw new AccessDeniedException("Cannot update Unassigned contact");
-        Contact contact = mapper.requestToContact(id, request, customFieldsAndLists);
+        Contact contact = mapper.requestToContact(id, request, customFieldsAndLists, referencesRequest);
         Contact contactFromDB = mainService.getContactById(id);
         contact.getCustomFieldsAndListsValues().addAll(contactFromDB.getCustomFieldsAndListsValues());
         BeanUtils.copyNonNullProperties(contact, contactFromDB);
@@ -150,9 +161,23 @@ public class ContactService extends GenericService<Contact, UUID, ContactRespons
     }
 
     @Transactional
-    public Map<String, Object> createContact(UpsertContactRequest request, CustomFieldsAndLists customFieldsAndLists) {
-        Contact contact = mapper.requestToContact(request, customFieldsAndLists);
+    public Map<String, Object> createContact(
+            UpsertContactRequest request,
+            CustomFieldsAndLists customFieldsAndLists,
+            ContactReferencesRequest referencesRequest) {
+        Contact contact = mapper.requestToContact(request, customFieldsAndLists, referencesRequest);
         return contactResponseMapper.map(mapper.contactToResponse(repository.save(contact)), null);
     }
 
+    @Override
+    protected Set<String> parseFields(String fields) {
+        return Arrays.stream(fields.split(","))
+                .map(field -> {
+                    if (field.startsWith(getCustomFieldPrefix())) return getCustomFieldsAndListsPrefix() + "." + field;
+                    if (field.equals("ContactCompany")) return "company." + field;
+                    if (field.equals("ContactProfession")) return "profession." + field;
+                    return field;
+                })
+                .collect(Collectors.toSet());
+    }
 }

@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Transactional
 public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
@@ -104,6 +103,21 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
         }
     }
 
+    public record EntityJoinWithCondition<E>(
+            EntityPath<E> source,
+            Predicate condition,
+            JoinType type
+    ) implements JoinExpression {
+        @Override
+        public void apply(JPAQuery<?> query) {
+            switch (type) {
+                case LEFTJOIN -> query.leftJoin(source).on(condition);
+                case INNERJOIN -> query.innerJoin(source).on(condition);
+                case RIGHTJOIN -> query.rightJoin(source).on(condition);
+                default -> query.join(source).on(condition);
+            }
+        }
+    }
     public record GroupByExpression(Expression<?> expression) {
     }
 
@@ -203,16 +217,7 @@ public abstract class GenericService<E, K, R, Q extends EntityPathBase<E>> {
         return Sort.Direction.ASC; // Дефолтное направление
     }
 
-    protected Set<String> parseFields(String fields) {
-        return Arrays.stream(fields.split(","))
-                .map(field -> {
-                    if (field.contains(getCustomFieldPrefix())) {
-                        return getCustomFieldsAndListsPrefix() + "." + field;
-                    }
-                    return field;
-                })
-                .collect(Collectors.toSet());
-    }
+    protected abstract Set<String> parseFields(String fields);
 
     protected abstract Class<E> getEntityClass();
 

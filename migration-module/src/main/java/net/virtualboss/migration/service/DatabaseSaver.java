@@ -3,6 +3,7 @@ package net.virtualboss.migration.service;
 import lombok.extern.log4j.Log4j2;
 import net.virtualboss.common.exception.MigrationException;
 import net.virtualboss.common.model.entity.Field;
+import net.virtualboss.common.model.enums.ChannelType;
 import net.virtualboss.common.web.dto.CustomValueDto;
 import net.virtualboss.migration.config.MigrationConfig;
 import net.virtualboss.migration.dto.FieldRowMapper;
@@ -39,7 +40,23 @@ public class DatabaseSaver {
     private final Map<String, List<Map<String, Object>>> attachmentsBuffer = new HashMap<>();
     private final Map<String, Long> resourceCache = new ConcurrentHashMap<>();
 
+    private final Map<Pair<String, String>, UUID> communicationTypeCache = new ConcurrentHashMap<>();
+    private final Map<String, List<Map<String, Object>>> communicationsBuffer = new HashMap<>();
+
+    private final Map<String, UUID> contactCache = new ConcurrentHashMap<>();
+
+    private final Map<String, List<Map<String, Object>>> addressesBuffer = new HashMap<>();
+
+    private final Map<String, UUID> companyCache = new ConcurrentHashMap<>();
+
     private static final String FLUSHING_BUFFER_MESSAGE = "Flushing buffer for {} ({} records)";
+
+    private static final String ADDRESS1 = "address1";
+    private static final String ADDRESS2 = "address2";
+    private static final String CITY = "city";
+    private static final String STATE = "state";
+    private static final String POSTAL = "postal";
+    private static final String COUNTRY = "country";
 
     public DatabaseSaver(JdbcTemplate jdbcTemplate, MigrationConfig migrationConfig) {
         this.jdbcTemplate = jdbcTemplate;
@@ -98,15 +115,15 @@ public class DatabaseSaver {
             }
         });
 
-        log.debug("Successfully inserted {} records into {}", buffer.size(), tableName);
+        log.info("Successfully inserted {} records into {}", buffer.size(), tableName);
 
         buffer.clear();
     }
 
     private String buildInsertSQL(String tableName, Set<String> columns) {
         return "INSERT INTO " + tableName + " (" +
-               String.join(", ", columns) + ") VALUES (" +
-               String.join(", ", Collections.nCopies(columns.size(), "?")) + ")";
+                String.join(", ", columns) + ") VALUES (" +
+                String.join(", ", Collections.nCopies(columns.size(), "?")) + ")";
     }
 
     private void setValue(PreparedStatement ps, int index, Object value, String type)
@@ -147,6 +164,8 @@ public class DatabaseSaver {
         batchBuffer.keySet().forEach(this::flushBuffer);
         flushCustomFields();
         flushAttachments();
+        flushCommunications();
+        flushAddresses();
     }
 
     @Transactional
@@ -243,13 +262,16 @@ public class DatabaseSaver {
                 return ps;
             }, keyHolder);
 
-            log.debug("New value inserted: {}.{} = {}", field.getName(), key, value);
+            log.info("New value inserted: {}.{} = {}", field.getName(), key, value);
 
             return Objects.requireNonNull(keyHolder.getKey()).longValue();
         });
     }
 
     public void preloadCaches() {
+        fieldCache.clear();
+        fieldValueCache.clear();
+
         List<Field> fields = jdbcTemplate.query(
                 "SELECT * FROM fields",
                 new FieldRowMapper()
@@ -287,9 +309,9 @@ public class DatabaseSaver {
         return resourceCache.computeIfAbsent(fullPath, path -> {
                     List<Long> existingIds = jdbcTemplate.query(connection -> {
                                 PreparedStatement ps = connection.prepareStatement(
-                                        "SELECT id FROM resources WHERE all_full_path = ?"
+                                        "SELECT id FROM resources WHERE lower(all_full_path) = ?"
                                 );
-                                ps.setString(1, fullPath);
+                                ps.setString(1, fullPath.toLowerCase());
                                 return ps;
                             },
                             (rs, rowNum) -> rs.getLong("id")
@@ -309,7 +331,7 @@ public class DatabaseSaver {
                         return ps;
                     }, keyHolder);
 
-                    log.debug("New resource inserted: {}", fullPath);
+                    log.info("New resource inserted: {}", fullPath);
 
                     return Objects.requireNonNull(keyHolder.getKey()).longValue();
                 }
@@ -356,5 +378,306 @@ public class DatabaseSaver {
         log.info(FLUSHING_BUFFER_MESSAGE, "Attachments", attachmentsBuffer.size());
 
         attachmentsBuffer.clear();
+    }
+
+    public void addCommunications(String entityId, String caption, ChannelType type, String title) {
+        if (title.isBlank()) return;
+        Map<String, Object> communication = new HashMap<>();
+        communication.put("caption", caption);
+        communication.put("channel", type);
+        communication.put("title", title);
+
+        communicationsBuffer
+                .computeIfAbsent(entityId, k -> new ArrayList<>())
+                .add(communication);
+
+        if (communicationsBuffer.size() >= migrationConfig.getBatchSize()) {
+            flushCommunications();
+        }
+    }
+
+    private UUID getOrCacheCommunicationId(String caption, ChannelType channelType) {
+        return communicationTypeCache.computeIfAbsent(Pair.of(caption, channelType.toString()), pair -> {
+                    List<UUID> existingIds = jdbcTemplate.query(connection -> {
+                                PreparedStatement ps = connection.prepareStatement(
+                                        "SELECT id FROM communication_types WHERE lower(caption) = ? and channel = ?"
+                                );
+                                ps.setString(1, pair.getFirst().toLowerCase());
+                                ps.setString(2, pair.getSecond());
+                                return ps;
+                            },
+                            (rs, rowNum) -> UUID.fromString(rs.getObject("id").toString())
+                    );
+                    if (!existingIds.isEmpty()) {
+                        return existingIds.get(0);
+                    }
+
+                    UUID id = UUID.randomUUID();
+                    jdbcTemplate.update(connection -> {
+                        PreparedStatement ps = connection.prepareStatement(
+                                "INSERT INTO communication_types (id, caption, channel, is_deleted) VALUES (?, ?, ?, ?)"
+                        );
+                        ps.setObject(1, id, Types.OTHER);
+                        ps.setString(2, pair.getFirst());
+                        ps.setString(3, pair.getSecond());
+                        ps.setBoolean(4, false);
+
+                        return ps;
+                    });
+
+                    log.info("New communication type {} with caption {} inserted",
+                            pair.getFirst(), pair.getSecond());
+
+                    return id;
+                }
+        );
+    }
+
+    public void flushCommunications() {
+        if (communicationsBuffer.isEmpty()) return;
+
+        List<Object[]> batchArgs = new ArrayList<>();
+
+        communicationsBuffer.forEach((entityId, communications) ->
+                communications.forEach(
+                        communication -> {
+                            String title = communication.get("title").toString();
+                            String caption = communication.get("caption").toString();
+                            ChannelType channelType = (ChannelType) communication.get("channel");
+
+                            UUID communicationId = getOrCacheCommunicationId(caption, channelType);
+                            UUID id = UUID.randomUUID();
+
+                            batchArgs.add(new Object[]{id, entityId, communicationId, title});
+                        }
+                )
+        );
+
+        jdbcTemplate.batchUpdate(
+                "INSERT INTO communications (id, entity_id, type_id, title, is_deleted) VALUES (?, ?, ?, ?, ?)",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        Object[] args = batchArgs.get(i);
+                        ps.setObject(1, UUID.fromString(args[0].toString()), Types.OTHER);
+                        ps.setObject(2, UUID.fromString(args[1].toString()), Types.OTHER);
+                        ps.setObject(3, UUID.fromString(args[2].toString()), Types.OTHER);
+                        ps.setString(4, args[3].toString());
+                        ps.setBoolean(5, false);
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return batchArgs.size();
+                    }
+                }
+        );
+
+        log.info(FLUSHING_BUFFER_MESSAGE, "Communications", communicationsBuffer.size());
+
+        communicationsBuffer.clear();
+    }
+
+    public UUID addJobContact(Map<String, Object> values) {
+
+        String name = values.get("owner").toString();
+        String company = values.get("company").toString();
+
+        UUID contactId = getOrCacheContactId(name, company);
+
+        addJobAddress(contactId.toString(), values);
+
+        addCommunications(
+                contactId.toString(), "Job Email", ChannelType.EMAIL,
+                values.get("email").toString()
+        );
+
+        addCommunications(
+                contactId.toString(), "Job Home", ChannelType.PHONE,
+                values.get("homePhone").toString()
+        );
+        addCommunications(
+                contactId.toString(), "Job Work", ChannelType.PHONE,
+                values.get("workPhone").toString()
+        );
+        addCommunications(
+                contactId.toString(), "Job Cellular", ChannelType.PHONE,
+                values.get("cellPhone").toString()
+        );
+        addCommunications(
+                contactId.toString(), "Job Fax", ChannelType.PHONE,
+                values.get("fax").toString()
+        );
+
+        return contactId;
+    }
+
+    private void addJobAddress(String contactId, Map<String, Object> values) {
+        Map<String, Object> address = new HashMap<>();
+        address.put(ADDRESS1, values.get(ADDRESS1));
+        address.put(ADDRESS2, values.get(ADDRESS2));
+        address.put(CITY, values.get(CITY));
+        address.put(STATE, values.get(STATE));
+        address.put(POSTAL, values.get(POSTAL));
+        address.put(COUNTRY, values.get(COUNTRY));
+
+        addressesBuffer
+                .computeIfAbsent(contactId, k -> new ArrayList<>())
+                .add(address);
+
+        if (addressesBuffer.size() >= migrationConfig.getBatchSize()) {
+            flushAddresses();
+        }
+    }
+
+    private void flushAddresses() {
+        if (addressesBuffer.isEmpty()) return;
+
+        List<Object[]> batchArgs = new ArrayList<>();
+
+        addressesBuffer.forEach((entityId, addresses) ->
+                addresses.forEach(
+                        address -> {
+                            String address1 = address.get(ADDRESS1).toString();
+                            String address2 = address.get(ADDRESS2).toString();
+                            String city = address.get(CITY).toString();
+                            String state = address.get(STATE).toString();
+                            String postal = address.get(POSTAL).toString();
+                            String country = address.get(COUNTRY).toString();
+
+                            UUID id = UUID.randomUUID();
+
+                            UUID communicationId = getOrCacheCommunicationId(
+                                    "Job site", ChannelType.ADDRESS);
+
+                            batchArgs.add(new Object[]{id, entityId, communicationId, address1, address2,
+                                    city, state, postal, country});
+                        }
+                )
+        );
+
+        jdbcTemplate.batchUpdate(
+                "INSERT INTO addresses (" +
+                        "id, entity_id, type_id, address1, address2, city, state, postal, country, is_deleted" +
+                        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                new BatchPreparedStatementSetter() {
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        Object[] args = batchArgs.get(i);
+                        ps.setObject(1, UUID.fromString(args[0].toString()), Types.OTHER);
+                        ps.setObject(2, UUID.fromString(args[1].toString()), Types.OTHER);
+                        ps.setObject(3, UUID.fromString(args[2].toString()), Types.OTHER);
+                        ps.setString(4, args[3].toString());
+                        ps.setString(5, args[4].toString());
+                        ps.setString(6, args[5].toString());
+                        ps.setString(7, args[6].toString());
+                        ps.setString(8, args[7].toString());
+                        ps.setString(9, args[8].toString());
+                        ps.setBoolean(10, false);
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return batchArgs.size();
+                    }
+                }
+        );
+
+        log.info(FLUSHING_BUFFER_MESSAGE, "Job addresses", addressesBuffer.size());
+
+        addressesBuffer.clear();
+    }
+
+    private UUID getOrCacheContactId(String name, String company) {
+        String firstName;
+        String lastName;
+        String[] parts = name.split(" ");
+
+        if (parts.length > 2) {
+            lastName = parts[parts.length - 1];
+            firstName = name.replace(lastName, "").trim();
+        } else if (parts.length > 1) {
+            firstName = parts[0];
+            lastName = parts[1];
+        } else {
+            lastName = "";
+            firstName = name;
+        }
+
+        UUID companyId = getOrCacheCompanyId(company);
+
+        return contactCache.computeIfAbsent(name, contact -> {
+                    List<UUID> existingIds = jdbcTemplate.query(connection -> {
+                                PreparedStatement ps = connection.prepareStatement(
+                                        "SELECT id FROM contacts WHERE lower(first_name) = ? and lower(last_name) = ?"
+                                );
+                                ps.setString(1, firstName.toLowerCase());
+                                ps.setString(2, lastName.toLowerCase());
+                                return ps;
+                            },
+                            (rs, rowNum) -> UUID.fromString(rs.getObject("id").toString())
+                    );
+                    if (!existingIds.isEmpty()) {
+                        return existingIds.get(0);
+                    }
+
+                    UUID id = UUID.randomUUID();
+                    jdbcTemplate.update(connection -> {
+                        PreparedStatement ps = connection.prepareStatement(
+                                "INSERT INTO contacts (id, first_name, last_name, company_id, is_deleted) " +
+                                        "VALUES (?, ?, ?, ?, ?)"
+                        );
+                        ps.setObject(1, id, Types.OTHER);
+                        ps.setString(2, firstName);
+                        ps.setString(3, lastName);
+                        ps.setObject(4, companyId, Types.OTHER);
+                        ps.setBoolean(5, false);
+
+                        return ps;
+                    });
+
+                    log.info("New contact {} with first name {} and lastname {} added",
+                            name, firstName, lastName);
+
+                    return id;
+                }
+        );
+    }
+
+    private UUID getOrCacheCompanyId(String name) {
+
+        if (name.isBlank()) return null;
+
+        return companyCache.computeIfAbsent(name, company -> {
+                    List<UUID> existingIds = jdbcTemplate.query(connection -> {
+                                PreparedStatement ps = connection.prepareStatement(
+                                        "SELECT id FROM companies WHERE lower(name) = ?"
+                                );
+                                ps.setString(1, name.toLowerCase());
+                                return ps;
+                            },
+                            (rs, rowNum) -> UUID.fromString(rs.getObject("id").toString())
+                    );
+                    if (!existingIds.isEmpty()) {
+                        return existingIds.get(0);
+                    }
+
+                    UUID id = UUID.randomUUID();
+                    jdbcTemplate.update(connection -> {
+                        PreparedStatement ps = connection.prepareStatement(
+                                "INSERT INTO companies (id, name, is_deleted) VALUES (?, ?, ?)"
+                        );
+                        ps.setObject(1, id, Types.OTHER);
+                        ps.setString(2, name);
+                        ps.setBoolean(3, false);
+
+                        return ps;
+                    });
+
+                    log.info("New company {} added", name);
+
+                    return id;
+                }
+        );
     }
 }

@@ -4,7 +4,7 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://virtualbosspgserver.postgres.database.azure.com:5432/virtualboss?sslmode=require}
     username: ${DATABASE_USER:pgadmin}
-    password: ${DATABASE_PASSWORD:${pguser-password}!}
+    password: ${DATABASE_PASSWORD:${pguser-password}}
     driver-class-name: org.postgresql.Driver
 
 #    hikari:
@@ -31,6 +31,7 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
   liquibase:
     change-log: classpath://db/changelog/db.changelog-master.xml

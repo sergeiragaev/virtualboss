@@ -2,9 +2,9 @@ spring:
   application:
     name: virtualboss
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/virtualboss}
-    username: ${DATABASE_USER:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
+    url: ${DATABASE_URL:jdbc:postgresql://virtualbosspgserver.postgres.database.azure.com:5432/virtualboss?sslmode=require}
+    username: ${DATABASE_USER:pgadmin}
+    password: ${DATABASE_PASSWORD:${pguser-password}!}
     driver-class-name: org.postgresql.Driver
 
 #    hikari:
@@ -19,8 +19,11 @@ spring:
     max-in-memory-size: 1048576
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      host: ${REDIS_HOST:virtualbossredis.redis.cache.windows.net}
+      port: ${REDIS_PORT:6380}
+      password: ${REDIS_PASSWORD:${redis-password}}
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:true}
 
   jpa:
     hibernate:
@@ -43,6 +46,13 @@ spring:
   config:
     import:
       - migration-config.yml
+
+  cloud:
+    azure:
+      keyvault:
+        secret:
+          enabled: true
+          endpoint: https://virtualboss-keyvault.vault.azure.net/
 
  # Logging settings
 logging:

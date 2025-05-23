@@ -7,4 +7,4 @@ FROM eclipse-temurin:17-jdk
 WORKDIR /app
 COPY --from=builder /app/application/target/application-*.jar app.jar
 EXPOSE 8080
-CMD ["java", "-Xms128m", "-Xmx256m", "-jar", "app.jar"]
+CMD ["java", "-jar", "app.jar"]

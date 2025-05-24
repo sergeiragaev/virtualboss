@@ -21,5 +21,6 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
     @Query("UPDATE Company c SET c.isDeleted = true")
     int markAllAsDeleted();
 
-    Optional<Company> findCompanyByNameEqualsIgnoreCase(String companyName);
+    Optional<Company> findCompanyByNameEqualsIgnoreCaseAndIsDeleted(
+            String companyName, boolean isDeleted);
 }

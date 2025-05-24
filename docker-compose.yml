@@ -1,0 +1,55 @@
+services:
+  postgres:
+    hostname: postgres
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      - POSTGRES_DB=virtualboss
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      virtualbossnet:
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=1
+    networks:
+      virtualbossnet:
+
+  frontend:
+    image: ragaev/frontend:virtualboss
+    ports:
+      - "80:80"
+    tty: true
+    restart: on-failure
+    networks:
+      virtualbossnet:
+
+  virtualboss:
+    image: ragaev/virtualboss:0.0.1-SNAPSHOT
+    environment:
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/virtualboss
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - FILE_UPLOAD_PATH=tmp/
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    networks:
+      virtualbossnet:
+
+volumes:
+  pgdata:
+networks:
+  virtualbossnet:

@@ -1,0 +1,68 @@
+name: Deploy Docker Compose to Azure Web App
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME_BACKEND: ragaev/virtualboss
+  IMAGE_NAME_FRONTEND: ragaev/frontend
+  TAG_BACKEND: latest
+  TAG_FRONTEND: virtualboss
+  AZURE_WEBAPP_NAME: virtualboss
+  AZURE_RESOURCE_GROUP: vbResourceGroup
+  COMPOSE_REPO_URL: https://raw.githubusercontent.com/sergeiragaev/virtualboss/master/docker-compose.yml
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME_BACKEND }}:${{ env.TAG_BACKEND }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME_FRONTEND }}:${{ env.TAG_FRONTEND }}
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set docker-compose as config
+        run: |
+          az webapp config container set \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }}\
+            --multicontainer-config-type compose \
+            --multicontainer-config-file ${{ env.COMPOSE_REPO_URL }}
+
+      - name: Restart app to pull new images
+        run: |
+          az webapp restart \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }}

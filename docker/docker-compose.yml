@@ -38,20 +38,21 @@ services:
     networks:
       virtualbossnet:
 
-#  virtualboss:
-#    hostname: 'virtualboss'
-#    image: ragaev/virtualboss:0.0.1-SNAPSHOT
-#    environment:
-#      - DATABASE_URL=jdbc:postgresql://postgres:bZpSnlICFWaUUvuUyRieHbpIOthprZoA@interchange.proxy.rlwy.net:18427/railway
-#      - DATABASE_USER=postgres
-#      - DATABASE_PASSWORD=bZpSnlICFWaUUvuUyRieHbpIOthprZoA
-#      - REDIS_HOST=redis://default:YhWTXDNdtMnBzJFXKLTqHWDgVTwdNkIn@tramway.proxy.rlwy.net:10322
-#      - FILE_UPLOAD_PATH=tmp/
-#    ports:
-#      - "8080:8080"
-#    restart: on-failure
-#    networks:
-#      virtualbossnet:
+  virtualboss:
+    hostname: 'virtualboss'
+    image: ragaev/virtualboss:0.0.1-SNAPSHOT
+    environment:
+      - DATABASE_URL=jdbc:postgresql://localhost:5432/virtualboss
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - FILE_UPLOAD_PATH=tmp/
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    networks:
+      virtualbossnet:
 #    deploy:
 #      placement:
 #        constraints:

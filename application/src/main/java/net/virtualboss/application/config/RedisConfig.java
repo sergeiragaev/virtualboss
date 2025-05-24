@@ -25,7 +25,7 @@ public class RedisConfig {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(host);
         config.setPort(port);
-        if (password != null) config.setPassword(RedisPassword.of(password));
+        if (!password.isBlank()) config.setPassword(RedisPassword.of(password));
 
         LettuceConnectionFactory factory = new LettuceConnectionFactory(config);
         factory.setUseSsl(sslEnabled);

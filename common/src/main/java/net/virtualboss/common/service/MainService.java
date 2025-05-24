@@ -88,7 +88,7 @@ public class MainService {
         if (companyName == null || companyName.isBlank()) return null;
         Company company = Company.builder().name(companyName).build();
         return companyRepository
-                .findCompanyByNameEqualsIgnoreCase(companyName)
+                .findCompanyByNameEqualsIgnoreCaseAndIsDeleted(companyName, false)
                 .orElse(companyRepository.save(company));
     }
 

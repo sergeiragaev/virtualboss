@@ -14,7 +14,8 @@ import java.util.UUID;
 @Repository
 public interface ContactRepository extends JpaRepository<Contact, UUID>, JpaSpecificationExecutor<Contact> {
 
-    @Query("select cn from Contact cn left join cn.company cp where lower(cp.name) = 'unassigned'")
+    @Query("select cn from Contact cn left join cn.company cp where lower(cp.name) = 'unassigned' " +
+           "and not cn.isDeleted and not cp.isDeleted")
     Optional<Contact> getUnassigned();
 
     @Modifying
